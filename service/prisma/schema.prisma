@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           Int     @id() @default(autoincrement())
+  username     String  @unique()
+  firstName    String
+  lastName     String
+  password     String
+  nationalCode String  @unique()
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Auth-------------------------------------------------------------------------
+model Permission {
+  name String         @id
+  type PermissionType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  RolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id        Int      @id
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  permission     Permission @relation(fields: [permissionName], references: [name], onDelete: Cascade)
+  permissionName String
+
+  @@unique([role, permissionName])
+}
+
+enum Role {
+  Admin
+  NewUser
+  Customer
+  Operator
+}
+
+enum PermissionType {
+  Service
+  Controller
+  Action
+}

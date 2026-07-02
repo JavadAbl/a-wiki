@@ -4,7 +4,7 @@ import { UserRepository } from '../repository/user.repository';
 import { UserDto } from '../dto/response/user.dto';
 import { UserCreateDto } from '../dto/request/user-create.dto';
 import { buildFindManyArgs } from 'src/common/utils/prisma-util';
-import { GetManyQueryType } from 'src/common/dto/reqest/get-many-query';
+import { GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 import { UserSetActiveDto } from '../dto/request/user-set-active.dto';
 import { PasswordService } from 'src/common/services/password.service';

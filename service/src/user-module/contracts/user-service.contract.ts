@@ -1,5 +1,5 @@
-import { UserDto } from '../dto/response/user.dto';
+import { User } from 'src/generated/prisma/client';
 
 export abstract class IUserServiceContract {
-  abstract userGetById(id: number): Promise<UserDto>;
+  abstract userGetByUsername(username: string): Promise<User | null>;
 }

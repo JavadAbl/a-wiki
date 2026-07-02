@@ -20,11 +20,22 @@ export type PermissionModel = runtime.Types.Result.DefaultSelection<Prisma.$Perm
 
 export type AggregatePermission = {
   _count: PermissionCountAggregateOutputType | null
+  _avg: PermissionAvgAggregateOutputType | null
+  _sum: PermissionSumAggregateOutputType | null
   _min: PermissionMinAggregateOutputType | null
   _max: PermissionMaxAggregateOutputType | null
 }
 
+export type PermissionAvgAggregateOutputType = {
+  id: number | null
+}
+
+export type PermissionSumAggregateOutputType = {
+  id: number | null
+}
+
 export type PermissionMinAggregateOutputType = {
+  id: number | null
   name: string | null
   type: $Enums.PermissionType | null
   createdAt: Date | null
@@ -32,6 +43,7 @@ export type PermissionMinAggregateOutputType = {
 }
 
 export type PermissionMaxAggregateOutputType = {
+  id: number | null
   name: string | null
   type: $Enums.PermissionType | null
   createdAt: Date | null
@@ -39,6 +51,7 @@ export type PermissionMaxAggregateOutputType = {
 }
 
 export type PermissionCountAggregateOutputType = {
+  id: number
   name: number
   type: number
   createdAt: number
@@ -47,7 +60,16 @@ export type PermissionCountAggregateOutputType = {
 }
 
 
+export type PermissionAvgAggregateInputType = {
+  id?: true
+}
+
+export type PermissionSumAggregateInputType = {
+  id?: true
+}
+
 export type PermissionMinAggregateInputType = {
+  id?: true
   name?: true
   type?: true
   createdAt?: true
@@ -55,6 +77,7 @@ export type PermissionMinAggregateInputType = {
 }
 
 export type PermissionMaxAggregateInputType = {
+  id?: true
   name?: true
   type?: true
   createdAt?: true
@@ -62,6 +85,7 @@ export type PermissionMaxAggregateInputType = {
 }
 
 export type PermissionCountAggregateInputType = {
+  id?: true
   name?: true
   type?: true
   createdAt?: true
@@ -107,6 +131,18 @@ export type PermissionAggregateArgs<ExtArgs extends runtime.Types.Extensions.Int
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: PermissionAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: PermissionSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: PermissionMinAggregateInputType
@@ -137,16 +173,21 @@ export type PermissionGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   _count?: PermissionCountAggregateInputType | true
+  _avg?: PermissionAvgAggregateInputType
+  _sum?: PermissionSumAggregateInputType
   _min?: PermissionMinAggregateInputType
   _max?: PermissionMaxAggregateInputType
 }
 
 export type PermissionGroupByOutputType = {
+  id: number
   name: string
   type: $Enums.PermissionType
   createdAt: Date
   updatedAt: Date
   _count: PermissionCountAggregateOutputType | null
+  _avg: PermissionAvgAggregateOutputType | null
+  _sum: PermissionSumAggregateOutputType | null
   _min: PermissionMinAggregateOutputType | null
   _max: PermissionMaxAggregateOutputType | null
 }
@@ -170,22 +211,25 @@ export type PermissionWhereInput = {
   AND?: Prisma.PermissionWhereInput | Prisma.PermissionWhereInput[]
   OR?: Prisma.PermissionWhereInput[]
   NOT?: Prisma.PermissionWhereInput | Prisma.PermissionWhereInput[]
+  id?: Prisma.IntFilter<"Permission"> | number
   name?: Prisma.StringFilter<"Permission"> | string
   type?: Prisma.EnumPermissionTypeFilter<"Permission"> | $Enums.PermissionType
   createdAt?: Prisma.DateTimeFilter<"Permission"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Permission"> | Date | string
-  RolePermissions?: Prisma.RolePermissionListRelationFilter
+  rolePermissions?: Prisma.RolePermissionListRelationFilter
 }
 
 export type PermissionOrderByWithRelationInput = {
+  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  RolePermissions?: Prisma.RolePermissionOrderByRelationAggregateInput
+  rolePermissions?: Prisma.RolePermissionOrderByRelationAggregateInput
 }
 
 export type PermissionWhereUniqueInput = Prisma.AtLeast<{
+  id?: number
   name?: string
   AND?: Prisma.PermissionWhereInput | Prisma.PermissionWhereInput[]
   OR?: Prisma.PermissionWhereInput[]
@@ -193,23 +237,27 @@ export type PermissionWhereUniqueInput = Prisma.AtLeast<{
   type?: Prisma.EnumPermissionTypeFilter<"Permission"> | $Enums.PermissionType
   createdAt?: Prisma.DateTimeFilter<"Permission"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Permission"> | Date | string
-  RolePermissions?: Prisma.RolePermissionListRelationFilter
-}, "name">
+  rolePermissions?: Prisma.RolePermissionListRelationFilter
+}, "id" | "name">
 
 export type PermissionOrderByWithAggregationInput = {
+  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.PermissionCountOrderByAggregateInput
+  _avg?: Prisma.PermissionAvgOrderByAggregateInput
   _max?: Prisma.PermissionMaxOrderByAggregateInput
   _min?: Prisma.PermissionMinOrderByAggregateInput
+  _sum?: Prisma.PermissionSumOrderByAggregateInput
 }
 
 export type PermissionScalarWhereWithAggregatesInput = {
   AND?: Prisma.PermissionScalarWhereWithAggregatesInput | Prisma.PermissionScalarWhereWithAggregatesInput[]
   OR?: Prisma.PermissionScalarWhereWithAggregatesInput[]
   NOT?: Prisma.PermissionScalarWhereWithAggregatesInput | Prisma.PermissionScalarWhereWithAggregatesInput[]
+  id?: Prisma.IntWithAggregatesFilter<"Permission"> | number
   name?: Prisma.StringWithAggregatesFilter<"Permission"> | string
   type?: Prisma.EnumPermissionTypeWithAggregatesFilter<"Permission"> | $Enums.PermissionType
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Permission"> | Date | string
@@ -221,15 +269,16 @@ export type PermissionCreateInput = {
   type: $Enums.PermissionType
   createdAt?: Date | string
   updatedAt?: Date | string
-  RolePermissions?: Prisma.RolePermissionCreateNestedManyWithoutPermissionInput
+  rolePermissions?: Prisma.RolePermissionCreateNestedManyWithoutPermissionInput
 }
 
 export type PermissionUncheckedCreateInput = {
+  id?: number
   name: string
   type: $Enums.PermissionType
   createdAt?: Date | string
   updatedAt?: Date | string
-  RolePermissions?: Prisma.RolePermissionUncheckedCreateNestedManyWithoutPermissionInput
+  rolePermissions?: Prisma.RolePermissionUncheckedCreateNestedManyWithoutPermissionInput
 }
 
 export type PermissionUpdateInput = {
@@ -237,18 +286,20 @@ export type PermissionUpdateInput = {
   type?: Prisma.EnumPermissionTypeFieldUpdateOperationsInput | $Enums.PermissionType
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  RolePermissions?: Prisma.RolePermissionUpdateManyWithoutPermissionNestedInput
+  rolePermissions?: Prisma.RolePermissionUpdateManyWithoutPermissionNestedInput
 }
 
 export type PermissionUncheckedUpdateInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumPermissionTypeFieldUpdateOperationsInput | $Enums.PermissionType
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  RolePermissions?: Prisma.RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput
+  rolePermissions?: Prisma.RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput
 }
 
 export type PermissionCreateManyInput = {
+  id?: number
   name: string
   type: $Enums.PermissionType
   createdAt?: Date | string
@@ -263,6 +314,7 @@ export type PermissionUpdateManyMutationInput = {
 }
 
 export type PermissionUncheckedUpdateManyInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumPermissionTypeFieldUpdateOperationsInput | $Enums.PermissionType
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -270,13 +322,19 @@ export type PermissionUncheckedUpdateManyInput = {
 }
 
 export type PermissionCountOrderByAggregateInput = {
+  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
+export type PermissionAvgOrderByAggregateInput = {
+  id?: Prisma.SortOrder
+}
+
 export type PermissionMaxOrderByAggregateInput = {
+  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -284,10 +342,15 @@ export type PermissionMaxOrderByAggregateInput = {
 }
 
 export type PermissionMinOrderByAggregateInput = {
+  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type PermissionSumOrderByAggregateInput = {
+  id?: Prisma.SortOrder
 }
 
 export type PermissionScalarRelationFilter = {
@@ -321,6 +384,7 @@ export type PermissionCreateWithoutRolePermissionsInput = {
 }
 
 export type PermissionUncheckedCreateWithoutRolePermissionsInput = {
+  id?: number
   name: string
   type: $Enums.PermissionType
   createdAt?: Date | string
@@ -351,6 +415,7 @@ export type PermissionUpdateWithoutRolePermissionsInput = {
 }
 
 export type PermissionUncheckedUpdateWithoutRolePermissionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumPermissionTypeFieldUpdateOperationsInput | $Enums.PermissionType
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -363,11 +428,11 @@ export type PermissionUncheckedUpdateWithoutRolePermissionsInput = {
  */
 
 export type PermissionCountOutputType = {
-  RolePermissions: number
+  rolePermissions: number
 }
 
 export type PermissionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  RolePermissions?: boolean | PermissionCountOutputTypeCountRolePermissionsArgs
+  rolePermissions?: boolean | PermissionCountOutputTypeCountRolePermissionsArgs
 }
 
 /**
@@ -389,15 +454,17 @@ export type PermissionCountOutputTypeCountRolePermissionsArgs<ExtArgs extends ru
 
 
 export type PermissionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
   name?: boolean
   type?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  RolePermissions?: boolean | Prisma.Permission$RolePermissionsArgs<ExtArgs>
+  rolePermissions?: boolean | Prisma.Permission$rolePermissionsArgs<ExtArgs>
   _count?: boolean | Prisma.PermissionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["permission"]>
 
 export type PermissionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
   name?: boolean
   type?: boolean
   createdAt?: boolean
@@ -405,6 +472,7 @@ export type PermissionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
 }, ExtArgs["result"]["permission"]>
 
 export type PermissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
   name?: boolean
   type?: boolean
   createdAt?: boolean
@@ -412,15 +480,16 @@ export type PermissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
 }, ExtArgs["result"]["permission"]>
 
 export type PermissionSelectScalar = {
+  id?: boolean
   name?: boolean
   type?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PermissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"name" | "type" | "createdAt" | "updatedAt", ExtArgs["result"]["permission"]>
+export type PermissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "type" | "createdAt" | "updatedAt", ExtArgs["result"]["permission"]>
 export type PermissionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  RolePermissions?: boolean | Prisma.Permission$RolePermissionsArgs<ExtArgs>
+  rolePermissions?: boolean | Prisma.Permission$rolePermissionsArgs<ExtArgs>
   _count?: boolean | Prisma.PermissionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type PermissionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -429,9 +498,10 @@ export type PermissionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 export type $PermissionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Permission"
   objects: {
-    RolePermissions: Prisma.$RolePermissionPayload<ExtArgs>[]
+    rolePermissions: Prisma.$RolePermissionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    id: number
     name: string
     type: $Enums.PermissionType
     createdAt: Date
@@ -519,8 +589,8 @@ export interface PermissionDelegate<ExtArgs extends runtime.Types.Extensions.Int
    * // Get first 10 Permissions
    * const permissions = await prisma.permission.findMany({ take: 10 })
    * 
-   * // Only select the `name`
-   * const permissionWithNameOnly = await prisma.permission.findMany({ select: { name: true } })
+   * // Only select the `id`
+   * const permissionWithIdOnly = await prisma.permission.findMany({ select: { id: true } })
    * 
    */
   findMany<T extends PermissionFindManyArgs>(args?: Prisma.SelectSubset<T, PermissionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -564,9 +634,9 @@ export interface PermissionDelegate<ExtArgs extends runtime.Types.Extensions.Int
    *   ]
    * })
    * 
-   * // Create many Permissions and only return the `name`
-   * const permissionWithNameOnly = await prisma.permission.createManyAndReturn({
-   *   select: { name: true },
+   * // Create many Permissions and only return the `id`
+   * const permissionWithIdOnly = await prisma.permission.createManyAndReturn({
+   *   select: { id: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -655,9 +725,9 @@ export interface PermissionDelegate<ExtArgs extends runtime.Types.Extensions.Int
    *   ]
    * })
    * 
-   * // Update zero or more Permissions and only return the `name`
-   * const permissionWithNameOnly = await prisma.permission.updateManyAndReturn({
-   *   select: { name: true },
+   * // Update zero or more Permissions and only return the `id`
+   * const permissionWithIdOnly = await prisma.permission.updateManyAndReturn({
+   *   select: { id: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -830,7 +900,7 @@ readonly fields: PermissionFieldRefs;
  */
 export interface Prisma__PermissionClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  RolePermissions<T extends Prisma.Permission$RolePermissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Permission$RolePermissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RolePermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  rolePermissions<T extends Prisma.Permission$rolePermissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Permission$rolePermissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RolePermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -860,6 +930,7 @@ export interface Prisma__PermissionClient<T, Null = never, ExtArgs extends runti
  * Fields of the Permission model
  */
 export interface PermissionFieldRefs {
+  readonly id: Prisma.FieldRef<"Permission", 'Int'>
   readonly name: Prisma.FieldRef<"Permission", 'String'>
   readonly type: Prisma.FieldRef<"Permission", 'PermissionType'>
   readonly createdAt: Prisma.FieldRef<"Permission", 'DateTime'>
@@ -1255,9 +1326,9 @@ export type PermissionDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
 }
 
 /**
- * Permission.RolePermissions
+ * Permission.rolePermissions
  */
-export type Permission$RolePermissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Permission$rolePermissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the RolePermission
    */

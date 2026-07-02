@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from 'src/generated/prisma/client';
-import { Repository } from 'src/infrastructure-modules/prisma-module/base.repository'; // Note: check typo 'prsima-module' vs 'prisma-module'
+import { Repository } from 'src/infrastructure-modules/prsima-module/base.repository';
 
 @Injectable()
 export class BaseService<E extends keyof PrismaClient, T extends Repository<E> = Repository<E>> {

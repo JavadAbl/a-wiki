@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
   Patch,
 } from '@nestjs/common';
-import { GetManyQuery, GetManyQueryType } from 'src/common/dto/reqest/get-many-query';
+import { GetManyQuery, GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { UserCreateDto } from '../dto/request/user-create.dto';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 import { UserService } from '../services/user.service';

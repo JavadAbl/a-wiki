@@ -1,5 +1,5 @@
 import { Prisma } from 'src/generated/prisma/client';
-import { GetManyQueryType } from '../dto/reqest/get-many-query';
+import { GetManyQueryType } from '../dto/request/get-many-query';
 
 /**
  * Builds Prisma findMany arguments based on query criteria.

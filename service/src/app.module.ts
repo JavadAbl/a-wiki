@@ -4,6 +4,9 @@ import { UserModule } from './user-module/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { appConfig, configValidationSchema } from './common/config/app.config';
 import { AuthModule } from './auth-module/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthenticationGuard } from './common/guards/authentication.guard';
+import { AuthorizationGuard } from './common/guards/authorization.guard';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { AuthModule } from './auth-module/auth.module';
     UserModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    { provide: APP_GUARD, useClass: AuthenticationGuard },
+    { provide: APP_GUARD, useClass: AuthorizationGuard },
+  ],
 })
 export class AppModule {}

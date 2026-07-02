@@ -14,9 +14,9 @@ export interface TokenResponse {
 }
 
 export abstract class ITokenService {
-  abstract generateTokens(payload: TokenPayload): TokenResponse;
-  abstract generateAccessToken(payload: TokenPayload): string;
-  abstract generateRefreshToken(payload: TokenPayload): string;
-  abstract verifyAccessToken(token: string): DecodedToken;
-  abstract verifyRefreshToken(token: string): DecodedToken;
+  abstract generateTokens(payload: TokenPayload): Promise<TokenResponse>;
+  abstract generateAccessToken(payload: TokenPayload): Promise<string>;
+  abstract generateRefreshToken(payload: TokenPayload): Promise<string>;
+  abstract verifyAccessToken(token: string): Promise<DecodedToken>;
+  abstract verifyRefreshToken(token: string): Promise<DecodedToken>;
 }

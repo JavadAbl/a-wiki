@@ -5,7 +5,6 @@ import {
   SERVICE_PERMISSION,
 } from '../auth.utils';
 import { PermissionType, Role } from 'src/generated/prisma/enums';
-import { AuthRepository } from '../repositories/auth.repository';
 import { ITokenService } from '../contracts/token-service.contract';
 import { LoginDto } from '../dto/request/login.dto';
 import { IUserServiceContract } from 'src/user-module/contracts/user-service.contract';
@@ -15,6 +14,9 @@ import { UserDto } from 'src/user-module/dto/response/user.dto';
 import { AuthDto } from '../dto/response/auth.dto';
 import { RolePermissionCreateDto } from '../dto/request/role-permission-create.dto';
 import { UserPermissionCreateDto } from '../dto/request/user-permission-create.dto';
+import { PermissionRepository } from '../repositories/permission.repository';
+import { RolePermissionRepository } from '../repositories/role-permission.repository';
+import { UserPermissionRepository } from '../repositories/user-permission.repository';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +25,9 @@ export class AuthService {
   ];
 
   constructor(
-    private readonly authRep: AuthRepository,
+    private readonly permissionRep: PermissionRepository,
+    private readonly rolePermissionRep: RolePermissionRepository,
+    private readonly userPermissionRep: UserPermissionRepository,
     private readonly passwordService: PasswordService,
     @Inject(ITokenService) private readonly tokenService: ITokenService,
     @Inject(IUserServiceContract) private readonly userService: IUserServiceContract,
@@ -50,7 +54,7 @@ export class AuthService {
 
   //Permission-----------------------------------------------
   async setupPermissions(): Promise<void> {
-    await this.authRep.syncPermissions(this.APP_PERMISSIONS);
+    await this.permissionRep.syncPermissions(this.APP_PERMISSIONS);
   }
 
   addControllerPermissions<T>(controller: Type<T>): void {
@@ -72,21 +76,21 @@ export class AuthService {
   //RolePermission-----------------------------------------------
   async rolePermissionCreate(payload: RolePermissionCreateDto): Promise<void> {
     const { permissionId, role } = payload;
-    const permission = await this.authRep.permissionFindById(permissionId);
+    const permission = await this.permissionRep.permissionFindById(permissionId);
 
     if (!permission) throw new BadRequestException('Invalid permission');
 
-    await this.authRep.rolePermissionCreate({
+    await this.rolePermissionRep.rolePermissionCreate({
       data: { permissionId, role, permissionName: permission.name },
     });
   }
 
   async rolePermissionDelete(id: number): Promise<void> {
-    await this.authRep.rolePermissionDelete({ where: { id } });
+    await this.rolePermissionRep.rolePermissionDelete({ where: { id } });
   }
 
   rolePermissionFindByRoleAndPermissionName(role: Role, permissionName: string) {
-    return this.authRep.rolePermissionFindFirst({
+    return this.rolePermissionRep.rolePermissionFindFirst({
       where: { role, permissionName: { contains: permissionName } },
     });
   }
@@ -95,16 +99,16 @@ export class AuthService {
   async userPermissionCreate(payload: UserPermissionCreateDto): Promise<void> {
     const { userId, permissionId } = payload;
 
-    const permission = await this.authRep.permissionFindById(permissionId);
+    const permission = await this.permissionRep.permissionFindById(permissionId);
     if (!permission) throw new BadRequestException('Invalid permission');
 
     const user = await this.userService.userGetById(userId);
     if (!user) throw new BadRequestException('Invalid user');
 
-    await this.authRep.userPermissionCreate({ data: { userId, permissionId } });
+    await this.userPermissionRep.userPermissionCreate({ data: { userId, permissionId } });
   }
 
   async userPermissionDelete(id: number): Promise<void> {
-    await this.authRep.userPermissionDelete({ where: { id } });
+    await this.userPermissionRep.userPermissionDelete({ where: { id } });
   }
 }

@@ -7,6 +7,7 @@ import { AuthModule } from './auth-module/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationGuard } from './common/guards/authentication.guard';
 import { AuthorizationGuard } from './common/guards/authorization.guard';
+import { CourseModule } from './course/course.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuthorizationGuard } from './common/guards/authorization.guard';
     PrismaModule,
     AuthModule,
     UserModule,
+    CourseModule,
   ],
   controllers: [],
   providers: [

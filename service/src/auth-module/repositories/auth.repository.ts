@@ -1,40 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
-import { PermissionType, Role } from 'src/generated/prisma/enums';
+import { PermissionType } from 'src/generated/prisma/enums';
 import { PrismaProvider } from 'src/infrastructure-modules/prsima-module/prisma.provider';
 
 @Injectable()
 export class AuthRepository {
   constructor(private readonly prismaProvider: PrismaProvider) {}
 
-  findFirstRolePermission(criteria: Prisma.RolePermissionFindFirstArgs) {
-    return this.prismaProvider.rolePermission.findFirst(criteria);
-  }
-
-  createRolePermission(criteria: Prisma.RolePermissionCreateArgs) {
-    return this.prismaProvider.rolePermission.create(criteria);
-  }
-
-  deleteRolePermission(criteria: Prisma.RolePermissionDeleteArgs) {
-    return this.prismaProvider.rolePermission.delete(criteria);
-  }
-
-  async findRolePermissionNamesByRole(role: Role): Promise<string[]> {
-    const rolePermissions = await this.prismaProvider.rolePermission.findMany({
-      where: { role },
-      select: { permissionName: true },
-    });
-
-    return rolePermissions.map((rolePermission) => rolePermission.permissionName);
-  }
-
-  async findUserPermissionNames(userId: number): Promise<string[]> {
-    const userPermissions = await this.prismaProvider.userPermission.findMany({
-      where: { userId },
-      select: { permission: { select: { name: true } } },
-    });
-
-    return userPermissions.map((permissionEntry) => permissionEntry.permission.name);
+  //Permission-----------------------------------------------
+  permissionFindById(id: number, criteria?: Prisma.PermissionFindUniqueArgs) {
+    return this.prismaProvider.permission.findUnique({ ...criteria, where: { id } });
   }
 
   async syncPermissions(permissions: { name: string; type: PermissionType }[]) {
@@ -58,5 +33,31 @@ export class AuthRepository {
         });
       }
     });
+  }
+
+  //RolePermission-----------------------------------------------
+  rolePermissionFindFirst(criteria: Prisma.RolePermissionFindFirstArgs) {
+    return this.prismaProvider.rolePermission.findFirst(criteria);
+  }
+
+  rolePermissionFindById(id: number, criteria?: Prisma.RolePermissionFindUniqueArgs) {
+    return this.prismaProvider.rolePermission.findUnique({ ...criteria, where: { id } });
+  }
+
+  rolePermissionCreate(criteria: Prisma.RolePermissionCreateArgs) {
+    return this.prismaProvider.rolePermission.create(criteria);
+  }
+
+  rolePermissionDelete(criteria: Prisma.RolePermissionDeleteArgs) {
+    return this.prismaProvider.rolePermission.delete(criteria);
+  }
+
+  //UserPermission-----------------------------------------------
+  userPermissionCreate(criteria: Prisma.UserPermissionCreateArgs) {
+    return this.prismaProvider.userPermission.create(criteria);
+  }
+
+  userPermissionDelete(criteria: Prisma.UserPermissionDeleteArgs) {
+    return this.prismaProvider.userPermission.delete(criteria);
   }
 }

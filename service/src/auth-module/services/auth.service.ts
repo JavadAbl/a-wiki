@@ -1,4 +1,4 @@
-import { Inject, Injectable, Type, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Type, UnauthorizedException } from '@nestjs/common';
 import {
   generateActionPermissionName,
   generateControllerPermissionName,
@@ -14,6 +14,7 @@ import { plainToInstance } from 'class-transformer';
 import { UserDto } from 'src/user-module/dto/response/user.dto';
 import { AuthDto } from '../dto/response/auth.dto';
 import { RolePermissionCreateDto } from '../dto/request/role-permission-create.dto';
+import { UserPermissionCreateDto } from '../dto/request/user-permission-create.dto';
 
 @Injectable()
 export class AuthService {
@@ -47,6 +48,7 @@ export class AuthService {
     return { user: userDto, refreshToken, accessToken };
   }
 
+  //Permission-----------------------------------------------
   async setupPermissions(): Promise<void> {
     await this.authRep.syncPermissions(this.APP_PERMISSIONS);
   }
@@ -67,18 +69,42 @@ export class AuthService {
       );
   }
 
-  async createRolePermission(rolePermissionEvent: RolePermissionCreateDto): Promise<void> {
-    const { permissionName, role } = rolePermissionEvent;
-    await this.authRep.createRolePermission({ data: { permissionName, role } });
+  //RolePermission-----------------------------------------------
+  async rolePermissionCreate(payload: RolePermissionCreateDto): Promise<void> {
+    const { permissionId, role } = payload;
+    const permission = await this.authRep.permissionFindById(permissionId);
+
+    if (!permission) throw new BadRequestException('Invalid permission');
+
+    await this.authRep.rolePermissionCreate({
+      data: { permissionId, role, permissionName: permission.name },
+    });
   }
 
-  async deleteRolePermission(id: number): Promise<void> {
-    await this.authRep.deleteRolePermission({ where: { id } });
+  async rolePermissionDelete(id: number): Promise<void> {
+    await this.authRep.rolePermissionDelete({ where: { id } });
   }
 
-  findIncludedRolePermission(role: Role, permissionName: string) {
-    return this.authRep.findFirstRolePermission({
+  rolePermissionFindByRoleAndPermissionName(role: Role, permissionName: string) {
+    return this.authRep.rolePermissionFindFirst({
       where: { role, permissionName: { contains: permissionName } },
     });
+  }
+
+  //UserPermission-----------------------------------------------
+  async userPermissionCreate(payload: UserPermissionCreateDto): Promise<void> {
+    const { userId, permissionId } = payload;
+
+    const permission = await this.authRep.permissionFindById(permissionId);
+    if (!permission) throw new BadRequestException('Invalid permission');
+
+    const user = await this.userService.userGetById(userId);
+    if (!user) throw new BadRequestException('Invalid user');
+
+    await this.authRep.userPermissionCreate({ data: { userId, permissionId } });
+  }
+
+  async userPermissionDelete(id: number): Promise<void> {
+    await this.authRep.userPermissionDelete({ where: { id } });
   }
 }

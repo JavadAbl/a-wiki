@@ -1,10 +1,10 @@
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty } from 'class-validator';
 import { Role } from 'src/generated/prisma/enums';
 
 export class RolePermissionCreateDto {
-  @IsString()
+  @IsInt()
   @IsNotEmpty()
-  permissionName: string;
+  permissionId: number;
 
   @IsEnum(Role)
   role: Role;

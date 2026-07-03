@@ -1,10 +1,17 @@
 // auth.guard.ts
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { DECORATOR_AUTH_KEY } from '../decorators/decorator-keys';
 import { AuthService } from 'src/auth-module/services/auth.service';
 import { Request } from 'express';
 import { Role } from 'src/generated/prisma/enums';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { generateActionPermissionName } from 'src/auth-module/auth.utils';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
@@ -14,17 +21,20 @@ export class AuthorizationGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const actionPermission = this.reflector.getAllAndOverride<string>(DECORATOR_AUTH_KEY, [
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-
-    if (!actionPermission) return true;
+    if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.user;
 
-    if (!user) throw new ForbiddenException('User information is missing in the request.');
+    if (!user) throw new UnauthorizedException('User information is missing in the request.');
+
+    const controllerName = context.getClass().name;
+    const actionName = context.getHandler().name;
+    const actionPermission = generateActionPermissionName(controllerName, actionName);
 
     const userRole = user.role;
     const userPermissions = user.permissions;
@@ -39,10 +49,13 @@ export class AuthorizationGuard implements CanActivate {
     }
 
     if (userRole) {
-      const roleMatch = await this.authService.findIncludedRolePermission(userRole as Role, actionPermission);
+      const roleMatch = await this.authService.rolePermissionFindByRoleAndPermissionName(
+        userRole as Role,
+        actionPermission,
+      );
       if (roleMatch) return true;
     }
 
-    throw new ForbiddenException();
+    throw new ForbiddenException('You do not have the required permissions for this action.');
   }
 }

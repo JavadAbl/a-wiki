@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma, User } from 'src/generated/prisma/client';
 
 export type UserWithPermissions = Prisma.UserGetPayload<{
   include: { userPermissions: { select: { permission: { select: { name: true } } } } };
@@ -6,4 +6,6 @@ export type UserWithPermissions = Prisma.UserGetPayload<{
 
 export abstract class IUserServiceContract {
   abstract userGetByUsername(username: string): Promise<UserWithPermissions | null>;
+
+  abstract userGetById(id: number): Promise<User | null>;
 }

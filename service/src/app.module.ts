@@ -7,7 +7,7 @@ import { AuthModule } from './auth-module/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationGuard } from './common/guards/authentication.guard';
 import { AuthorizationGuard } from './common/guards/authorization.guard';
-import { CourseModule } from './course/course.module';
+import { CourseModule } from './course-module/course.module';
 
 @Module({
   imports: [

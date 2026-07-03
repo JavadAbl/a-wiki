@@ -7,7 +7,7 @@ import { buildFindManyArgs } from 'src/common/utils/prisma-util';
 import { GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 import { UserSetActiveDto } from '../dto/request/user-set-active.dto';
-import { PasswordService } from 'src/common/services/password.service';
+import { PasswordService } from 'src/auth-module/services/password.service';
 import { UserChangePasswordDto } from '../dto/request/user-change-password.dto';
 
 @Injectable()
@@ -44,8 +44,8 @@ export class UserService {
     return plainToInstance(UserDto, user);
   }
 
-  async userSetIsActive(payload: UserSetActiveDto): Promise<void> {
-    const { isActive, userId } = payload;
+  async userSetIsActive(userId: number, payload: UserSetActiveDto): Promise<void> {
+    const { isActive } = payload;
     await this.userRep.findAndCheckExistsBy({ where: { id: userId } }, 'userId', userId);
     await this.userRep.update({ where: { id: userId }, data: { isActive } });
   }

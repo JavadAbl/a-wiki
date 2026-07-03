@@ -1,10 +1,6 @@
-import { IsBoolean, IsInt, IsNotEmpty } from 'class-validator';
+import { IsBoolean } from 'class-validator';
 
 export class UserSetActiveDto {
-  @IsInt()
-  @IsNotEmpty()
-  userId: number;
-
   @IsBoolean()
   isActive: boolean;
 }

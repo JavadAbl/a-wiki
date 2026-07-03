@@ -131,12 +131,11 @@ model Document {
 }
 
 model Section {
-  id           Int     @id() @default(autoincrement())
+  id           Int    @id() @default(autoincrement())
   courseId     Int
-  course       Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course       Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title        String
   sectionOrder Int
-  isPublished  Boolean @default(false)
 
   parts Part[]
 
@@ -151,7 +150,6 @@ model Part {
   title       String
   partOrder   Int
   textContent String?
-  isPublished Boolean @default(false)
 
   contents         Content[]
   userPartProgress UserCoursePartProgress[]

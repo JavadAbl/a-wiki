@@ -8,7 +8,7 @@ import { PermissionType, Role } from 'src/generated/prisma/enums';
 import { ITokenService } from '../contracts/token-service.contract';
 import { LoginDto } from '../dto/request/login.dto';
 import { IUserServiceContract } from 'src/user-module/contracts/user-service.contract';
-import { PasswordService } from 'src/common/services/password.service';
+import { PasswordService } from 'src/auth-module/services/password.service';
 import { plainToInstance } from 'class-transformer';
 import { UserDto } from 'src/user-module/dto/response/user.dto';
 import { AuthDto } from '../dto/response/auth.dto';

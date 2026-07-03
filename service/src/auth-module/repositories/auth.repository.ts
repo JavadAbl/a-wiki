@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
-import { PermissionType } from 'src/generated/prisma/enums';
+import { PermissionType, Role } from 'src/generated/prisma/enums';
 import { PrismaProvider } from 'src/infrastructure-modules/prsima-module/prisma.provider';
 
 @Injectable()
@@ -17,6 +17,24 @@ export class AuthRepository {
 
   deleteRolePermission(criteria: Prisma.RolePermissionDeleteArgs) {
     return this.prismaProvider.rolePermission.delete(criteria);
+  }
+
+  async findRolePermissionNamesByRole(role: Role): Promise<string[]> {
+    const rolePermissions = await this.prismaProvider.rolePermission.findMany({
+      where: { role },
+      select: { permissionName: true },
+    });
+
+    return rolePermissions.map((rolePermission) => rolePermission.permissionName);
+  }
+
+  async findUserPermissionNames(userId: number): Promise<string[]> {
+    const userPermissions = await this.prismaProvider.userPermission.findMany({
+      where: { userId },
+      select: { permission: { select: { name: true } } },
+    });
+
+    return userPermissions.map((permissionEntry) => permissionEntry.permission.name);
   }
 
   async syncPermissions(permissions: { name: string; type: PermissionType }[]) {

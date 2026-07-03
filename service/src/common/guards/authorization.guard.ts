@@ -3,6 +3,8 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { Reflector } from '@nestjs/core';
 import { DECORATOR_AUTH_KEY } from '../decorators/decorator-keys';
 import { AuthService } from 'src/auth-module/services/auth.service';
+import { Request } from 'express';
+import { Role } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
@@ -19,13 +21,15 @@ export class AuthorizationGuard implements CanActivate {
 
     if (!actionPermission) return true;
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
+    const user = request.user;
 
-    const userRole = request.headers['x-user-role'];
-    const userPermissions: string[] =
-      request.headers['x-user-permissions'] && JSON.parse(request.headers['x-user-permissions']);
+    if (!user) throw new ForbiddenException('User information is missing in the request.');
 
-    if (userRole === 'Admin') return true;
+    const userRole = user.role;
+    const userPermissions = user.permissions;
+
+    if (userRole === Role.SuperAdmin) return true;
 
     if (userPermissions && Array.isArray(userPermissions)) {
       const permissionMatch = userPermissions.some((userPermission) =>
@@ -35,7 +39,7 @@ export class AuthorizationGuard implements CanActivate {
     }
 
     if (userRole) {
-      const roleMatch = await this.authService.findIncludedRolePermission(userRole, actionPermission);
+      const roleMatch = await this.authService.findIncludedRolePermission(userRole as Role, actionPermission);
       if (roleMatch) return true;
     }
 

@@ -1,6 +1,7 @@
 export interface TokenPayload {
   userId: number;
-  role?: string;
+  role: string;
+  permissions: string[];
 }
 
 export interface DecodedToken extends TokenPayload {

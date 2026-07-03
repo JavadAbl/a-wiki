@@ -37,7 +37,11 @@ export class AuthService {
     const validateResult = await this.passwordService.validatePassword(password, user.password);
     if (!validateResult) throw new UnauthorizedException('Incorrect username or password');
 
-    const { accessToken, refreshToken } = this.tokenService.generateTokens({ userId: user.id });
+    const { accessToken, refreshToken } = await this.tokenService.generateTokens({
+      userId: user.id,
+      role: user.role,
+      permissions: user.userPermissions.map((up) => up.permission.name),
+    });
 
     const userDto = plainToInstance(UserDto, user);
     return { user: userDto, refreshToken, accessToken };

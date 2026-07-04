@@ -1,0 +1,833 @@
+/* ========================================================
+   ENTRANCE ANIMATIONS
+   ========================================================
+   FADES
+     .fade-in           Simple opacity
+     .fade-in-up        From below
+     .fade-in-down      From above
+     .fade-in-left      From left
+     .fade-in-right     From right
+   
+   SLIDES
+     .slide-in-up       From below (larger travel)
+     .slide-in-down     From above (larger travel)
+     .slide-in-left     From left (larger travel)
+     .slide-in-right    From right (larger travel)
+   
+   SCALE & POP
+     .scale-in          Grows from small
+     .scale-in-bounce   Grows with elastic bounce
+     .pop-in            Quick pop with slight overshoot
+   
+   ROTATE & FLIP
+     .rotate-in         Slight rotation + scale
+     .flip-in-x         3D flip from top
+     .flip-in-y         3D flip from side
+   
+   SPECIAL
+     .drop-in           Falls from above with squash
+     .bounce-in         Bouncy scale entrance
+     .glitch-in         Glitchy digital distortion
+     .blur-in           Blurs into focus
+     .mask-reveal-l     Wipe left to right
+     .mask-reveal-c     Circle expand from center
+     .jack-in-the-box   Rotates & scales up
+     .roll-in           Rolls in from left
+   
+   CUSTOMIZE
+     --anim-duration       Default: 0.6s
+     --anim-duration-long  For drop/bounce: 0.9s
+     --ease-smooth         Default easing
+     --ease-back           Overshoot easing
+     --ease-heavy          Heavy landing easing
+     --ease-bounce         Bounce easing
+   
+   DELAY (inline)
+     style="animation-delay: 0.2s"
+   
+   ======================================================== */
+
+:root {
+  --anim-duration: 0.6s;
+  --anim-duration-long: 0.9s;
+
+  --ease-smooth: ease-in-out;
+  --ease-back: ease-in-out;
+  --ease-heavy: ease-in-out;
+  --ease-bounce: ease-in-out;
+
+  /*  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-heavy: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-bounce: cubic-bezier(0.25, 1, 0.5, 1.25); */
+}
+
+/* FADES */
+.fade-in {
+  animation: fade-in var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-up {
+  animation: fade-in-up var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-down {
+  animation: fade-in-down var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-left {
+  animation: fade-in-left var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-right {
+  animation: fade-in-right var(--anim-duration) var(--ease-smooth) both;
+}
+
+/* SLIDES */
+.slide-in-up {
+  animation: slide-in-up var(--anim-duration) var(--ease-smooth) both;
+}
+.slide-in-down {
+  animation: slide-in-down var(--anim-duration) var(--ease-smooth) both;
+}
+.slide-in-left {
+  animation: slide-in-left var(--anim-duration) var(--ease-smooth) both;
+}
+.slide-in-right {
+  animation: slide-in-right var(--anim-duration) var(--ease-smooth) both;
+}
+
+/* SCALE & POP */
+.scale-in {
+  animation: scale-in var(--anim-duration) var(--ease-smooth) both;
+}
+.scale-in-bounce {
+  animation: scale-in-bounce var(--anim-duration) var(--ease-back) both;
+}
+.pop-in {
+  animation: pop-in var(--anim-duration) var(--ease-back) both;
+}
+
+/* ROTATE & FLIP */
+.rotate-in {
+  animation: rotate-in var(--anim-duration) var(--ease-smooth) both;
+}
+.flip-in-x {
+  animation: flip-in-x var(--anim-duration) var(--ease-heavy) both;
+  perspective: 800px;
+}
+.flip-in-y {
+  animation: flip-in-y var(--anim-duration) var(--ease-heavy) both;
+  perspective: 800px;
+}
+
+/* SPECIAL */
+.drop-in {
+  animation: drop-in var(--anim-duration-long)
+    cubic-bezier(0.55, 0.055, 0.675, 0.19) both;
+  transform-origin: center bottom;
+}
+.bounce-in {
+  animation: bounce-in var(--anim-duration-long) var(--ease-bounce) both;
+}
+.glitch-in {
+  animation: glitch-in 0.5s steps(3, end) both;
+}
+.blur-in {
+  animation: blur-in var(--anim-duration) var(--ease-smooth) both;
+}
+.mask-reveal-l {
+  animation: mask-reveal-l var(--anim-duration) var(--ease-heavy) both;
+}
+.mask-reveal-c {
+  animation: mask-reveal-c var(--anim-duration) var(--ease-heavy) both;
+}
+.jack-in-the-box {
+  animation: jack-in-the-box var(--anim-duration) var(--ease-smooth) both;
+  transform-origin: center bottom;
+}
+.roll-in {
+  animation: roll-in var(--anim-duration) var(--ease-smooth) both;
+}
+
+/* ========================================================*/
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scale-in-bounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rotate-in {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes flip-in-x {
+  from {
+    opacity: 0;
+    transform: rotateX(-80deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(0);
+  }
+}
+
+@keyframes flip-in-y {
+  from {
+    opacity: 0;
+    transform: rotateY(-80deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0);
+  }
+}
+
+@keyframes drop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px) scaleY(1.1);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+  75% {
+    transform: translateY(8px) scaleY(0.95) scaleX(1.02);
+  }
+  85% {
+    transform: translateY(-3px) scaleY(1.01);
+  }
+  100% {
+    transform: translateY(0) scaleY(1) scaleX(1);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glitch-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px) skewX(15deg);
+    filter: blur(2px);
+  }
+  25% {
+    opacity: 0.8;
+    transform: translateX(5px) skewX(-8deg);
+    filter: blur(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-3px) skewX(3deg);
+  }
+  75% {
+    transform: translateX(1px) skewX(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0);
+  }
+}
+
+@keyframes blur-in {
+  from {
+    filter: blur(10px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mask-reveal-l {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0% 0 0);
+  }
+}
+
+@keyframes mask-reveal-c {
+  from {
+    clip-path: circle(0% at 50% 50%);
+  }
+  to {
+    clip-path: circle(150% at 50% 50%);
+  }
+}
+
+@keyframes jack-in-the-box {
+  0% {
+    opacity: 0;
+    transform: scale(0.1) rotate(30deg);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(-10deg) scale(0.5);
+  }
+  70% {
+    transform: rotate(3deg) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes roll-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50px) rotate(-45deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(0);
+  }
+}
+
+:root {
+  --anim-duration: 0.6s;
+  --anim-duration-long: 0.9s;
+
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-heavy: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-bounce: cubic-bezier(0.25, 1, 0.5, 1.25);
+}
+
+/* FADES */
+.fade-in {
+  animation: fade-in var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-up {
+  animation: fade-in-up var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-down {
+  animation: fade-in-down var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-left {
+  animation: fade-in-left var(--anim-duration) var(--ease-smooth) both;
+}
+.fade-in-right {
+  animation: fade-in-right var(--anim-duration) var(--ease-smooth) both;
+}
+
+/* SLIDES */
+.slide-in-up {
+  animation: slide-in-up var(--anim-duration) var(--ease-smooth) both;
+}
+.slide-in-down {
+  animation: slide-in-down var(--anim-duration) var(--ease-smooth) both;
+}
+.slide-in-left {
+  animation: slide-in-left var(--anim-duration) var(--ease-smooth) both;
+}
+.slide-in-right {
+  animation: slide-in-right var(--anim-duration) var(--ease-smooth) both;
+}
+
+/* SCALE & POP */
+.scale-in {
+  animation: scale-in var(--anim-duration) var(--ease-smooth) both;
+}
+.scale-in-bounce {
+  animation: scale-in-bounce var(--anim-duration) var(--ease-back) both;
+}
+.pop-in {
+  animation: pop-in var(--anim-duration) var(--ease-back) both;
+}
+
+/* ROTATE & FLIP */
+.rotate-in {
+  animation: rotate-in var(--anim-duration) var(--ease-smooth) both;
+}
+.flip-in-x {
+  animation: flip-in-x var(--anim-duration) var(--ease-heavy) both;
+  perspective: 800px;
+}
+.flip-in-y {
+  animation: flip-in-y var(--anim-duration) var(--ease-heavy) both;
+  perspective: 800px;
+}
+
+/* SPECIAL */
+.drop-in {
+  animation: drop-in var(--anim-duration-long)
+    cubic-bezier(0.55, 0.055, 0.675, 0.19) both;
+  transform-origin: center bottom;
+}
+.bounce-in {
+  animation: bounce-in var(--anim-duration-long) var(--ease-bounce) both;
+}
+.glitch-in {
+  animation: glitch-in 0.5s steps(3, end) both;
+}
+.blur-in {
+  animation: blur-in var(--anim-duration) var(--ease-smooth) both;
+}
+.mask-reveal-l {
+  animation: mask-reveal-l var(--anim-duration) var(--ease-heavy) both;
+}
+.mask-reveal-c {
+  animation: mask-reveal-c var(--anim-duration) var(--ease-heavy) both;
+}
+.jack-in-the-box {
+  animation: jack-in-the-box var(--anim-duration) var(--ease-smooth) both;
+  transform-origin: center bottom;
+}
+.roll-in {
+  animation: roll-in var(--anim-duration) var(--ease-smooth) both;
+}
+
+/* ========================================================*/
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scale-in-bounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rotate-in {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes flip-in-x {
+  from {
+    opacity: 0;
+    transform: rotateX(-80deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(0);
+  }
+}
+
+@keyframes flip-in-y {
+  from {
+    opacity: 0;
+    transform: rotateY(-80deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0);
+  }
+}
+
+@keyframes drop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px) scaleY(1.1);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+  75% {
+    transform: translateY(8px) scaleY(0.95) scaleX(1.02);
+  }
+  85% {
+    transform: translateY(-3px) scaleY(1.01);
+  }
+  100% {
+    transform: translateY(0) scaleY(1) scaleX(1);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glitch-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px) skewX(15deg);
+    filter: blur(2px);
+  }
+  25% {
+    opacity: 0.8;
+    transform: translateX(5px) skewX(-8deg);
+    filter: blur(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-3px) skewX(3deg);
+  }
+  75% {
+    transform: translateX(1px) skewX(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0);
+  }
+}
+
+@keyframes blur-in {
+  from {
+    filter: blur(10px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mask-reveal-l {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0% 0 0);
+  }
+}
+
+@keyframes mask-reveal-c {
+  from {
+    clip-path: circle(0% at 50% 50%);
+  }
+  to {
+    clip-path: circle(150% at 50% 50%);
+  }
+}
+
+@keyframes jack-in-the-box {
+  0% {
+    opacity: 0;
+    transform: scale(0.1) rotate(30deg);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(-10deg) scale(0.5);
+  }
+  70% {
+    transform: rotate(3deg) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes roll-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50px) rotate(-45deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(0);
+  }
+}

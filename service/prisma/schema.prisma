@@ -118,24 +118,26 @@ model Course {
 }
 
 model Document {
-  id        Int    @id() @default(autoincrement())
-  courseId  Int
-  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  fileName  String
-  fileUrl   String
-  mimeType  String
-  sortOrder Int    @default(0)
+  id          Int     @id() @default(autoincrement())
+  courseId    Int
+  course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  mimeType    String
+  sortOrder   Int     @default(0)
+  description String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Section {
-  id           Int    @id() @default(autoincrement())
+  id           Int     @id() @default(autoincrement())
   courseId     Int
-  course       Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course       Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title        String
   sectionOrder Int
+  description  String?
 
   parts Part[]
 
@@ -150,6 +152,7 @@ model Part {
   title       String
   partOrder   Int
   textContent String?
+  description String?
 
   contents         Content[]
   userPartProgress UserCoursePartProgress[]
@@ -166,6 +169,7 @@ model Content {
   mediaUrl        String
   durationSeconds Int
   contentOrder    Int       @default(0)
+  description     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -61,24 +61,30 @@ export class Repository<TModel extends keyof PrismaClient> {
 
   async findAndCheckExistsBy<TArgs extends Prisma.Args<PrismaClient[TModel], 'findFirst'>>(
     args: TArgs,
-    fieldName: string,
+    fieldName: string | null,
     value: any,
+    customMessage?: string,
   ): Promise<NonNullable<Prisma.Result<PrismaClient[TModel], TArgs, 'findFirst'>>> {
     const entity = await (this.prismaProvider[this.model] as any).findFirst(args);
     if (!entity) {
-      throw new NotFoundException(`${this.entityName} ${fieldName} with value ${value} not found`);
+      throw new NotFoundException(
+        customMessage ? customMessage : `${this.entityName} ${fieldName} with value ${value} not found`,
+      );
     }
     return entity;
   }
 
   async checkDuplicateBy<TArgs extends Prisma.Args<PrismaClient[TModel], 'findFirst'>>(
     args: TArgs,
-    fieldName: string,
+    fieldName: string | null,
     value: any,
+    customMessage?: string,
   ): Promise<void> {
     const entity = await (this.prismaProvider[this.model] as any).findFirst(args);
     if (entity)
-      throw new ConflictException(`${this.entityName} ${fieldName} with value ${value} already exists`);
+      throw new ConflictException(
+        customMessage ? customMessage : `${this.entityName} ${fieldName} with value ${value} already exists`,
+      );
   }
 
   // --- WRITE ---

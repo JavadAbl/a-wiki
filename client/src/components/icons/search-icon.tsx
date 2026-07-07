@@ -6,7 +6,7 @@ export default function SearchIcon(props: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "border-3 rounded-full border-[#ABB7C2] p-1.5 size-16 flex items-center justify-center",
+        "border-1 rounded-full border-[#ABB7C2] p-1.5 size-16 flex items-center justify-center",
       )}
       {...props}
     >

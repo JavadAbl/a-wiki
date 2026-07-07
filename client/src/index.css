@@ -32,10 +32,6 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
 
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-primary-300: var(--primary-300);
-
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -49,6 +45,20 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* custom */
+  --color-content-primary: var(--content-primary);
+  --color-content-secondary: var(--content-secondary);
+  --color-content-tertiary: var(--content-tertiary);
+
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-100: var(--primary-100);
+  --color-primary-300: var(--primary-300);
+  --color-primary-600: var(--primary-600);
+  --color-surface-100: var(--surface-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-bgcolor: var(--bgcolor);
 }
 
 :root {
@@ -58,9 +68,6 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #0090a1;
-  --primary-300: #4cb1bd;
-
   --primary-foreground: oklch(0.985 0 0);
   --secondary: #e76f51;
   --secondary-foreground: oklch(0.205 0 0);
@@ -69,7 +76,6 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
@@ -86,6 +92,20 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Custom */
+  --content-primary: #222222;
+  --content-secondary: #ebebeb;
+  --content-tertiary: #4a5565;
+
+  --primary: #0090a1;
+  --primary-100: #b2dee3;
+  --primary-300: #4cb1bd;
+  --primary-600: #005d6e;
+  --surface-100: #ffffff;
+  --neutral-200: #ccc8c8;
+  --bgcolor: #ffffff1a;
+  --border: rgba(255, 255, 255, 0.2);
 }
 
 .dark {
@@ -135,8 +155,37 @@
 }
 
 @layer utilities {
-  .test {
+  .font-b1 {
     font-size: 16px;
+    font-weight: normal;
+  }
+  .font-b2 {
+    font-size: 14px;
+    font-weight: normal;
+  }
+  .font-slogan {
+    font-size: 48px;
     font-weight: bold;
+  }
+  .font-h0 {
+    font-size: 36px;
+    font-weight: bold;
+  }
+  .font-h1 {
+    font-size: 32px;
+    font-weight: bold;
+  }
+
+  .font-h2 {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  .font-h3 {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .font-p2 {
+    font-size: 20px;
+    font-weight: normal;
   }
 }

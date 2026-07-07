@@ -1,5 +1,12 @@
-import React from "react";
+import HomeHero from "./components/home-hero";
+import HeroFeatures from "./components/hero-features";
 
 export default function Home() {
-  return <div>home</div>;
+  return (
+    <div>
+      <HomeHero />
+
+      <HeroFeatures />
+    </div>
+  );
 }

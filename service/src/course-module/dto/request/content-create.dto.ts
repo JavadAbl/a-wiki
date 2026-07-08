@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsString, IsNotEmpty, MaxLength, IsOptional, IsInt } from 'class-validator';
 
 export class ContentCreateDto {
@@ -11,6 +12,7 @@ export class ContentCreateDto {
   @IsOptional()
   description?: string | null;
 
+  @Type(() => Number)
   @IsInt()
   contentOrder: number;
 }

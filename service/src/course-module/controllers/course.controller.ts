@@ -11,6 +11,8 @@ import {
   Patch,
   UseInterceptors,
   UploadedFile,
+  Delete,
+  Res,
 } from '@nestjs/common';
 import { GetManyQuery, GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -27,6 +29,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentCreateDto } from '../dto/request/content-create.dto';
 import { memoryStorage } from 'multer';
 import { ContentService } from '../services/content.service';
+import { PartCreateDto } from '../dto/request/part-create.dto';
+import { SectionCreateDto } from '../dto/request/section-create.dto';
+import { type Response } from 'express';
 
 @Controller('Courses')
 export class CourseController {
@@ -39,8 +44,11 @@ export class CourseController {
 
   //Course---------------------------------------------------------
   @Get()
-  courseGetMany(@Query() query: GetManyQuery): Promise<GetManyReply<CourseDto>> {
-    return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>);
+  courseGetMany(
+    @Query() query: GetManyQuery,
+    @Query('categoryId', ParseIntPipe) categoryId?: number,
+  ): Promise<GetManyReply<CourseDto>> {
+    return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, categoryId);
   }
 
   @Get(':courseId')
@@ -70,12 +78,18 @@ export class CourseController {
     return this.courseService.courseSetDescription(id, payload);
   }
 
+  @Delete(':courseId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  courseDelete(@Param('courseId', ParseIntPipe) id: number): Promise<void> {
+    return this.courseService.courseDelete(id);
+  }
+
   //Section---------------------------------------------------------
-  @Post(':courseId/Section')
+  @Post(':courseId/Sections')
   @HttpCode(HttpStatus.CREATED)
   sectionCreate(
     @Param('courseId', ParseIntPipe) id: number,
-    @Body() payload: CourseCreateDto,
+    @Body() payload: SectionCreateDto,
   ): Promise<number> {
     return this.sectionService.sectionCreate(id, payload);
   }
@@ -89,9 +103,9 @@ export class CourseController {
   }
 
   //Part------------------------------------------------------------
-  @Post(':courseId/Part')
+  @Post('Sections/:sectionId/Parts')
   @HttpCode(HttpStatus.CREATED)
-  partCreate(@Param('courseId', ParseIntPipe) id: number, @Body() payload: CourseCreateDto): Promise<number> {
+  partCreate(@Param('sectionId', ParseIntPipe) id: number, @Body() payload: PartCreateDto): Promise<number> {
     return this.partService.partCreate(id, payload);
   }
 
@@ -103,14 +117,31 @@ export class CourseController {
     return this.partService.partSetDescription(id, payload);
   }
 
+  //Content------------------------------------------------------------
   @Post('Parts/:partId/Contents')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('content', { storage: memoryStorage() }))
-  partContentCreate(
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  contentCreate(
     @Param('partId', ParseIntPipe) id: number,
     @Body() payload: ContentCreateDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<number> {
     return this.contentService.contentCreate(id, payload, file);
+  }
+
+  @Get('stream/:contentId')
+  async contentStream(@Param('contentId', ParseIntPipe) contentId: number, @Res() res: Response) {
+    const absolutePath = await this.contentService.contentFindAbsolutePath(contentId);
+
+    // 7. Stream the file
+    // res.sendFile automatically handles HTTP Range requests (allowing video seeking/scrubbing)
+    res.sendFile(absolutePath, (err: any) => {
+      if (err && !res.headersSent) {
+        // Handle stream aborts gracefully (e.g., user closes the tab while loading)
+        if (err.code !== 'ECONNABORTED' && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+          res.status(500).send('Error streaming file');
+        }
+      }
+    });
   }
 }

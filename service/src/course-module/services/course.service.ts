@@ -29,9 +29,15 @@ export class CourseService {
     return course;
   }
 
-  async courseGetMany(query: GetManyQueryType<'Course'>): Promise<GetManyReply<CourseDto>> {
+  async courseGetMany(
+    query: GetManyQueryType<'Course'>,
+    categoryId?: number,
+  ): Promise<GetManyReply<CourseDto>> {
     const predicate = buildFindManyArgs(query, { searchableFields: ['title'] });
-    const { items, totalCount } = await this.courseRep.findMany(predicate);
+    const { items, totalCount } = await this.courseRep.findMany({
+      ...predicate,
+      where: { ...predicate.where, categoryId },
+    });
     const coursesDto = plainToInstance(CourseDto, items);
     return { items: coursesDto, totalCount };
   }

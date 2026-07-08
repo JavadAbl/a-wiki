@@ -5,10 +5,15 @@ import { SectionRepository } from './repositories/section.repository';
 import { ContentRepository } from './repositories/content.repository';
 import { DocumentRepository } from './repositories/document.repository';
 import { CategoryRepository } from './repositories/category.repository';
+import { CourseController } from './controllers/course.controller';
+import { CourseService } from './services/course.service';
+import { SectionService } from './services/section.service';
+import { PartService } from './services/part.service';
+import { ContentService } from './services/content.service';
 
 @Module({
   imports: [],
-  controllers: [],
+  controllers: [CourseController],
   providers: [
     CourseRepository,
     PartRepository,
@@ -16,6 +21,11 @@ import { CategoryRepository } from './repositories/category.repository';
     ContentRepository,
     DocumentRepository,
     CategoryRepository,
+
+    CourseService,
+    SectionService,
+    PartService,
+    ContentService,
   ],
   exports: [],
 })

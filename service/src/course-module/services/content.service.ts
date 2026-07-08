@@ -1,10 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ContentRepository } from '../repositories/content.repository';
 import { ContentCreateDto } from '../dto/request/content-create.dto';
 import { PartRepository } from '../repositories/part.repository';
 import { extname, join, relative } from 'path';
 import { createHash } from 'crypto';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, stat, writeFile } from 'fs/promises';
 import { MediaType } from 'src/generated/prisma/enums';
 import * as mm from 'music-metadata';
 
@@ -16,6 +16,8 @@ export class ContentService {
   ) {}
 
   async contentCreate(partId: number, payload: ContentCreateDto, file: Express.Multer.File): Promise<number> {
+    if (!file) throw new BadRequestException('Wrong file');
+
     const part = await this.partRep.findAndCheckExistsBy(
       { where: { id: partId }, include: { section: { include: { course: true } } } },
       'sectionId',
@@ -89,6 +91,36 @@ export class ContentService {
     });
 
     return content.id;
+  }
+
+  async contentFindAbsolutePath(contentId: number): Promise<string> {
+    const content = await this.contentRep.findAndCheckExistsBy(
+      {
+        where: { id: contentId },
+        include: { part: { include: { section: { include: { course: true } } } } },
+      },
+      'contentId',
+      contentId,
+    );
+
+    // 4. Resolve Path safely
+    const cleanUrl = content.mediaUrl.startsWith('/') ? content.mediaUrl.substring(1) : content.mediaUrl;
+    const absolutePath = join(process.cwd(), cleanUrl);
+
+    // 5. Safety Check: Ensure the DB path hasn't been tampered with
+    const baseDir = join(process.cwd(), 'files');
+    if (!absolutePath.startsWith(baseDir)) {
+      throw new ForbiddenException('Invalid file path.');
+    }
+
+    // 6. Check that the file actually exists on disk
+    try {
+      await stat(absolutePath);
+    } catch {
+      throw new NotFoundException('Media file not found on server');
+    }
+
+    return absolutePath;
   }
 
   private sanitize(str: string): string {

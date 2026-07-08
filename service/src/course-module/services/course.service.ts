@@ -10,6 +10,8 @@ import { buildFindManyArgs } from 'src/common/utils/prisma-util';
 import { plainToInstance } from 'class-transformer';
 import { CourseDetailsDto } from '../dto/response/course-details.dto';
 import { CourseSetDescriptionDto } from '../dto/request/course-set-description.dto';
+import { join } from 'path';
+import { rm } from 'fs/promises';
 
 @Injectable()
 export class CourseService {
@@ -61,5 +63,21 @@ export class CourseService {
     await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'id', courseId);
 
     await this.courseRep.update({ where: { id: courseId }, data: { description: description } });
+  }
+
+  async courseDelete(courseId: number) {
+    // Fetch the part with its relations so we can build the file system path
+    await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'courseId', courseId);
+
+    // Construct the base directory for this specific part
+    const partDir = join(process.cwd(), 'files', 'courses', `${courseId}`);
+
+    // Delete the entire directory for this part (removes both 'videos' and 'sounds' subdirectories)
+    // `recursive: true` ensures all nested files are deleted
+    // `force: true` prevents the app from crashing if the directory was already deleted or never created
+    await rm(partDir, { recursive: true, force: true });
+
+    // Finally, remove the database record
+    await this.courseRep.remove({ where: { id: courseId } });
   }
 }

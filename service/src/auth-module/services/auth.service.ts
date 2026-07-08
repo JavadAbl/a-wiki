@@ -17,6 +17,10 @@ import { UserPermissionCreateDto } from '../dto/request/user-permission-create.d
 import { PermissionRepository } from '../repositories/permission.repository';
 import { RolePermissionRepository } from '../repositories/role-permission.repository';
 import { UserPermissionRepository } from '../repositories/user-permission.repository';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { type Cache as NestCache } from 'cache-manager';
+import { LoginOtpDto } from '../dto/request/login-otp.dto';
+import { SendOtpDto } from '../dto/request/send-otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -31,12 +35,13 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     @Inject(ITokenService) private readonly tokenService: ITokenService,
     @Inject(IUserServiceContract) private readonly userService: IUserServiceContract,
+    @Inject(CACHE_MANAGER) private cacheManager: NestCache,
   ) {}
 
   async login(payload: LoginDto): Promise<AuthDto> {
-    const { password, username } = payload;
+    const { password, mobile } = payload;
 
-    const user = await this.userService.userGetByUsername(username);
+    const user = await this.userService.userGetByMobile(mobile);
     if (!user) throw new UnauthorizedException('Incorrect username or password');
 
     const validateResult = await this.passwordService.validatePassword(password, user.password);
@@ -50,6 +55,33 @@ export class AuthService {
 
     const userDto = plainToInstance(UserDto, user);
     return { user: userDto, refreshToken, accessToken };
+  }
+
+  async loginWithOto(payload: LoginOtpDto): Promise<AuthDto> {
+    const { otp, mobile } = payload;
+
+    const cachedOtp = await this.cacheManager.get(`otp-${mobile}`);
+    if (cachedOtp != otp) throw new UnauthorizedException('Incorrect otp code');
+
+    const user = await this.userService.userGetByMobile(mobile);
+    if (!user) throw new UnauthorizedException('Incorrect user');
+
+    const { accessToken, refreshToken } = await this.tokenService.generateTokens({
+      userId: user.id,
+      role: user.role,
+      permissions: user.userPermissions.map((up) => up.permission.name),
+    });
+
+    await this.cacheManager.del(`otp-${mobile}`);
+    const userDto = plainToInstance(UserDto, user);
+    return { user: userDto, refreshToken, accessToken };
+  }
+
+  async sendOtp(payload: SendOtpDto) {
+    const { mobile } = payload;
+    //Todo
+    //Send sms
+    await this.cacheManager.set(`otp-${mobile}`, '123456', 120000);
   }
 
   //Permission-----------------------------------------------

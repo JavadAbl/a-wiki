@@ -19,6 +19,8 @@ import { UserSetActiveDto } from '../dto/request/user-set-active.dto';
 import { UserChangePasswordDto } from '../dto/request/user-change-password.dto';
 import { User } from 'src/common/decorators/user.decorator';
 import { type TokenPayload } from 'src/auth-module/contracts/token-service.contract';
+import { Public } from 'src/common/decorators/public.decorator';
+import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-otp.dto';
 
 @Controller('Users')
 export class UserController {
@@ -40,6 +42,13 @@ export class UserController {
     return this.userService.userCreate(payload);
   }
 
+  @Public()
+  @Post('sa')
+  @HttpCode(HttpStatus.CREATED)
+  superAdminCreate(@Body() payload: { seedPass: string }): Promise<void> {
+    return this.userService.superAdminCreate(payload.seedPass);
+  }
+
   @Patch(':id/SetIsActive')
   userSetIsActive(@Param('id', ParseIntPipe) id: number, @Body() payload: UserSetActiveDto): Promise<void> {
     return this.userService.userSetIsActive(id, payload);
@@ -48,5 +57,11 @@ export class UserController {
   @Patch('ChangePassword')
   userChangePassword(@User() user: TokenPayload, @Body() payload: UserChangePasswordDto): Promise<void> {
     return this.userService.userChangePassword(user.userId, payload);
+  }
+
+  @Public()
+  @Patch('ChangePasswordOtp')
+  userChangePasswordOtp(@Body() payload: UserChangePasswordOtpDto): Promise<void> {
+    return this.userService.userChangePasswordOtp(payload);
   }
 }

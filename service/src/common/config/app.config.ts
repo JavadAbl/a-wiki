@@ -9,6 +9,10 @@ export const config = () => ({
   DATABASE_URL: process.env.DATABASE_URL!,
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET!,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
+  SUPER_ADMIN_USERNAME: process.env.SUPER_ADMIN_USERNAME!,
+  SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD!,
+  SUPER_ADMIN_MOBILE: process.env.SUPER_ADMIN_MOBILE!,
+  SUPER_ADMIN_SEED_PASSWORD: process.env.SUPER_ADMIN_SEED_PASSWORD!,
 });
 
 export const appConfig = registerAs('app', config);
@@ -25,6 +29,10 @@ export const configValidationSchema = Joi.object({
 
   JWT_ACCESS_SECRET: Joi.string().required(),
   JWT_REFRESH_SECRET: Joi.string().required(),
+  SUPER_ADMIN_USERNAME: Joi.string().required(),
+  SUPER_ADMIN_PASSWORD: Joi.string().required(),
+  SUPER_ADMIN_MOBILE: Joi.string().required(),
+  SUPER_ADMIN_SEED_PASSWORD: Joi.string().required(),
 });
 
 export const isDev = config().NODE_ENV === (nodeEnvs.Development as any);

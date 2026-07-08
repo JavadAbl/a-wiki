@@ -18,5 +18,5 @@ export class UserCreateDto {
 
   @IsString()
   @Length(11)
-  nationalCode: string;
+  mobile: string;
 }

@@ -9,9 +9,7 @@ export class PrismaProvider extends PrismaClient {
   constructor(configService: ConfigService<ConfigType>) {
     const config = configService.getOrThrow<AppConfig>('app');
 
-    const adapter = new PrismaBetterSqlite3({
-      url: config.DATABASE_URL,
-    });
+    const adapter = new PrismaBetterSqlite3({ url: config.DATABASE_URL });
 
     super({ adapter });
   }

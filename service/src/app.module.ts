@@ -8,6 +8,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationGuard } from './common/guards/authentication.guard';
 import { AuthorizationGuard } from './common/guards/authorization.guard';
 import { CourseModule } from './course-module/course.module';
+import { ITokenService } from './auth-module/contracts/token-service.contract';
+import { TokenService } from './auth-module/services/token.service';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -21,6 +24,8 @@ import { CourseModule } from './course-module/course.module';
       },
     }),
 
+    CacheModule.register({ isGlobal: true }),
+
     PrismaModule,
     AuthModule,
     UserModule,
@@ -28,8 +33,9 @@ import { CourseModule } from './course-module/course.module';
   ],
   controllers: [],
   providers: [
-    { provide: APP_GUARD, useClass: AuthenticationGuard },
-    { provide: APP_GUARD, useClass: AuthorizationGuard },
+    { provide: ITokenService, useClass: TokenService },
+    /*  { provide: APP_GUARD, useClass: AuthenticationGuard },
+    { provide: APP_GUARD, useClass: AuthorizationGuard }, */
   ],
 })
 export class AppModule {}

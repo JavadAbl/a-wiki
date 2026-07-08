@@ -1,0 +1,26 @@
+import { Exclude, Expose } from 'class-transformer';
+import { MediaType } from 'src/generated/prisma/enums';
+
+@Exclude()
+export class ContentDto {
+  @Expose()
+  id: number;
+
+  @Expose()
+  title: string;
+
+  @Expose()
+  mediaUrl: string;
+
+  @Expose()
+  mediaType: MediaType;
+
+  @Expose()
+  description?: string | null;
+
+  @Expose()
+  contentOrder: number;
+
+  @Expose()
+  contents: ContentDto[];
+}

@@ -9,6 +9,8 @@ import {
   HttpStatus,
   ParseIntPipe,
   Patch,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { GetManyQuery, GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -20,14 +22,22 @@ import { CourseDetailsDto } from '../dto/response/course-details.dto';
 import { CourseSetDescriptionDto } from '../dto/request/course-set-description.dto';
 import { SectionService } from '../services/section.service';
 import { SectionSetDescriptionDto } from '../dto/request/section-set-description.dto';
+import { PartService } from '../services/part.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ContentCreateDto } from '../dto/request/content-create.dto';
+import { memoryStorage } from 'multer';
+import { ContentService } from '../services/content.service';
 
 @Controller('Courses')
 export class CourseController {
   constructor(
     private readonly courseService: CourseService,
     private readonly sectionService: SectionService,
+    private readonly partService: PartService,
+    private readonly contentService: ContentService,
   ) {}
 
+  //Course---------------------------------------------------------
   @Get()
   courseGetMany(@Query() query: GetManyQuery): Promise<GetManyReply<CourseDto>> {
     return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>);
@@ -66,8 +76,8 @@ export class CourseController {
   sectionCreate(
     @Param('courseId', ParseIntPipe) id: number,
     @Body() payload: CourseCreateDto,
-  ): Promise<CourseDto> {
-    return this.courseService.courseCreate(payload);
+  ): Promise<number> {
+    return this.sectionService.sectionCreate(id, payload);
   }
 
   @Patch('Sections/:sectionId/SetDescription')
@@ -75,6 +85,32 @@ export class CourseController {
     @Param('sectionId', ParseIntPipe) id: number,
     @Body() payload: SectionSetDescriptionDto,
   ): Promise<void> {
-    return this.courseService.courseSetDescription(id, payload);
+    return this.sectionService.sectionSetDescription(id, payload);
+  }
+
+  //Part------------------------------------------------------------
+  @Post(':courseId/Part')
+  @HttpCode(HttpStatus.CREATED)
+  partCreate(@Param('courseId', ParseIntPipe) id: number, @Body() payload: CourseCreateDto): Promise<number> {
+    return this.partService.partCreate(id, payload);
+  }
+
+  @Patch('Parts/:partId/SetDescription')
+  partSetDescription(
+    @Param('sectionId', ParseIntPipe) id: number,
+    @Body() payload: SectionSetDescriptionDto,
+  ): Promise<void> {
+    return this.partService.partSetDescription(id, payload);
+  }
+
+  @Post('Parts/:partId/Contents')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('content', { storage: memoryStorage() }))
+  partContentCreate(
+    @Param('partId', ParseIntPipe) id: number,
+    @Body() payload: ContentCreateDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<number> {
+    return this.contentService.contentCreate(id, payload, file);
   }
 }

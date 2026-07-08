@@ -3,6 +3,8 @@ import { SectionRepository } from '../repositories/section.repository';
 import { CourseRepository } from '../repositories/course.repository';
 import { SectionSetDescriptionDto } from '../dto/request/section-set-description.dto';
 import { SectionCreateDto } from '../dto/request/section-create.dto';
+import { join } from 'path';
+import { rm } from 'fs/promises';
 
 @Injectable()
 export class SectionService {
@@ -44,5 +46,27 @@ export class SectionService {
     await this.sectionRep.findAndCheckExistsBy({ where: { id: sectionId } }, 'id', sectionId);
 
     await this.sectionRep.update({ where: { id: sectionId }, data: { description: description } });
+  }
+
+  async sectionDelete(sectionId: number) {
+    // Fetch the part with its relations so we can build the file system path
+    const section = await this.sectionRep.findAndCheckExistsBy(
+      { where: { id: sectionId }, include: { course: true } },
+      'sectionId',
+      sectionId,
+    );
+
+    const courseId = section.course.id;
+
+    // Construct the base directory for this specific part
+    const partDir = join(process.cwd(), 'files', 'courses', `${courseId}`, 'sections', `${sectionId}`);
+
+    // Delete the entire directory for this part (removes both 'videos' and 'sounds' subdirectories)
+    // `recursive: true` ensures all nested files are deleted
+    // `force: true` prevents the app from crashing if the directory was already deleted or never created
+    await rm(partDir, { recursive: true, force: true });
+
+    // Finally, remove the database record
+    await this.sectionRep.remove({ where: { id: sectionId } });
   }
 }

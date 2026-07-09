@@ -8,9 +8,10 @@ import { UserModule } from 'src/user-module/user.module';
 import { UserPermissionRepository } from './repositories/user-permission.repository';
 import { PermissionRepository } from './repositories/permission.repository';
 import { RolePermissionRepository } from './repositories/role-permission.repository';
+import { ContractModule } from 'src/contract-module/contract.module';
 
 @Module({
-  imports: [UserModule],
+  imports: [UserModule, ContractModule],
   controllers: [AuthController],
   providers: [
     UserPermissionRepository,

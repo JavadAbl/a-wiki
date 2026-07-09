@@ -11,6 +11,7 @@ import { CourseModule } from './course-module/course.module';
 import { ITokenService } from './auth-module/contracts/token-service.contract';
 import { TokenService } from './auth-module/services/token.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ContractModule } from './contract-module/contract.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     AuthModule,
     UserModule,
     CourseModule,
+    ContractModule,
   ],
   controllers: [],
   providers: [

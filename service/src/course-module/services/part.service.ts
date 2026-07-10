@@ -5,11 +5,13 @@ import { PartCreateDto } from '../dto/request/part-create.dto';
 import { PartSetDescriptionDto } from '../dto/request/part-set-description.dto';
 import { join } from 'path';
 import { rm } from 'fs/promises';
+import { PartViewRepository } from '../repositories/part-view.repository';
 
 @Injectable()
 export class PartService {
   constructor(
     private readonly partRep: PartRepository,
+    private readonly partViewRep: PartViewRepository,
     private readonly sectionRep: SectionRepository,
   ) {}
 
@@ -48,7 +50,7 @@ export class PartService {
     await this.partRep.update({ where: { id: partId }, data: { description: description } });
   }
 
-  async partDelete(partId: number) {
+  async partDelete(partId: number): Promise<void> {
     // Fetch the part with its relations so we can build the file system path
     const part = await this.partRep.findAndCheckExistsBy(
       { where: { id: partId }, include: { section: { include: { course: true } } } },
@@ -78,5 +80,12 @@ export class PartService {
 
     // Finally, remove the database record
     await this.partRep.remove({ where: { id: partId } });
+  }
+
+  async partSetView(partId: number, userId: number): Promise<void> {
+    const existingView = await this.partViewRep.findUnique({ where: { userId_partId: { partId, userId } } });
+    if (existingView) return;
+    await this.partRep.findAndCheckExistsBy({ where: { id: partId } }, 'partId', partId);
+    await this.partViewRep.create({ data: { userId, partId } });
   }
 }

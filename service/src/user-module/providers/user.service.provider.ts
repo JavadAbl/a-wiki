@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../repository/user.repository';
-import { IUserServiceContract, UserWithPermissions } from '../contracts/user-service.contract';
+import { UserServiceContract, UserWithPermissions } from '../contracts/user-service.contract';
 import { User } from 'src/generated/prisma/client';
 
 @Injectable()
-export class UserServiceContract implements IUserServiceContract {
+export class UserProvider implements UserServiceContract {
   constructor(private readonly userRep: UserRepository) {}
   userGetByMobile(mobile: string): Promise<UserWithPermissions | null> {
     return this.userRep.findUnique({

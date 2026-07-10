@@ -32,6 +32,8 @@ import { ContentService } from '../services/content.service';
 import { PartCreateDto } from '../dto/request/part-create.dto';
 import { SectionCreateDto } from '../dto/request/section-create.dto';
 import { type Response } from 'express';
+import { User } from 'src/common/decorators/user.decorator';
+import { type TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 
 @Controller('Courses')
 export class CourseController {
@@ -107,6 +109,15 @@ export class CourseController {
   @HttpCode(HttpStatus.CREATED)
   partCreate(@Param('sectionId', ParseIntPipe) id: number, @Body() payload: PartCreateDto): Promise<number> {
     return this.partService.partCreate(id, payload);
+  }
+
+  @Post('Parts/:partId/SetView')
+  @HttpCode(HttpStatus.CREATED)
+  partSetView(
+    @Param('sectionId', ParseIntPipe) id: number,
+    @User() tokenPayload: TokenPayload,
+  ): Promise<void> {
+    return this.partService.partSetView(id, tokenPayload.userId);
   }
 
   @Patch('Parts/:partId/SetDescription')

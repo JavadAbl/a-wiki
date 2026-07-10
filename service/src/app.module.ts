@@ -8,10 +8,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationGuard } from './common/guards/authentication.guard';
 import { AuthorizationGuard } from './common/guards/authorization.guard';
 import { CourseModule } from './course-module/course.module';
-import { ITokenService } from './auth-module/contracts/token-service.contract';
-import { TokenService } from './auth-module/services/token.service';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ContractModule } from './contract-module/contract.module';
 
 @Module({
   imports: [
@@ -31,11 +28,9 @@ import { ContractModule } from './contract-module/contract.module';
     AuthModule,
     UserModule,
     CourseModule,
-    ContractModule,
   ],
   controllers: [],
   providers: [
-    { provide: ITokenService, useClass: TokenService },
     /*  { provide: APP_GUARD, useClass: AuthenticationGuard },
     { provide: APP_GUARD, useClass: AuthorizationGuard }, */
   ],

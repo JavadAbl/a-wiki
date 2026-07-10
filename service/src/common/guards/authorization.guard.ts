@@ -7,17 +7,17 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthService } from 'src/auth-module/services/auth.service';
 import { Request } from 'express';
 import { Role } from 'src/generated/prisma/enums';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { generateActionPermissionName } from 'src/auth-module/auth.utils';
+import { AuthServiceContract } from 'src/auth-module/contracts/auth-service.contract';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private readonly authService: AuthService,
+    private readonly authService: AuthServiceContract,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

@@ -1,0 +1,128 @@
+erDiagram
+    %% AUTH & USER MANAGEMENT
+    User ||--o{ UserPermission : has
+    User ||--o{ PartView : views
+    Role ||--o{ RolePermission : has
+    Permission ||--o{ UserPermission : "assigned to"
+    Permission ||--o{ RolePermission : "assigned to"
+    
+    User {
+        int id PK
+        string username UK
+        string mobile UK
+        string firstName
+        string lastName
+        string password
+        boolean isActive
+        Role role
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Role {
+        string value
+    }
+
+    Permission {
+        int id PK
+        string name UK
+        PermissionType type
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    UserPermission {
+        int id PK
+        int userId FK
+        int permissionId FK
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    RolePermission {
+        int id PK
+        Role role
+        int permissionId FK
+        string permissionName
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    %% WIKI LEARNING SERVICE
+    Category ||--o{ Course : contains
+    Course ||--o{ Section : has
+    Course ||--o{ Document : has
+    Section ||--o{ Part : contains
+    Part ||--o{ Content : contains
+    Part ||--o{ PartView : "tracked in"
+    
+    Category {
+        int id PK
+        string name
+        string description
+        int parentId FK
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Course {
+        int id PK
+        int categoryId FK
+        string title UK
+        string description
+        string thumbnailUrl
+        boolean isPublished
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Section {
+        int id PK
+        int courseId FK
+        string title
+        int sectionOrder
+        string description
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Part {
+        int id PK
+        int sectionId FK
+        string title
+        int partOrder
+        string description
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Content {
+        int id PK
+        int partId FK
+        MediaType mediaType
+        string mediaUrl
+        int durationSeconds
+        int contentOrder
+        string title
+        string description
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Document {
+        int id PK
+        int courseId FK
+        string fileUrl
+        string mimeType
+        int sortOrder
+        string description
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    PartView {
+        int id PK
+        int partId FK
+        int userId FK
+        datetime createdAt
+    }

@@ -1,0 +1,49 @@
+graph TB
+    subgraph Frontend["🎨 Frontend Layer"]
+        direction TB
+        F1[React + TypeScript]
+        F2[Vite Bundler]
+        F3[RTK State Management]
+        F4[RTK Query Data Fetching]
+        F5[shadcn/ui Components]
+        F6[TailwindCSS]
+        F7[react-hook-form]
+        F8[lucide-react Icons]
+        
+        F1 --> F2
+        F1 --> F3
+        F3 --> F4
+        F1 --> F5
+        F1 --> F6
+        F1 --> F7
+        F1 --> F8
+    end
+
+ 
+
+    subgraph Backend["⚙️ Backend Layer"]
+        direction TB
+        B1[Node.js v24 Runtime]
+        B2[NestJS v11 Framework]
+        B3[Express.js HTTP Server]
+        B4[JWT Authentication]
+        B5[Prisma ORM]
+        B6[Strict Modular Architecture]
+        
+        B1 --> B2
+        B2 --> B3
+        B2 --> B4
+        B2 --> B5
+        B2 --> B6
+    end
+
+    subgraph Database["💾 Database Layer"]
+        D1[(Database)]
+    end
+
+    %% Connections
+    F4 <-->|HTTP/REST API| B2
+    B5 --> D1
+    
+
+ 

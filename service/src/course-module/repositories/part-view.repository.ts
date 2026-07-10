@@ -3,8 +3,8 @@ import { Repository } from 'src/infrastructure-modules/prsima-module/base.reposi
 import { PrismaProvider } from 'src/infrastructure-modules/prsima-module/prisma.provider';
 
 @Injectable()
-export class UserCourseRepository extends Repository<'userCourse'> {
+export class PartViewRepository extends Repository<'partView'> {
   constructor(prismaProvider: PrismaProvider) {
-    super('userCourse', prismaProvider);
+    super('partView', prismaProvider);
   }
 }

@@ -1,5 +1,5 @@
 // auth.guard.ts
-import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ITokenService } from 'src/auth-module/contracts/token-service.contract';
 import { Request } from 'express';
@@ -9,7 +9,7 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 export class AuthenticationGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @Inject(ITokenService) private readonly tokenService: ITokenService,
+    private readonly tokenService: ITokenService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

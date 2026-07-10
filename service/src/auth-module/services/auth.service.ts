@@ -7,7 +7,7 @@ import {
 import { PermissionType, Role } from 'src/generated/prisma/enums';
 import { ITokenService } from '../contracts/token-service.contract';
 import { LoginDto } from '../dto/request/login.dto';
-import { IUserServiceContract } from 'src/user-module/contracts/user-service.contract';
+import { UserServiceContract } from 'src/user-module/contracts/user-service.contract';
 import { PasswordService } from 'src/auth-module/services/password.service';
 import { plainToInstance } from 'class-transformer';
 import { UserDto } from 'src/user-module/dto/response/user.dto';
@@ -34,7 +34,7 @@ export class AuthService {
     private readonly userPermissionRep: UserPermissionRepository,
     private readonly passwordService: PasswordService,
     @Inject(ITokenService) private readonly tokenService: ITokenService,
-    @Inject(IUserServiceContract) private readonly userService: IUserServiceContract,
+    @Inject(UserServiceContract) private readonly userService: UserServiceContract,
     @Inject(CACHE_MANAGER) private cacheManager: NestCache,
   ) {}
 

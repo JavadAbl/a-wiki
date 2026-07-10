@@ -10,6 +10,7 @@ import { CourseService } from './services/course.service';
 import { SectionService } from './services/section.service';
 import { PartService } from './services/part.service';
 import { ContentService } from './services/content.service';
+import { PartViewRepository } from './repositories/part-view.repository';
 
 @Module({
   imports: [],
@@ -21,6 +22,7 @@ import { ContentService } from './services/content.service';
     ContentRepository,
     DocumentRepository,
     CategoryRepository,
+    PartViewRepository,
 
     CourseService,
     SectionService,

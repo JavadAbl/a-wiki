@@ -88,7 +88,7 @@ enum PermissionType {
 
 model Category {
   id          Int      @id() @default(autoincrement())
-  name        String
+  name        String   @unique()
   description String?
   // parentId    Int?
   // parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)

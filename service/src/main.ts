@@ -20,6 +20,10 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  app.setGlobalPrefix('api');
+
+  app.enableCors({ origin: '*' });
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true }));
 
   const port = configService.get<AppConfig>('app')!.HTTP_PORT;

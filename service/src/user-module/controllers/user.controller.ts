@@ -31,6 +31,13 @@ export class UserController {
     return this.userService.userGetMany(query as GetManyQueryType<'User'>);
   }
 
+  @Get('Context')
+  userGetByContext(@User() tokenPayload: TokenPayload): Promise<UserDto> {
+    console.log(tokenPayload);
+
+    return this.userService.userGetById(tokenPayload.userId);
+  }
+
   @Get(':id')
   userGetById(@Param('id', ParseIntPipe) id: number): Promise<UserDto> {
     return this.userService.userGetById(id);

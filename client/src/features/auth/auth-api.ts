@@ -1,26 +1,22 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { UserDto } from "./dto/user.dto";
 import { baseApi } from "../base-api";
+import type { AuthDto } from "./dto/auth.dto";
+import type { LoginDto } from "./schemas/login-schema";
 
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: baseApi,
   //  tagTypes: ["auth"],
-  endpoints: (builder) => ({
-    getUserByContext: builder.query<UserDto, void>({
-      query: () => ({
-        url: "Users/Context",
-      }),
-    }),
 
-    /* sendOtp: builder.mutation<void, SendOtpDto>({
+  endpoints: (builder) => ({
+    login: builder.mutation<AuthDto, LoginDto>({
       query: (body) => ({
-        url: "Auth-Api/Auth/SendOtp",
+        url: "Auth/Login",
         method: "POST",
         body,
       }),
-    }), */
+    }),
   }),
 });
 
-export const { useLazyGetUserByContextQuery } = authApi;
+export const { useLoginMutation } = authApi;

@@ -55,9 +55,13 @@
   --color-primary: var(--primary);
   --color-primary-100: var(--primary-100);
   --color-primary-300: var(--primary-300);
+  --color-primary-500: var(--primary-500);
   --color-primary-600: var(--primary-600);
   --color-surface-100: var(--surface-100);
+  --color-surface-300: var(--surface-300);
   --color-neutral-200: var(--neutral-200);
+  --color-gray: var(--gray);
+  --color-gray-400: var(--gray-400);
   --color-bgcolor: var(--bgcolor);
 }
 
@@ -101,8 +105,12 @@
   --primary: #0090a1;
   --primary-100: #b2dee3;
   --primary-300: #4cb1bd;
+  --primary-500: #0090a1;
   --primary-600: #005d6e;
   --surface-100: #ffffff;
+  --surface-300: #e8e8e8;
+  --gray: #abb7c2;
+  --gray-400: #9ca3af;
   --neutral-200: #ccc8c8;
   --bgcolor: #ffffff1a;
   --border: rgba(255, 255, 255, 0.2);
@@ -183,6 +191,22 @@
   .font-h3 {
     font-size: 20px;
     font-weight: bold;
+  }
+  .font-h4 {
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .font-h5 {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .font-h6 {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .font-p1 {
+    font-size: 18px;
+    font-weight: normal;
   }
   .font-p2 {
     font-size: 20px;

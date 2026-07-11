@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import type { AppState } from "./store";
 import status from "http-status";
 
-const BASE_ADDRESS = "https://localhost:3000/";
+const BASE_ADDRESS = "http://localhost:3000/api/";
 
 // Create a mutex to prevent multiple refresh requests at the same time
 const mutex = new Mutex();
@@ -118,7 +118,7 @@ export const baseApi: BaseQueryFn<
 
     // Handle non-401 errors (toasts)
     if (result.error && result.error.status !== 401)
-      if (api.endpoint !== "walletPaymentVerify") {
+      if (api.endpoint !== "getUserByContext") {
         let message = "Server error";
 
         if (typeof result.error.data === "string") {

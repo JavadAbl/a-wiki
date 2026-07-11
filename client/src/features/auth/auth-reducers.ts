@@ -1,6 +1,6 @@
 import type { PayloadAction, WritableDraft } from "@reduxjs/toolkit";
 import type { AuthState } from "./auth-slice";
-import type { UserDto } from "./dto/user.dto";
+import type { UserDto } from "./dto/auth.dto";
 
 export const authReducers = {
   logout: (state: WritableDraft<AuthState>) => {

@@ -1,5 +1,6 @@
 import HomeHero from "./components/home-hero";
-import HeroFeatures from "./components/hero-features";
+import HeroFeatures from "./components/home-features";
+import HomeCourses from "./components/home-courses";
 
 export default function Home() {
   return (
@@ -7,6 +8,8 @@ export default function Home() {
       <HomeHero />
 
       <HeroFeatures />
+
+      <HomeCourses />
     </div>
   );
 }

@@ -31,8 +31,8 @@ import { CacheModule } from '@nestjs/cache-manager';
   ],
   controllers: [],
   providers: [
-    /*  { provide: APP_GUARD, useClass: AuthenticationGuard },
-    { provide: APP_GUARD, useClass: AuthorizationGuard }, */
+    { provide: APP_GUARD, useClass: AuthenticationGuard },
+    /*   { provide: APP_GUARD, useClass: AuthorizationGuard }, */
   ],
 })
 export class AppModule {}

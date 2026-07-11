@@ -1,7 +1,7 @@
 import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
 import { authReducers } from "./auth-reducers";
-import type { UserDto } from "./dto/user.dto";
 import { storage } from "../../utils/storage";
+import type { UserDto } from "../user/dto/user.dto";
 
 export type AuthState = {
   accessToken: string | null;

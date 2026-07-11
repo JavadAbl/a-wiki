@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "./redux-hooks";
 import { authActions } from "../features/auth/auth-slice";
-import { useLazyGetUserByContextQuery } from "../features/auth/auth-api";
 import { storage } from "../utils/storage";
+import { useLazyGetUserByContextQuery } from "../features/user/user-api";
 
 export function useAuth() {
   const dis = useAppDispatch();
@@ -18,12 +18,16 @@ export function useAuth() {
       }
 
       const refreshToken = storage.getRefreshToken();
+      const accessToken = storage.getAccessToken();
 
       if (!refreshToken) {
         dis(authActions.logout());
         setIsAuthDone(true);
         return;
       }
+
+      if (accessToken)
+        dis(authActions.setTokens({ accessToken, refreshToken }));
 
       fetchUser()
         .then((res) => {

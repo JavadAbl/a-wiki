@@ -5,20 +5,27 @@ import {
   authListenerMiddleware,
   authReducer,
 } from "../features/auth/auth-slice";
+import { userApi } from "./user/user-api";
+import { userReducer } from "./user/user-slice";
+import { sharedReducer } from "./shared/shared-slice";
 
 // Configure the Redux store
 export const store = configureStore({
   reducer: {
     // Add the generated reducer as a specific top-level slice
     [authApi.reducerPath]: authApi.reducer,
+    [userApi.reducerPath]: userApi.reducer,
 
+    shared: sharedReducer,
     auth: authReducer,
+    user: userReducer,
   },
   // Adding the api middleware enables caching, invalidation, polling,
   // and other useful features of `rtk-query`.
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(authApi.middleware)
+      .concat(userApi.middleware)
       .prepend(authListenerMiddleware.middleware),
 });
 

@@ -8,6 +8,8 @@ import {
 import { userApi } from "./user/user-api";
 import { userReducer } from "./user/user-slice";
 import { sharedReducer } from "./shared/shared-slice";
+import { courseApi } from "./course/course-api";
+import { courseReducer } from "./course/course-slice";
 
 // Configure the Redux store
 export const store = configureStore({
@@ -15,10 +17,12 @@ export const store = configureStore({
     // Add the generated reducer as a specific top-level slice
     [authApi.reducerPath]: authApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
+    [courseApi.reducerPath]: courseApi.reducer,
 
     shared: sharedReducer,
     auth: authReducer,
     user: userReducer,
+    course: courseReducer,
   },
   // Adding the api middleware enables caching, invalidation, polling,
   // and other useful features of `rtk-query`.
@@ -26,6 +30,7 @@ export const store = configureStore({
     getDefaultMiddleware()
       .concat(authApi.middleware)
       .concat(userApi.middleware)
+      .concat(courseApi.middleware)
       .prepend(authListenerMiddleware.middleware),
 });
 

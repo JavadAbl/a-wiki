@@ -90,9 +90,6 @@ model Category {
   id          Int      @id() @default(autoincrement())
   name        String   @unique()
   description String?
-  // parentId    Int?
-  // parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
-  // children    Category[] @relation("CategoryTree")
   courses     Course[]
 
   createdAt DateTime @default(now())
@@ -100,13 +97,15 @@ model Category {
 }
 
 model Course {
-  id           Int       @id() @default(autoincrement())
-  categoryId   Int?
-  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  title        String    @unique()
-  description  String?
-  thumbnailUrl String?
-  isPublished  Boolean   @default(false)
+  id                 Int       @id() @default(autoincrement())
+  categoryId         Int?
+  category           Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  title              String    @unique()
+  description        String?
+  thumbnailUrl       String?
+  isPublished        Boolean   @default(false)
+  lecturer           String?
+  lecturerProfession String?
 
   sections  Section[]
   documents Document[]
@@ -163,7 +162,7 @@ model Content {
   part            Part      @relation(fields: [partId], references: [id], onDelete: Cascade)
   mediaType       MediaType
   mediaUrl        String
-  durationSeconds Int
+  durationSeconds Int       @default(0)
   contentOrder    Int       @default(0)
   title           String
   description     String?

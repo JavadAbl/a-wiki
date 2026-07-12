@@ -1,7 +1,10 @@
 import { cn } from "#lib/utils";
+import { useNavigate } from "react-router";
 import HomeCourseCard from "./home-course-card";
 
 export default function HomeCourses() {
+  const nav = useNavigate();
+
   return (
     <div className={cn("flex flex-col items-center gap-8 py-6 text-center")}>
       <div className={cn("flex flex-col")}>
@@ -24,6 +27,7 @@ export default function HomeCourses() {
         className={cn(
           "bg-transparent border border-primary-500 text-primary-500 font-h3 px-8 py-3 rounded-[24px]",
         )}
+        onClick={() => nav("/Courses")}
       >
         {"مشاهده همه دوره ها"}
       </button>

@@ -11,6 +11,16 @@ export class CourseCreateDto {
   @IsOptional()
   description: string;
 
+  @IsString()
+  @MaxLength(100)
+  @IsOptional()
+  lecturer: string;
+
+  @IsString()
+  @MaxLength(100)
+  @IsOptional()
+  lecturerProfession: string;
+
   @IsInt()
   @IsOptional()
   categoryId?: number;

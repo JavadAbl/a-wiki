@@ -34,6 +34,10 @@ import { SectionCreateDto } from '../dto/request/section-create.dto';
 import { type Response } from 'express';
 import { User } from 'src/common/decorators/user.decorator';
 import { type TokenPayload } from 'src/auth-module/contracts/token-service.contract';
+import { CategoryCreateDto } from '../dto/request/category-create.dto';
+import { CategoryService } from '../services/category.service';
+import { Public } from 'src/common/decorators/public.decorator';
+import { CategoryDto } from '../dto/response/category.dto';
 
 @Controller('Courses')
 export class CourseController {
@@ -42,13 +46,15 @@ export class CourseController {
     private readonly sectionService: SectionService,
     private readonly partService: PartService,
     private readonly contentService: ContentService,
+    private readonly categoryService: CategoryService,
   ) {}
 
   //Course---------------------------------------------------------
+  @Public()
   @Get()
   courseGetMany(
     @Query() query: GetManyQuery,
-    @Query('categoryId', ParseIntPipe) categoryId?: number,
+    @Query('categoryId', new ParseIntPipe({ optional: true })) categoryId?: number,
   ): Promise<GetManyReply<CourseDto>> {
     return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, categoryId);
   }
@@ -60,7 +66,7 @@ export class CourseController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  courseCreate(@Body() payload: CourseCreateDto): Promise<CourseDto> {
+  courseCreate(@Body() payload: CourseCreateDto): Promise<number> {
     return this.courseService.courseCreate(payload);
   }
 
@@ -154,5 +160,18 @@ export class CourseController {
         }
       }
     });
+  }
+
+  //Category------------------------------------------------------------
+  @Public()
+  @Get('Categories')
+  categoryGetMany(@Query() query: GetManyQuery): Promise<GetManyReply<CategoryDto>> {
+    return this.categoryService.categoryGetMany(query as GetManyQueryType<'Category'>);
+  }
+
+  @Post('Categories')
+  @HttpCode(HttpStatus.CREATED)
+  categoryCreate(@Body() payload: CategoryCreateDto): Promise<number> {
+    return this.categoryService.categoryCreate(payload);
   }
 }

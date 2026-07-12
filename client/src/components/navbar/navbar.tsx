@@ -55,7 +55,7 @@ export default function Navbar() {
           <InputSearch />
         </div>
 
-        <Separator className={cn("p-0! m-0")} />
+        <Separator />
 
         <div className={cn("flex items-center gap-1.5 py-2 px-6")}>
           {links.map((link) => (

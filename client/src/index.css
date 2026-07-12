@@ -54,10 +54,12 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
   --color-primary-300: var(--primary-300);
   --color-primary-500: var(--primary-500);
   --color-primary-600: var(--primary-600);
   --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
   --color-surface-300: var(--surface-300);
   --color-neutral-200: var(--neutral-200);
   --color-gray: var(--gray);
@@ -104,10 +106,12 @@
 
   --primary: #0090a1;
   --primary-100: #b2dee3;
+  --primary-200: #80c7d0;
   --primary-300: #4cb1bd;
   --primary-500: #0090a1;
   --primary-600: #005d6e;
   --surface-100: #ffffff;
+  --surface-200: #f5f5f5;
   --surface-300: #e8e8e8;
   --gray: #abb7c2;
   --gray-400: #9ca3af;
@@ -194,15 +198,15 @@
   }
   .font-h4 {
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 600;
   }
   .font-h5 {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
   }
   .font-h6 {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
   }
   .font-p1 {
     font-size: 18px;

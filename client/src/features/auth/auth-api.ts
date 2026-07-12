@@ -1,6 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseApi } from "../base-api";
-import type { AuthDto } from "./dto/auth.dto";
+import type { AuthDto } from "./dto/category.dto";
 import type { LoginDto } from "./schemas/login-schema";
 
 export const authApi = createApi({

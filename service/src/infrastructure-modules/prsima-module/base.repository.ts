@@ -21,12 +21,7 @@ export class Repository<TModel extends keyof PrismaClient> {
 
   async findMany<TArgs extends Prisma.Args<(typeof this.prismaProvider)[TModel], 'findMany'>>(
     args?: TArgs,
-  ): Promise<
-    GetManyReply<Prisma.Result<(typeof this.prismaProvider)[TModel], TArgs, 'findMany'>>
-  > /* : Promise<{
-    items: Prisma.Result<(typeof this.prismaProvider)[TModel], TArgs, 'findMany'>;
-    totalCount: number;
-  }>  */ {
+  ): Promise<GetManyReply<Prisma.Result<(typeof this.prismaProvider)[TModel], TArgs, 'findMany'>>> {
     const [items, totalCount] = await Promise.all([
       (this.prismaProvider[this.model] as any).findMany(args),
       (this.prismaProvider[this.model] as any).count({ where: args?.where }),

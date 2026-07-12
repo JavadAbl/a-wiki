@@ -19,4 +19,16 @@ export class CourseDto {
 
   @Expose()
   thumbnailUrl?: string | null;
+
+  @Expose()
+  lecturer?: string | null;
+
+  @Expose()
+  lecturerProfession?: string | null;
+
+  @Expose()
+  totalContents: number;
+
+  @Expose()
+  totalContentsLength: number;
 }

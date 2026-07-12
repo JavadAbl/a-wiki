@@ -1,6 +1,7 @@
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import { cn } from "#lib/utils";
+import { useNavigate } from "react-router";
 import type { JSX } from "react/jsx-runtime";
 
 const stats = [
@@ -9,18 +10,22 @@ const stats = [
   { value: "۱۰۰", label: "دوره آموزشی" },
 ];
 
-const actions = [
-  {
-    label: "شروع یادگیری",
-    variant: "primary",
-  },
-  {
-    label: "مشاهده دوره‌ها",
-    variant: "glass",
-  },
-] as const;
-
 const HomeHero = (): JSX.Element => {
+  const nav = useNavigate();
+
+  const actions = [
+    {
+      label: "شروع یادگیری",
+      variant: "primary",
+      onClick: () => {},
+    },
+    {
+      label: "مشاهده دوره‌ها",
+      variant: "glass",
+      onClick: () => nav("/Courses"),
+    },
+  ] as const;
+
   return (
     <section className="relative min-h-180 w-full overflow-hidden bg-[linear-gradient(270deg,rgba(11,79,74,0.6)_16.81%,rgba(15,23,43,0.9)_73.25%),url('images/hero.webp')] bg-center bg-cover ">
       {/*    <div aria-hidden="true" className="absolute inset-0 " />
@@ -59,6 +64,7 @@ const HomeHero = (): JSX.Element => {
                 <Button
                   key={action.label}
                   type="button"
+                  onClick={action.onClick}
                   className={cn(
                     "cursor-pointer px-6 py-4  font-b1",
                     action.variant === "primary"

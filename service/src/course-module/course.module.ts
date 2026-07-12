@@ -11,10 +11,12 @@ import { SectionService } from './services/section.service';
 import { PartService } from './services/part.service';
 import { ContentService } from './services/content.service';
 import { PartViewRepository } from './repositories/part-view.repository';
+import { CategoryService } from './services/category.service';
+import { CategoryController } from './controllers/category.controller';
 
 @Module({
   imports: [],
-  controllers: [CourseController],
+  controllers: [CourseController, CategoryController],
   providers: [
     CourseRepository,
     PartRepository,
@@ -28,6 +30,7 @@ import { PartViewRepository } from './repositories/part-view.repository';
     SectionService,
     PartService,
     ContentService,
+    CategoryService,
   ],
   exports: [],
 })

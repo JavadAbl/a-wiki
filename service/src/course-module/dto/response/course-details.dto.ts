@@ -27,4 +27,10 @@ export class CourseDetailsDto {
 
   @Expose()
   sections: SectionDto[];
+
+  @Expose()
+  lecturer?: string | null;
+
+  @Expose()
+  lecturerProfession?: string | null;
 }

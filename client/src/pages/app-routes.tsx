@@ -1,15 +1,14 @@
 import { Routes, Route } from "react-router";
-import { useAppDispatch, useAppSelector } from "../hooks/redux-hooks";
+import { useAppSelector } from "../hooks/redux-hooks";
 import { useAuth } from "../hooks/use-auth";
 import { Spinner } from "#components/ui/spinner";
 import Home from "./home/home";
 import Layout from "./layout/layout";
-import { storage } from "../utils/storage";
+import CourseRoutes from "./course/course-routes";
 
 export default function AppRoutes() {
   // const theme = useAppSelector((s) => s.app.theme);
   const isAuth = useAppSelector((s) => s.auth.isAuth);
-  const dis = useAppDispatch();
 
   useAuth();
 
@@ -26,7 +25,7 @@ export default function AppRoutes() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
-          {/* <Route path="/Products/*" element={<ProductsRoutes />} /> */}
+          <Route path="/Courses/*" element={<CourseRoutes />} />
         </Route>
 
         {/*  <Route element={<PublicOnlyRoute />}>

@@ -1,5 +1,4 @@
 import AtieLogo from "#components/icons/atie-logo";
-import SearchIcon from "#components/icons/search-icon";
 import { Separator } from "#components/ui/separator";
 import { cn } from "#lib/utils";
 import NavbarLink from "./navbar-link";
@@ -7,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
 import { Button } from "#components/ui/button";
 import { sharedActions } from "../../features/shared/shared-slice";
 import { authActions } from "../../features/auth/auth-slice";
+import InputSearch from "#components/inputs/input-search";
 
 const links = [
   { text: "صفحه اصلی", to: "/" },
@@ -41,18 +41,18 @@ export default function Navbar() {
               </div>
             ) : (
               <Button
-                size={"xs"}
+                size={"lg"}
                 variant={"primary"}
                 onClick={() =>
                   dis(sharedActions.setIsOpenLogin({ isOpen: true }))
                 }
               >
-                {"ورود"}
+                {"ورود اعضا"}
               </Button>
             )}
           </div>
 
-          <SearchIcon />
+          <InputSearch />
         </div>
 
         <Separator className={cn("p-0! m-0")} />

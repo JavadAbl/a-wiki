@@ -108,6 +108,6 @@ This set of fonts are used in this project under the license: (.....)
       url("/fonts/fonts/ttf/IRANSansWeb(FaNum).ttf") format("truetype");
 }
 
-html {
-  font-family: "IRANSans", sans-serif;
+body {
+  font-family: "IRANSans", Tahoma, Geneva, Verdana, sans-serif;
 }

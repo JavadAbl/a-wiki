@@ -6,7 +6,7 @@ import { sharedActions } from "../../features/shared/shared-slice";
 import Login from "../login/login";
 
 export default function Layout() {
-  const isOpenLogin = useAppSelector((s) => s.shared.isOpenLogin);
+  const { isOpenLogin, loginRedirect } = useAppSelector((s) => s.shared);
   const dis = useAppDispatch();
   return (
     <div>
@@ -19,6 +19,7 @@ export default function Layout() {
         setIsOpen={(isOpen: boolean) =>
           dis(sharedActions.setIsOpenLogin({ isOpen }))
         }
+        redirect={loginRedirect}
       />
     </div>
   );

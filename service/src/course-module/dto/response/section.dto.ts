@@ -1,4 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
+import { PartDto } from './part.dto';
 
 @Exclude()
 export class SectionDto {
@@ -15,5 +16,5 @@ export class SectionDto {
   sectionOrder: number;
 
   @Expose()
-  parts: any[];
+  parts: PartDto[];
 }

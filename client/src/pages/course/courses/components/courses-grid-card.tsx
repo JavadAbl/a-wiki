@@ -1,10 +1,18 @@
 import { cn } from "#lib/utils";
+import { ChevronLeftIcon } from "lucide-react";
 import type { CourseDto } from "../../../../features/course/dto/course.dto";
+import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
+import { useNavigate } from "react-router";
+import { sharedActions } from "../../../../features/shared/shared-slice";
 
 interface Props {
   course: CourseDto;
 }
 export default function CoursesGridCard({ course }: Props) {
+  const isAuth = useAppSelector((s) => s.auth.isAuth);
+  const dis = useAppDispatch();
+  const nav = useNavigate();
+
   return (
     <div
       className={cn(
@@ -33,7 +41,11 @@ export default function CoursesGridCard({ course }: Props) {
         </span>
       </div>
 
-      <div className={cn("flex justify-between")}>
+      <div
+        className={cn(
+          "flex justify-between border-t border-neutral-100 pt-[8px]",
+        )}
+      >
         <div
           className={cn(
             "flex items-center gap-[8px] py-[6px] px-[12px] bg-[#F9FAFB] border border-[#E5E7EB] text-[#4A5565] rounded-[32px]",
@@ -46,7 +58,24 @@ export default function CoursesGridCard({ course }: Props) {
           <LockIcon />
         </div>
 
-        <div className={cn("")}></div>
+        <div className={cn("flex items-center text-primary-300 ")}>
+          <ChevronLeftIcon />
+          <span
+            className={cn("font-[16px] font-medium cursor-pointer")}
+            onClick={() => {
+              if (isAuth) nav(`/Courses/${course.id}`);
+              else
+                dis(
+                  sharedActions.setIsOpenLogin({
+                    isOpen: true,
+                    redirect: `/Courses/${course.id}`,
+                  }),
+                );
+            }}
+          >
+            {"مشاهده آموزش"}
+          </span>
+        </div>
       </div>
     </div>
   );

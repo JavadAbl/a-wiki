@@ -2,7 +2,7 @@ import { Exclude, Expose } from 'class-transformer';
 import { ContentDto } from './content.dto';
 
 @Exclude()
-export class SectionDto {
+export class PartDto {
   @Expose()
   id: number;
 

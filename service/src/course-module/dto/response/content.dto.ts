@@ -10,9 +10,6 @@ export class ContentDto {
   title: string;
 
   @Expose()
-  mediaUrl: string;
-
-  @Expose()
   mediaType: MediaType;
 
   @Expose()
@@ -20,7 +17,4 @@ export class ContentDto {
 
   @Expose()
   contentOrder: number;
-
-  @Expose()
-  contents: ContentDto[];
 }

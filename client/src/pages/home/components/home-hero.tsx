@@ -27,7 +27,7 @@ const HomeHero = (): JSX.Element => {
   ] as const;
 
   return (
-    <section className="relative min-h-180 w-full overflow-hidden bg-[linear-gradient(270deg,rgba(11,79,74,0.6)_16.81%,rgba(15,23,43,0.9)_73.25%),url('images/hero.webp')] bg-center bg-cover ">
+    <section className="relative min-h-180 w-full overflow-hidden bg-[linear-gradient(270deg,rgba(11,79,74,0.6)_16.81%,rgba(15,23,43,0.9)_73.25%),url('/images/hero.webp')] bg-center bg-cover ">
       {/*    <div aria-hidden="true" className="absolute inset-0 " />
 
       <div

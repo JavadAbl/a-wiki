@@ -23,7 +23,13 @@ export class CourseService {
 
   async courseGetById(id: number): Promise<CourseDetailsDto> {
     const course = await this.courseRep.findAndCheckExistsBy(
-      { where: { id }, include: { sections: { include: { parts: true } }, documents: true } },
+      {
+        where: { id },
+        include: {
+          sections: { include: { parts: { include: { contents: { omit: { mediaUrl: true } } } } } },
+          documents: true,
+        },
+      },
       'id',
       id,
     );
@@ -37,7 +43,12 @@ export class CourseService {
     const predicate = buildFindManyArgs(query, { searchableFields: ['title'] });
 
     // 1. Fetch ONLY the course data (no heavy nested includes)
-    const items = await this.courseRep.prismaClient.course.findMany({
+    /*  const items = await this.courseRep.prismaClient.course.findMany({
+      ...predicate,
+      where: { ...predicate.where, categoryId },
+    }); */
+
+    const { items, totalCount } = await this.courseRep.findMany({
       ...predicate,
       where: { ...predicate.where, categoryId },
     });
@@ -93,7 +104,7 @@ export class CourseService {
 
     // Note: For accurate pagination, consider using a separate COUNT query
     // instead of items.length when using LIMIT/OFFSET
-    return { items: mappedItems, totalCount: items.length };
+    return { items: mappedItems, totalCount };
   }
 
   async courseCreate(payload: CourseCreateDto): Promise<number> {

@@ -1,56 +1,87 @@
 import { cn } from "#lib/utils";
+import { ChevronLeftIcon } from "lucide-react";
 import type { CourseDto } from "../../../../features/course/dto/course.dto";
+import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
+import { useNavigate } from "react-router";
+import { sharedActions } from "../../../../features/shared/shared-slice";
 
 interface Props {
   course: CourseDto;
 }
 export default function CoursesListCard({ course }: Props) {
+  const isAuth = useAppSelector((s) => s.auth.isAuth);
+  const dis = useAppDispatch();
+  const nav = useNavigate();
+
   return (
     <div
       className={cn(
-        "flex flex-col gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px]",
+        "flex gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px]",
       )}
     >
-      <img
-        className={cn("w-[200px] object-cover")}
-        src={course.thumbnailUrl ?? "/images/course-cover.webp"}
-        alt={course.title}
-      />
-
-      <div className={cn("flex flex-col gap-[6px] ")}>
-        <span
-          className={cn(
-            "font-medium font-[20px] leading-[27px] text-background",
-          )}
-        >
-          {course.title}
-        </span>
-
-        <span className={cn("font-h6 text-[#555555]")}>
-          {course.description}
-        </span>
-
-        <span className={cn("font-b2 text-[#555555]")}>
-          {course.description}
-        </span>
-
-        <span className={cn("font-b2 text-[#777777]")}>
-          {`تعداد محتوا: ${course.totalContents} قسمت - ${course.totalContentsLength} ساعت`}
-        </span>
+      <div className={cn("flex-1")}>
+        <img
+          className={cn("h-full object-cover rounded-[32px] ")}
+          src={course.thumbnailUrl ?? "/images/course-cover.webp"}
+          alt={course.title}
+        />
       </div>
 
-      <div className={cn("flex justify-between")}>
-        <div
-          className={cn(
-            "flex items-center gap-[8px] py-[6px] px-[12px] bg-[#F9FAFB] border border-[#E5E7EB] text-[#4A5565] ",
-          )}
-        >
-          <span className={cn("font-bold text-[14px] leading-[20px]")}></span>
+      <div className={cn("flex flex-col flex-3 gap-[16px]")}>
+        <div className={cn("flex flex-col gap-[6px] ")}>
+          <span className={cn("font-medium leading-[27px] text-foreground")}>
+            {course.title}
+          </span>
 
-          <LockIcon />
+          <span className={cn("font-h6 text-[#555555]")}>
+            {course.description}
+          </span>
+
+          <span className={cn("font-b2 text-[#555555]")}>
+            {course.lecturer}
+          </span>
+
+          <span className={cn("font-b2 text-[#777777]")}>
+            {`تعداد محتوا: ${course.totalContents} قسمت - ${course.totalContentsLength} ساعت`}
+          </span>
         </div>
 
-        <div className={cn("")}></div>
+        <div
+          className={cn(
+            "flex justify-between border-t border-neutral-100 pt-[8px] ml-[16px]",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center gap-[8px] py-[6px] px-[12px] bg-[#F9FAFB] border border-[#E5E7EB] text-[#4A5565] rounded-[32px]",
+            )}
+          >
+            <span className={cn("font-bold text-[14px] leading-[20px]")}>
+              {"حفاظت شده"}
+            </span>
+
+            <LockIcon />
+          </div>
+
+          <div className={cn("flex items-center text-primary-300 ")}>
+            <ChevronLeftIcon />
+            <span
+              className={cn("font-[16px] font-medium cursor-pointer")}
+              onClick={() => {
+                if (isAuth) nav(`/Courses/${course.id}`);
+                else
+                  dis(
+                    sharedActions.setIsOpenLogin({
+                      isOpen: true,
+                      redirect: `/Courses/${course.id}`,
+                    }),
+                  );
+              }}
+            >
+              {"مشاهده آموزش"}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,10 @@ import { Button } from "#components/ui/button";
 import { sharedActions } from "../../features/shared/shared-slice";
 import { authActions } from "../../features/auth/auth-slice";
 import InputSearch from "#components/inputs/input-search";
+import { useNavigate } from "react-router";
+import AuthorizationComponent from "#components/auth/role-authorization-component";
+import { Role } from "../../features/auth/enums/role";
+import { toast } from "sonner";
 
 const links = [
   { text: "صفحه اصلی", to: "/" },
@@ -16,6 +20,7 @@ const links = [
 ];
 
 export default function Navbar() {
+  const nav = useNavigate();
   const { isAuth, user } = useAppSelector((s) => s.auth);
   const dis = useAppDispatch();
 
@@ -29,12 +34,29 @@ export default function Navbar() {
             {isAuth ? (
               <div className={cn("flex gap-4 items-center")}>
                 <Button
-                  size={"xs"}
-                  variant={"secondary"}
-                  onClick={() => dis(authActions.logout())}
+                  size={"sm"}
+                  variant={"destructive"}
+                  onClick={() => {
+                    dis(authActions.logout());
+                    toast.success("حروج موفقیت آمیز");
+                  }}
                 >
                   {"خروج"}
                 </Button>
+
+                <AuthorizationComponent
+                  allowedRoles={[Role.SuperAdmin, Role.Admin]}
+                >
+                  <Button
+                    className={cn(" rounded-2xl")}
+                    size={"sm"}
+                    variant={"secondary"}
+                    onClick={() => nav("/Admin")}
+                  >
+                    {"پنل ادمین"}
+                  </Button>
+                </AuthorizationComponent>
+
                 <span className={cn("text-sm text-content-tertiary")}>
                   {user?.firstName + " " + user?.lastName}
                 </span>

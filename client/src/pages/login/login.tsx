@@ -8,12 +8,7 @@ import {
   LoginSchema,
   type LoginDto,
 } from "../../features/auth/schemas/login-schema";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "#components/ui/field";
+import { Field, FieldLabel } from "#components/ui/field";
 import { useLoginMutation } from "../../features/auth/auth-api";
 import { toast } from "sonner";
 import { useAppDispatch } from "#hooks/redux-hooks";
@@ -25,7 +20,7 @@ import { InputMessage } from "#components/inputs/input-message";
 interface Props {
   isOpen: boolean;
   setIsOpen: (open: boolean) => any;
-  redirect?: string;
+  redirect?: string | null;
 }
 export default function Login({ isOpen, setIsOpen, redirect }: Props) {
   const nav = useNavigate();

@@ -4,6 +4,8 @@ import type { GetManyQuery, GetManyReply } from "../../utils/types";
 import type { CategoryCreateDto } from "./schemas/category-create-schema";
 import type { CategoryDto } from "./dto/category.dto";
 import type { CourseDto } from "./dto/course.dto";
+import type { CourseCreateDto } from "./schemas/course-create-schema";
+import type { CourseDetailsDto } from "./dto/course.details.dto";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
@@ -43,6 +45,22 @@ export const courseApi = createApi({
       }),
       providesTags: ["course"],
     }),
+
+    CourseGetById: builder.query<CourseDetailsDto, number | string>({
+      query: (id) => ({
+        url: `Courses/${id}`,
+      }),
+      providesTags: ["course"],
+    }),
+
+    CourseCreate: builder.mutation<number, CourseCreateDto>({
+      query: (body) => ({
+        url: "Courses",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
   }),
 });
 
@@ -50,4 +68,6 @@ export const {
   useCategoryGetManyQuery,
   useCategoryCreateMutation,
   useCoursesGetManyQuery,
+  useCourseCreateMutation,
+  useCourseGetByIdQuery,
 } = courseApi;

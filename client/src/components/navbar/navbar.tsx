@@ -63,8 +63,9 @@ export default function Navbar() {
               </div>
             ) : (
               <Button
-                size={"lg"}
-                variant={"primary"}
+                className={cn(" rounded-2xl")}
+                size={"sm"}
+                variant={"secondary"}
                 onClick={() =>
                   dis(sharedActions.setIsOpenLogin({ isOpen: true }))
                 }

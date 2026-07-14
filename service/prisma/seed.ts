@@ -219,11 +219,70 @@ async function createCourses() {
   console.log(`✅ Ensured ${ensuredCount} courses exist.`);
 }
 
+async function createSections() {
+  const courseData = [
+    {
+      title: 'آموزش جامع React.js',
+      description: 'یادگیری کامل ری‌اکت از مقدماتی تا پیشرفته',
+      id: 1,
+      courseId: 1,
+    },
+    { title: 'مبانی Node.js و Express', description: 'ساخت APIهای RESTful با نود جی‌اس', id: 2, courseId: 2 },
+  ];
+
+  let ensuredCount = 0;
+  for (let i = 0; i < courseData.length; i++) {
+    const data = courseData[i];
+
+    await prisma.section.upsert({
+      where: { id: data.id },
+      update: {},
+      create: { ...data, courseId: data.courseId },
+    });
+    ensuredCount++;
+  }
+
+  console.log(`✅ Ensured ${ensuredCount} courses exist.`);
+}
+
+async function createParts() {
+  const courseData = [
+    {
+      title: 'آموزش جامع React.js',
+      description: 'یادگیری کامل ری‌اکت از مقدماتی تا پیشرفته',
+      id: 1,
+      sectionId: 1,
+    },
+    {
+      title: 'مبانی Node.js و Express',
+      description: 'ساخت APIهای RESTful با نود جی‌اس',
+      id: 2,
+      sectionId: 2,
+    },
+  ];
+
+  let ensuredCount = 0;
+  for (let i = 0; i < courseData.length; i++) {
+    const data = courseData[i];
+
+    await prisma.part.upsert({
+      where: { id: data.id },
+      update: {},
+      create: { ...data, sectionId: data.sectionId },
+    });
+    ensuredCount++;
+  }
+
+  console.log(`✅ Ensured ${ensuredCount} courses exist.`);
+}
+
 async function main() {
   try {
     await createSuperAdmin();
     await createCategories();
     await createCourses();
+    await createSections();
+    await createParts();
   } catch (error) {
     console.error('❌ Seed failed:', error);
     process.exit(1);

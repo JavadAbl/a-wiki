@@ -85,7 +85,6 @@ export class ContentService {
         mediaType: mediaType as any,
         partId: partIdVal,
         title: payload.title,
-        contentOrder: payload.contentOrder,
         description: payload.description,
       },
     });

@@ -38,6 +38,8 @@ import { CategoryCreateDto } from '../dto/request/category-create.dto';
 import { CategoryService } from '../services/category.service';
 import { Public } from 'src/common/decorators/public.decorator';
 import { CategoryDto } from '../dto/response/category.dto';
+import { DocumentCreateDto } from '../dto/request/document-create.dto';
+import { DocumentService } from '../services/document.service';
 
 @Controller('Courses')
 export class CourseController {
@@ -47,6 +49,7 @@ export class CourseController {
     private readonly partService: PartService,
     private readonly contentService: ContentService,
     private readonly categoryService: CategoryService,
+    private readonly documentService: DocumentService,
   ) {}
 
   //Course---------------------------------------------------------
@@ -160,6 +163,18 @@ export class CourseController {
         }
       }
     });
+  }
+
+  //Document------------------------------------------------------------
+  @Post(':courseId/Documents')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  documentCreate(
+    @Param('courseId', ParseIntPipe) id: number,
+    @Body() payload: DocumentCreateDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<number> {
+    return this.documentService.documentCreate(id, payload, file);
   }
 
   //Category------------------------------------------------------------

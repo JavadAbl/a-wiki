@@ -22,7 +22,7 @@ export function AdminSidebar() {
     );
 
   return (
-    <aside className="w-56 h-screen border-l border-neutral-100 bg-surface-300 p-4 flex flex-col gap-2 shadow-xl">
+    <aside className="w-56 h-screen border-l border-neutral-300 bg-surface-100 p-4 flex flex-col gap-2 shadow-xl">
       {/* Header / Brand */}
       <div className="flex-1 flex flex-col gap-1">
         <div className="font-bold text-lg mb-4 px-2 text-foreground">

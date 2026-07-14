@@ -1,6 +1,6 @@
 export interface DocumentDto {
   id: number;
   fileUrl: string;
-  mimeType: string;
+  title: string;
   description?: string | null;
 }

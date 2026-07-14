@@ -40,7 +40,6 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
     if (!res.error) {
       const { accessToken, refreshToken, user } = res.data;
       dis(authActions.login({ accessToken, refreshToken, user }));
-      toast.success("ورود موفقیت آمیز");
       dis(sharedActions.setIsOpenLogin({ isOpen: false }));
       if (redirect) nav(redirect);
     }

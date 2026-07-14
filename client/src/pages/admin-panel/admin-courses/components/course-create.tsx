@@ -18,6 +18,7 @@ import {
   useCategoryGetManyQuery,
   useCourseCreateMutation,
 } from "../../../../features/course/course-api";
+import { reactSelectStyles } from "../../../../utils/react-select-styles";
 
 interface Props {
   isOpen: boolean;
@@ -167,38 +168,7 @@ export default function CourseCreate({ isOpen, setIsOpen }: Props) {
                   menuPortalTarget={document.body} // renders menu outside the modal
                   menuPosition="fixed" // avoids scroll issues
                   maxMenuHeight={200} // optional: limit height
-                  styles={{
-                    control: (base, state) => ({
-                      ...base,
-                      borderRadius: "32px",
-                      /*  borderColor: state.isFocused
-                        ? "var(--ring)"
-                        : "var(--border)", */
-                      boxShadow: state.isFocused
-                        ? "0 0 0 2px var(--ring)"
-                        : "none",
-                      padding: "2px 4px",
-                      "&:hover": {
-                        borderColor: "var(--ring)",
-                      },
-                    }),
-                    placeholder: (base) => ({
-                      ...base,
-                      color: "var(--muted-foreground)",
-                      fontSize: "0.875rem",
-                    }),
-                    singleValue: (base) => ({
-                      ...base,
-                      fontSize: "0.875rem",
-                    }),
-                    input: (base) => ({
-                      ...base,
-                      fontSize: "0.875rem",
-                    }),
-                    // Optionally style the menu and its container
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                    menu: (base) => ({ ...base, zIndex: 9999 }),
-                  }}
+                  styles={reactSelectStyles}
                 />
                 <InputMessage>{fieldState.error?.message}</InputMessage>
               </Field>

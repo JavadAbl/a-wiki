@@ -119,8 +119,8 @@ model Document {
   courseId    Int
   course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   fileUrl     String
-  mimeType    String
   sortOrder   Int     @default(0)
+  title       String
   description String?
 
   createdAt DateTime @default(now())
@@ -132,7 +132,7 @@ model Section {
   courseId     Int
   course       Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title        String
-  sectionOrder Int
+  sectionOrder Int     @default(0)
   description  String?
 
   parts Part[]
@@ -146,7 +146,7 @@ model Part {
   sectionId   Int
   section     Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   title       String
-  partOrder   Int
+  partOrder   Int     @default(0)
   description String?
 
   contents Content[]

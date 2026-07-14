@@ -51,7 +51,7 @@ export const baseApi: BaseQueryFn<
       (meta?.request.method === "DELETE" &&
         meta?.response?.status === status.NO_CONTENT)
     )
-      toast.success("Operation successful");
+      toast.success("عملیات موفقیت آمیز");
   }
 
   if (result.error) {

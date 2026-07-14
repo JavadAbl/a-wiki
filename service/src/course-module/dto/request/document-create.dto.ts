@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
 
-export class ContentCreateDto {
+export class DocumentCreateDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)

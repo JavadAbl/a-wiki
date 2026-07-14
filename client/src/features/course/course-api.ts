@@ -6,6 +6,8 @@ import type { CategoryDto } from "./dto/category.dto";
 import type { CourseDto } from "./dto/course.dto";
 import type { CourseCreateDto } from "./schemas/course-create-schema";
 import type { CourseDetailsDto } from "./dto/course.details.dto";
+import type { SectionCreateDto } from "./schemas/section-create-schema";
+import type { PartCreateDto } from "./schemas/part-create-schema";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
@@ -61,6 +63,69 @@ export const courseApi = createApi({
       }),
       invalidatesTags: ["course"],
     }),
+
+    CourseSetPublished: builder.mutation<
+      void,
+      { body: { isPublished: boolean }; courseId: number }
+    >({
+      query: ({ body, courseId }) => ({
+        url: `Courses/${courseId}/SetPublished`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    //Section-------------------------------------------------------
+    SectionCreate: builder.mutation<
+      number,
+      { body: SectionCreateDto; courseId: number }
+    >({
+      query: ({ body, courseId }) => ({
+        url: `Courses/${courseId}/Sections`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    //Part-------------------------------------------------------
+    PartCreate: builder.mutation<
+      number,
+      { body: PartCreateDto; sectionId: number }
+    >({
+      query: ({ body, sectionId }) => ({
+        url: `Courses/Sections/${sectionId}/Parts`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    //Content-------------------------------------------------------
+    ContentCreate: builder.mutation<number, { body: FormData; partId: number }>(
+      {
+        query: ({ body, partId }) => ({
+          url: `Courses/Parts/${partId}/Contents`,
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: ["course"],
+      },
+    ),
+
+    //Document-------------------------------------------------------
+    DocumentCreate: builder.mutation<
+      number,
+      { body: FormData; courseId: number }
+    >({
+      query: ({ body, courseId }) => ({
+        url: `Courses/${courseId}/Documents`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
   }),
 });
 
@@ -70,4 +135,9 @@ export const {
   useCoursesGetManyQuery,
   useCourseCreateMutation,
   useCourseGetByIdQuery,
+  useSectionCreateMutation,
+  usePartCreateMutation,
+  useContentCreateMutation,
+  useDocumentCreateMutation,
+  useCourseSetPublishedMutation,
 } = courseApi;

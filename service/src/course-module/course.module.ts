@@ -13,6 +13,7 @@ import { ContentService } from './services/content.service';
 import { PartViewRepository } from './repositories/part-view.repository';
 import { CategoryService } from './services/category.service';
 import { CategoryController } from './controllers/category.controller';
+import { DocumentService } from './services/document.service';
 
 @Module({
   imports: [],
@@ -31,6 +32,7 @@ import { CategoryController } from './controllers/category.controller';
     PartService,
     ContentService,
     CategoryService,
+    DocumentService,
   ],
   exports: [],
 })

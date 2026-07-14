@@ -33,7 +33,7 @@ export function buildFindManyArgs<T extends keyof Prisma.TypeMap['model']>(
 
   if (search && options?.searchableFields?.length) {
     whereClause.OR = options.searchableFields.map((field) => ({
-      [field]: { contains: search, mode: 'insensitive' },
+      [field]: { contains: search /* mode: 'insensitive'  */ },
     }));
   }
 

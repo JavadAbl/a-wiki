@@ -5,6 +5,7 @@ import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 import { buildFindManyArgs } from 'src/common/utils/prisma-util';
 import { CategoryDto } from '../dto/response/category.dto';
 import { CategoryRepository } from '../repositories/category.repository';
+import { CategoryUpdateDto } from '../dto/request/category-update.dto';
 
 @Injectable()
 export class CategoryService {
@@ -16,7 +17,7 @@ export class CategoryService {
       ...predicate,
       where: { ...predicate.where },
     });
-    return { items: items as any, totalCount };
+    return { items: items, totalCount };
   }
 
   async categoryCreate(payload: CategoryCreateDto): Promise<number> {
@@ -26,6 +27,11 @@ export class CategoryService {
 
     const category = await this.categoryRep.create({ data: payload });
     return category.id;
+  }
+
+  async categoryUpdate(id: number, payload: CategoryUpdateDto): Promise<void> {
+    await this.categoryRep.findAndCheckExistsBy({ where: { id } }, 'id', id);
+    await this.categoryRep.update({ data: payload, where: { id } });
   }
 
   async categoryDelete(categoryId: number) {

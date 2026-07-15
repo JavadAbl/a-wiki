@@ -1,7 +1,9 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseApi } from "../base-api";
-import type { AuthDto } from "./dto/category.dto";
 import type { LoginDto } from "./schemas/login-schema";
+import type { SendOtpDto } from "./schemas/send-otp-schema";
+import type { AuthDto } from "./dto/auth.dto";
+import type { ResetPasswordDto } from "./schemas/reset-password-schema";
 
 export const authApi = createApi({
   reducerPath: "authApi",
@@ -16,7 +18,27 @@ export const authApi = createApi({
         body,
       }),
     }),
+
+    sendOtp: builder.mutation<void, SendOtpDto>({
+      query: (body) => ({
+        url: "Auth/Otp/Send",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    ResetPasswordOtp: builder.mutation<void, ResetPasswordDto>({
+      query: (body) => ({
+        url: "Users/ResetPasswordOtp",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useLoginMutation } = authApi;
+export const {
+  useLoginMutation,
+  useSendOtpMutation,
+  useResetPasswordOtpMutation,
+} = authApi;

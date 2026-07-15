@@ -12,6 +12,12 @@ import { LoginOtpDto } from '../dto/request/login-otp.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  /*  @Public()
+  @Post('Test')
+  test(): any {
+    return this.authService.sendSms('09128394413', 'test');
+  } */
+
   @Public()
   @Post('Login')
   login(@Body() payload: LoginDto): Promise<AuthDto> {

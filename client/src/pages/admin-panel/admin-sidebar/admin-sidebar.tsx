@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router";
 import { Button } from "#components/ui/button";
 import {
   BookOpen,
+  ChartBarIncreasingIcon,
   LogOut, // Changed from ChevronRightIcon for better UX
   Users,
 } from "lucide-react";
@@ -45,6 +46,21 @@ export function AdminSidebar() {
           )}
         </NavLink>
 
+        <NavLink to="/Admin/Categories" className={getNavLinkClass}>
+          {({ isActive }) => (
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2",
+                isActive && "bg-transparent hover:bg-transparent",
+              )}
+            >
+              <ChartBarIncreasingIcon size={18} />
+              <span>دسته بندی ها</span>{" "}
+            </Button>
+          )}
+        </NavLink>
+
         <NavLink to="/Admin/Users" className={getNavLinkClass}>
           {({ isActive }) => (
             <Button
@@ -56,7 +72,6 @@ export function AdminSidebar() {
             >
               <Users size={18} />
               <span>کاربران</span>{" "}
-              {/* Changed "Users" to Persian for consistency */}
             </Button>
           )}
         </NavLink>

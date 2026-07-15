@@ -21,6 +21,7 @@ import { User } from 'src/common/decorators/user.decorator';
 import { type TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 import { Public } from 'src/common/decorators/public.decorator';
 import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-otp.dto';
+import { UserUpdateDto } from '../dto/request/user-update.dto';
 
 @Controller('Users')
 export class UserController {
@@ -38,15 +39,20 @@ export class UserController {
     return this.userService.userGetById(tokenPayload.userId);
   }
 
-  @Get(':id')
-  userGetById(@Param('id', ParseIntPipe) id: number): Promise<UserDto> {
+  @Get(':userId')
+  userGetById(@Param('userId', ParseIntPipe) id: number): Promise<UserDto> {
     return this.userService.userGetById(id);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  userCreate(@Body() payload: UserCreateDto): Promise<UserDto> {
+  userCreate(@Body() payload: UserCreateDto): Promise<number> {
     return this.userService.userCreate(payload);
+  }
+
+  @Patch(':userId')
+  userUpdate(@Param('userId') id: number, @Body() payload: UserUpdateDto): Promise<void> {
+    return this.userService.userUpdate(id, payload);
   }
 
   @Public()

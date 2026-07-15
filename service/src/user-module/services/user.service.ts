@@ -14,6 +14,7 @@ import { AppConfig } from 'src/common/config/config.type';
 import { Role } from 'src/generated/prisma/enums';
 import { CACHE_MANAGER, type Cache } from '@nestjs/cache-manager';
 import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-otp.dto';
+import { UserUpdateDto } from '../dto/request/user-update.dto';
 
 @Injectable()
 export class UserService {
@@ -30,48 +31,49 @@ export class UserService {
   }
 
   async userGetMany(query: GetManyQueryType<'User'>): Promise<GetManyReply<UserDto>> {
-    const predicate = buildFindManyArgs(query, {
-      searchableFields: ['firstName', 'lastName', 'username', 'mobile'],
+    const adminMobile = this.configService.get<string>('SUPER_ADMIN_MOBILE');
+    const predicate = buildFindManyArgs(query, { searchableFields: ['firstName', 'lastName', 'mobile'] });
+    const { items, totalCount } = await this.userRep.findMany({
+      ...predicate,
+      where: { ...predicate.where, NOT: { mobile: adminMobile } },
+      omit: { password: true },
     });
-    const { items, totalCount } = await this.userRep.findMany(predicate);
     const usersDto = plainToInstance(UserDto, items);
     return { items: usersDto, totalCount };
   }
 
-  async userCreate(payload: UserCreateDto): Promise<UserDto> {
-    const { username, mobile } = payload;
+  async userCreate(payload: UserCreateDto): Promise<number> {
+    const { mobile } = payload;
 
-    await this.userRep.checkDuplicateBy({ where: { username } }, 'username', username);
+    await this.userRep.checkDuplicateBy({ where: { mobile } }, 'mobile', mobile);
 
     const defaultPassword = mobile;
     const hashedPassword = await this.passwordService.hashPassword(defaultPassword);
 
     const user = await this.userRep.create({ data: { ...payload, password: hashedPassword } });
 
-    return plainToInstance(UserDto, user);
+    return user.id;
+  }
+
+  async userUpdate(userId: number, payload: UserUpdateDto): Promise<void> {
+    const { mobile } = payload;
+    await this.userRep.findAndCheckExistsBy({ where: { mobile } }, 'mobile', mobile);
+    await this.userRep.update({ data: payload, where: { id: userId } });
   }
 
   async superAdminCreate(seedPass: string): Promise<void> {
     if (seedPass != this.configService.getOrThrow('SUPER_ADMIN_SEED_PASSWORD'))
       throw new UnauthorizedException();
 
-    const username = this.configService.getOrThrow<string>('SUPER_ADMIN_USERNAME');
     const mobile = this.configService.getOrThrow<string>('SUPER_ADMIN_MOBILE');
     const defaultPassword = this.configService.getOrThrow<string>('SUPER_ADMIN_PASSWORD');
 
-    await this.userRep.checkDuplicateBy({ where: { username } }, 'username', username);
+    await this.userRep.checkDuplicateBy({ where: { mobile } }, 'mobile', mobile);
 
     const hashedPassword = await this.passwordService.hashPassword(defaultPassword);
 
     await this.userRep.create({
-      data: {
-        firstName: 'sa',
-        lastName: 'sa',
-        mobile,
-        username,
-        role: Role.SuperAdmin,
-        password: hashedPassword,
-      },
+      data: { firstName: 'sa', lastName: 'sa', mobile, role: Role.SuperAdmin, password: hashedPassword },
     });
   }
 

@@ -10,12 +10,13 @@ import {
 } from "../../features/auth/schemas/login-schema";
 import { Field, FieldLabel } from "#components/ui/field";
 import { useLoginMutation } from "../../features/auth/auth-api";
-import { toast } from "sonner";
 import { useAppDispatch } from "#hooks/redux-hooks";
 import { authActions } from "../../features/auth/auth-slice";
 import { useNavigate } from "react-router";
 import { sharedActions } from "../../features/shared/shared-slice";
 import { InputMessage } from "#components/inputs/input-message";
+import { useState } from "react";
+import ResetPassword from "./reset-password";
 
 interface Props {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface Props {
   redirect?: string | null;
 }
 export default function Login({ isOpen, setIsOpen, redirect }: Props) {
+  const [isOpenResetPassword, setIsOpenResetPassword] = useState(false);
   const nav = useNavigate();
   const dis = useAppDispatch();
   const form = useForm<LoginDto>({
@@ -31,6 +33,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
       mobile: "",
       password: "",
     },
+    mode: "onSubmit",
   });
 
   const [mutateLogin] = useLoginMutation();
@@ -47,72 +50,89 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
 
   return (
     <Modal open={isOpen} onOpenChange={setIsOpen} title="ورود">
-      <form
-        onSubmit={form.handleSubmit(handleLogin)}
-        className={cn("flex flex-col gap-[4px] py-4 px-[40px] ")}
-      >
-        <div>
-          <Controller
-            name="mobile"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field className="" data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="">{"شماره موبایل"} </FieldLabel>
+      {isOpenResetPassword && (
+        <ResetPassword done={() => setIsOpenResetPassword(false)} />
+      )}
 
-                <FormInput
-                  {...field}
-                  aria-invalid={fieldState.invalid}
-                  placeholder="شماره موبایل"
-                  autoComplete="off"
-                />
+      {!isOpenResetPassword && (
+        <form
+          onSubmit={form.handleSubmit(handleLogin)}
+          className={cn("flex flex-col gap-[4px] py-4 px-[40px] ")}
+        >
+          <div>
+            <Controller
+              name="mobile"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field className="" data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="">{"شماره موبایل"} </FieldLabel>
 
-                <InputMessage>{fieldState.error?.message}</InputMessage>
-              </Field>
-            )}
-          />
+                  <FormInput
+                    {...field}
+                    aria-invalid={fieldState.invalid}
+                    placeholder="شماره موبایل"
+                    autoComplete="off"
+                  />
 
-          <Controller
-            name="password"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="">{" رمز عبور"} </FieldLabel>
+                  <InputMessage>{fieldState.error?.message}</InputMessage>
+                </Field>
+              )}
+            />
 
-                <FormInput
-                  {...field}
-                  aria-invalid={fieldState.invalid}
-                  placeholder="رمز عبور"
-                  type="password"
-                  autoComplete="off"
-                />
+            <Controller
+              name="password"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="">{" رمز عبور"} </FieldLabel>
 
-                <InputMessage>{fieldState.error?.message}</InputMessage>
-              </Field>
-            )}
-          />
-        </div>
+                  <FormInput
+                    {...field}
+                    aria-invalid={fieldState.invalid}
+                    placeholder="رمز عبور"
+                    type="password"
+                    autoComplete="off"
+                  />
 
-        <div className={cn("flex justify-end gap-1 ")}>
-          <Button
-            type="submit"
-            variant={"primary"}
-            size={"lg"}
-            className={cn(" self-end rounded-[24px]  min-w-[75px]")}
-          >
-            {"ورود"}
-          </Button>
+                  <InputMessage>{fieldState.error?.message}</InputMessage>
+                </Field>
+              )}
+            />
+          </div>
 
-          <Button
-            type="button"
-            variant={"secondary"}
-            size={"lg"}
-            className={cn(" self-end rounded-[24px]   min-w-[75px]")}
-            onClick={() => dis(sharedActions.setIsOpenLogin({ isOpen: false }))}
-          >
-            {"انصراف"}
-          </Button>
-        </div>
-      </form>
+          <div className={cn("flex justify-between")}>
+            <Button
+              variant={"link"}
+              onClick={() => setIsOpenResetPassword(true)}
+            >
+              {"فراموشی رمز عبور"}
+            </Button>
+
+            <div className={cn("flex justify-end gap-1 ")}>
+              <Button
+                type="submit"
+                variant={"primary"}
+                size={"lg"}
+                className={cn(" self-end rounded-[24px]  min-w-[75px]")}
+              >
+                {"ورود"}
+              </Button>
+
+              <Button
+                type="button"
+                variant={"secondary"}
+                size={"lg"}
+                className={cn(" self-end rounded-[24px]   min-w-[75px]")}
+                onClick={() =>
+                  dis(sharedActions.setIsOpenLogin({ isOpen: false }))
+                }
+              >
+                {"انصراف"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      )}
     </Modal>
   );
 }

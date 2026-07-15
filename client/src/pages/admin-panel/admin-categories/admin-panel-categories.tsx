@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useCoursesGetManyAdminQuery } from "../../../features/course/course-api";
 import {
   Table,
   TableBody,
@@ -9,7 +8,6 @@ import {
   TableRow,
 } from "#components/ui/table";
 import { Button } from "#components/ui/button";
-import { Badge } from "#components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,24 +18,27 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
-  MonitorUpIcon,
   MoreVertical,
   Pencil,
   Trash2,
 } from "lucide-react";
-import CourseCreate from "./components/course-create";
-import { useNavigate } from "react-router";
+import CategoryCreate from "./components/category-create";
 import { cn } from "#lib/utils";
-import CourseSetPublished from "./components/course-set-published";
-import type { CourseDto } from "../../../features/course/dto/course.dto";
+import {
+  useCategoryDeleteByIdMutation,
+  useCategoryGetManyQuery,
+} from "../../../features/course/course-api";
+import CategoryUpdate from "./components/category-update";
+import type { CategoryDto } from "../../../features/course/dto/category.dto";
+import { ConfirmModal } from "#components/modals/confirm-modal";
 
-export default function AdminPanelCourses() {
-  const nav = useNavigate();
-  const [isOpenCourseCreate, setIsOpenCourseCreate] = useState(false);
-  // const [isOpenSetPublished, setIsOpenSetPublished] = useState(false);
+export default function AdminPanelCategories() {
+  const [isOpenCategoryCreate, setIsOpenCategoryCreate] = useState(false);
+  const [selectedCategoryForUpdate, setSelectedCategoryForUpdate] =
+    useState<CategoryDto | null>(null);
+  const [selectedCategoryForDelete, setSelectedCategoryForDelete] =
+    useState<CategoryDto | null>(null);
   const [modalKeys, setModalsKey] = useState(0);
-  const [selectedCourseForPublish, setSelectedCourseForPublish] =
-    useState<CourseDto | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -45,40 +46,54 @@ export default function AdminPanelCourses() {
     setModalsKey((val) => val + 1);
   };
 
-  const { data: coursesRes, isFetching } = useCoursesGetManyAdminQuery({
+  //Data Hooks
+  const { data: coursesRes, isFetching } = useCategoryGetManyQuery({
     pageSize,
     page: currentPage,
   });
+
+  const [mutateDelete, { isLoading: isLoadingDelete }] =
+    useCategoryDeleteByIdMutation();
+
+  const handleDelete = async () => {
+    if (!selectedCategoryForDelete) return;
+    const res = await mutateDelete(selectedCategoryForDelete.id);
+    if (!res.error) setSelectedCategoryForDelete(null);
+  };
 
   const courses = coursesRes?.items || [];
   const coursesCount = coursesRes?.totalCount || 0;
   const totalPages = Math.ceil(coursesCount / pageSize);
 
-  const formatDuration = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    if (hrs > 0) return `${hrs} ساعت و ${mins} دقیقه`;
-    return `${mins} دقیقه`;
-  };
-
   return (
     <>
-      <CourseCreate
+      <CategoryCreate
         key={`Create_${modalKeys}`}
-        isOpen={isOpenCourseCreate}
+        isOpen={isOpenCategoryCreate}
         setIsOpen={(open: boolean) => {
-          setIsOpenCourseCreate(open);
+          setIsOpenCategoryCreate(open);
+          increaseModalsKey();
+        }}
+      />
+      <CategoryUpdate
+        key={`Update_${modalKeys}`}
+        category={selectedCategoryForUpdate}
+        close={() => {
+          setSelectedCategoryForUpdate(null);
           increaseModalsKey();
         }}
       />
 
-      <CourseSetPublished
-        key={`SetPublished_${modalKeys}`}
-        setIsOpen={() => {
-          setSelectedCourseForPublish(null);
-          increaseModalsKey();
+      <ConfirmModal
+        open={!!selectedCategoryForDelete}
+        onOpenChange={() => {
+          setSelectedCategoryForDelete(null);
         }}
-        course={selectedCourseForPublish}
+        title="حذف دسته بندی?"
+        description={`آیا از حذف ${selectedCategoryForDelete?.name} مطمئن هستید؟`}
+        destructive={true}
+        loading={isLoadingDelete}
+        onConfirm={handleDelete}
       />
 
       <div>
@@ -88,7 +103,7 @@ export default function AdminPanelCourses() {
             <h2 className="text-2xl font-bold tracking-tight">
               دوره‌های آموزشی
             </h2>
-            <Button onClick={() => setIsOpenCourseCreate(true)}>
+            <Button onClick={() => setIsOpenCategoryCreate(true)}>
               افزودن دوره
             </Button>
           </div>
@@ -98,12 +113,14 @@ export default function AdminPanelCourses() {
             <Table>
               {/* sticky top-0 keeps the header visible when scrolling the table */}
               <TableHeader className="sticky top-0 z-10 shadow-sm">
-                <TableRow className={cn("bg-surface-200!")}>
-                  <TableHead className="text-start">عنوان و مدرس</TableHead>
-                  <TableHead className="text-center">تعداد دروس</TableHead>
-                  <TableHead className="text-center">مدت زمان</TableHead>
-                  <TableHead className="text-center">وضعیت</TableHead>
-                  <TableHead className="text-left w-[80px]">عملیات</TableHead>
+                <TableRow className={cn("flex items-center  bg-surface-200")}>
+                  <TableHead className="text-start flex-1"> {"نام"}</TableHead>
+                  <TableHead className="text-start flex-3">
+                    {"توضیحات"}
+                  </TableHead>
+                  <TableHead className="text-left w-[80px] flex-1">
+                    عملیات
+                  </TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -121,36 +138,21 @@ export default function AdminPanelCourses() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  courses.map((course) => (
-                    <TableRow key={`courses_${course.id}`}>
-                      <TableCell>
-                        <div className="font-medium">{course.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {course.lecturer}
-                          {course.lecturerProfession
-                            ? ` • ${course.lecturerProfession}`
-                            : ""}
-                        </div>
+                  courses.map((category) => (
+                    <TableRow
+                      className={cn("flex items-center")}
+                      key={`courses_${category.id}`}
+                    >
+                      <TableCell className={cn("flex-1")}>
+                        <div className="font-medium">{category.name}</div>
                       </TableCell>
 
-                      <TableCell className="text-center">
-                        {course.totalContents} عدد
+                      <TableCell className=" flex-3">
+                        {category.description}
                       </TableCell>
 
-                      <TableCell className="text-center">
-                        {formatDuration(course.totalContentsLength)}
-                      </TableCell>
-
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={course.isPublished ? "default" : "secondary"}
-                        >
-                          {course.isPublished ? "انتشار یافته" : "پیش‌نویس"}
-                        </Badge>
-                      </TableCell>
-
-                      <TableCell className="text-left">
-                        <DropdownMenu modal={true}>
+                      <TableCell className="text-left flex-1">
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger>
                             <Button
                               variant="ghost"
@@ -165,27 +167,22 @@ export default function AdminPanelCourses() {
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem
                               className="cursor-pointer text-xs"
-                              onClick={() => nav(`/Admin/Courses/${course.id}`)}
+                              onClick={() =>
+                                setSelectedCategoryForUpdate(category)
+                              }
                             >
                               <Pencil className="mr-2 h-4 w-4 " />
-                              نمایش
+                              ویرایش
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
 
                             <DropdownMenuItem
-                              className="cursor-pointer text-xs"
-                              onClick={() => {
-                                setSelectedCourseForPublish(course);
-                              }}
+                              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
+                              onClick={() =>
+                                setSelectedCategoryForDelete(category)
+                              }
                             >
-                              <MonitorUpIcon className="mr-2 h-4 w-4 " />
-                              {"تغییر وضعیت انتشار"}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs">
                               <Trash2 className="mr-2 h-4 w-4" />
                               حذف
                             </DropdownMenuItem>

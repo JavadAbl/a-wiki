@@ -8,17 +8,15 @@ const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function createSuperAdmin() {
-  const SUPER_ADMIN_USERNAME = process.env.SUPER_ADMIN_USERNAME!;
   const SUPER_ADMIN_MOBILE = process.env.SUPER_ADMIN_MOBILE!;
   const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD!;
 
   const hashedPassword = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
 
   const superAdmin = await prisma.user.upsert({
-    where: { username: SUPER_ADMIN_USERNAME },
+    where: { mobile: SUPER_ADMIN_MOBILE },
     update: { role: Role.SuperAdmin, isActive: true },
     create: {
-      username: SUPER_ADMIN_USERNAME,
       mobile: SUPER_ADMIN_MOBILE,
       firstName: 'Super',
       lastName: 'Admin',
@@ -28,7 +26,7 @@ async function createSuperAdmin() {
     },
   });
 
-  console.log(`✅ SuperAdmin ensured: ${superAdmin.username} (ID: ${superAdmin.id})`);
+  console.log(`✅ SuperAdmin ensured: ${superAdmin.mobile} (ID: ${superAdmin.id})`);
   return superAdmin;
 }
 

@@ -34,10 +34,7 @@ import { SectionCreateDto } from '../dto/request/section-create.dto';
 import { type Response } from 'express';
 import { User } from 'src/common/decorators/user.decorator';
 import { type TokenPayload } from 'src/auth-module/contracts/token-service.contract';
-import { CategoryCreateDto } from '../dto/request/category-create.dto';
-import { CategoryService } from '../services/category.service';
 import { Public } from 'src/common/decorators/public.decorator';
-import { CategoryDto } from '../dto/response/category.dto';
 import { DocumentCreateDto } from '../dto/request/document-create.dto';
 import { DocumentService } from '../services/document.service';
 
@@ -48,7 +45,6 @@ export class CourseController {
     private readonly sectionService: SectionService,
     private readonly partService: PartService,
     private readonly contentService: ContentService,
-    private readonly categoryService: CategoryService,
     private readonly documentService: DocumentService,
   ) {}
 
@@ -59,7 +55,15 @@ export class CourseController {
     @Query() query: GetManyQuery,
     @Query('categoryId', new ParseIntPipe({ optional: true })) categoryId?: number,
   ): Promise<GetManyReply<CourseDto>> {
-    return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, categoryId);
+    return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, false, categoryId);
+  }
+
+  @Get('/Admin/GetMany')
+  courseGetManyAdmin(
+    @Query() query: GetManyQuery,
+    @Query('categoryId', new ParseIntPipe({ optional: true })) categoryId?: number,
+  ): Promise<GetManyReply<CourseDto>> {
+    return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, true, categoryId);
   }
 
   @Get(':courseId')
@@ -175,18 +179,5 @@ export class CourseController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<number> {
     return this.documentService.documentCreate(id, payload, file);
-  }
-
-  //Category------------------------------------------------------------
-  @Public()
-  @Get('Categories')
-  categoryGetMany(@Query() query: GetManyQuery): Promise<GetManyReply<CategoryDto>> {
-    return this.categoryService.categoryGetMany(query as GetManyQueryType<'Category'>);
-  }
-
-  @Post('Categories')
-  @HttpCode(HttpStatus.CREATED)
-  categoryCreate(@Body() payload: CategoryCreateDto): Promise<number> {
-    return this.categoryService.categoryCreate(payload);
   }
 }

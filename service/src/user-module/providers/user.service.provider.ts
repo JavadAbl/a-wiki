@@ -16,11 +16,4 @@ export class UserProvider implements UserServiceContract {
   userGetById(id: number): Promise<User | null> {
     return this.userRep.findUnique({ where: { id } });
   }
-
-  userGetByUsername(username: string): Promise<UserWithPermissions | null> {
-    return this.userRep.findUnique({
-      where: { username },
-      include: { userPermissions: { select: { permission: { select: { name: true } } } } },
-    });
-  }
 }

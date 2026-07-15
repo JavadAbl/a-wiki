@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const CategoryCreateSchema = z.object({
+export const CategoryUpdateSchema = z.object({
   name: z.string("نام مورد نیاز است"),
 
   description: z
@@ -11,4 +11,4 @@ export const CategoryCreateSchema = z.object({
     .optional(),
 });
 
-export type CategoryCreateDto = z.infer<typeof CategoryCreateSchema>;
+export type CategoryUpdateDto = z.infer<typeof CategoryUpdateSchema>;

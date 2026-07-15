@@ -38,19 +38,18 @@ export class CourseService {
 
   async courseGetMany(
     query: GetManyQueryType<'Course'>,
+    adminCourses: boolean,
     categoryId?: number,
   ): Promise<GetManyReply<CourseDto>> {
     const predicate = buildFindManyArgs(query, { searchableFields: ['title'] });
 
-    // 1. Fetch ONLY the course data (no heavy nested includes)
-    /*  const items = await this.courseRep.prismaClient.course.findMany({
-      ...predicate,
-      where: { ...predicate.where, categoryId },
-    }); */
+    let isPublished: boolean | undefined;
+    if (adminCourses) isPublished = undefined;
+    else isPublished = true;
 
     const { items, totalCount } = await this.courseRep.findMany({
       ...predicate,
-      where: { ...predicate.where, categoryId },
+      where: { ...predicate.where, categoryId, isPublished },
     });
 
     if (items.length === 0) {

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useCoursesGetManyAdminQuery } from "../../../features/course/course-api";
 import {
   Table,
   TableBody,
@@ -9,7 +8,6 @@ import {
   TableRow,
 } from "#components/ui/table";
 import { Button } from "#components/ui/button";
-import { Badge } from "#components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,26 +16,27 @@ import {
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu";
 import {
+  CheckCircleIcon,
   ChevronLeft,
   ChevronRight,
-  MonitorUpIcon,
   MoreVertical,
   Pencil,
-  Trash2,
 } from "lucide-react";
-import CourseCreate from "./components/course-create";
-import { useNavigate } from "react-router";
 import { cn } from "#lib/utils";
-import CourseSetPublished from "./components/course-set-published";
-import type { CourseDto } from "../../../features/course/dto/course.dto";
+import { useUserGetManyQuery } from "../../../features/user/user-api";
+import type { UserDto } from "../../../features/user/dto/user.dto";
+import UserCreate from "./components/user-create";
+import UserUpdate from "./components/user-update";
+import { Badge } from "#components/ui/badge";
+import UserSetActive from "./components/user-set-active";
 
-export default function AdminPanelCourses() {
-  const nav = useNavigate();
-  const [isOpenCourseCreate, setIsOpenCourseCreate] = useState(false);
-  // const [isOpenSetPublished, setIsOpenSetPublished] = useState(false);
+export default function AdminPanelUsers() {
+  const [isOpenUserCreate, setIsOpenUserCreate] = useState(false);
+  const [selectedUserForUpdate, setSelectedUserForUpdate] =
+    useState<UserDto | null>(null);
+  const [selectedUserForSetActive, setSelectedUserForSetActive] =
+    useState<UserDto | null>(null);
   const [modalKeys, setModalsKey] = useState(0);
-  const [selectedCourseForPublish, setSelectedCourseForPublish] =
-    useState<CourseDto | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -45,7 +44,8 @@ export default function AdminPanelCourses() {
     setModalsKey((val) => val + 1);
   };
 
-  const { data: coursesRes, isFetching } = useCoursesGetManyAdminQuery({
+  //Data Hooks
+  const { data: coursesRes, isFetching } = useUserGetManyQuery({
     pageSize,
     page: currentPage,
   });
@@ -54,31 +54,31 @@ export default function AdminPanelCourses() {
   const coursesCount = coursesRes?.totalCount || 0;
   const totalPages = Math.ceil(coursesCount / pageSize);
 
-  const formatDuration = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    if (hrs > 0) return `${hrs} ساعت و ${mins} دقیقه`;
-    return `${mins} دقیقه`;
-  };
-
   return (
     <>
-      <CourseCreate
+      <UserCreate
         key={`Create_${modalKeys}`}
-        isOpen={isOpenCourseCreate}
+        isOpen={isOpenUserCreate}
         setIsOpen={(open: boolean) => {
-          setIsOpenCourseCreate(open);
+          setIsOpenUserCreate(open);
           increaseModalsKey();
         }}
       />
-
-      <CourseSetPublished
-        key={`SetPublished_${modalKeys}`}
-        setIsOpen={() => {
-          setSelectedCourseForPublish(null);
+      <UserUpdate
+        key={`Update_${modalKeys}`}
+        user={selectedUserForUpdate}
+        close={() => {
+          setSelectedUserForUpdate(null);
           increaseModalsKey();
         }}
-        course={selectedCourseForPublish}
+      />
+      <UserSetActive
+        key={`SetActive_${modalKeys}`}
+        user={selectedUserForSetActive}
+        close={() => {
+          setSelectedUserForSetActive(null);
+          increaseModalsKey();
+        }}
       />
 
       <div>
@@ -88,7 +88,7 @@ export default function AdminPanelCourses() {
             <h2 className="text-2xl font-bold tracking-tight">
               دوره‌های آموزشی
             </h2>
-            <Button onClick={() => setIsOpenCourseCreate(true)}>
+            <Button onClick={() => setIsOpenUserCreate(true)}>
               افزودن دوره
             </Button>
           </div>
@@ -98,12 +98,18 @@ export default function AdminPanelCourses() {
             <Table>
               {/* sticky top-0 keeps the header visible when scrolling the table */}
               <TableHeader className="sticky top-0 z-10 shadow-sm">
-                <TableRow className={cn("bg-surface-200!")}>
-                  <TableHead className="text-start">عنوان و مدرس</TableHead>
-                  <TableHead className="text-center">تعداد دروس</TableHead>
-                  <TableHead className="text-center">مدت زمان</TableHead>
-                  <TableHead className="text-center">وضعیت</TableHead>
-                  <TableHead className="text-left w-[80px]">عملیات</TableHead>
+                <TableRow className={cn("flex items-center  bg-surface-200")}>
+                  <TableHead className="text-start flex-1"> {"نام"}</TableHead>
+                  <TableHead className="text-start flex-1">
+                    {"نام خانوادگی"}
+                  </TableHead>
+                  <TableHead className="text-start flex-1">
+                    {"موبایل"}
+                  </TableHead>
+                  <TableHead className="text-start flex-1">{"وضعیت"}</TableHead>
+                  <TableHead className="text-left w-[80px] flex-1">
+                    عملیات
+                  </TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -121,36 +127,29 @@ export default function AdminPanelCourses() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  courses.map((course) => (
-                    <TableRow key={`courses_${course.id}`}>
-                      <TableCell>
-                        <div className="font-medium">{course.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {course.lecturer}
-                          {course.lecturerProfession
-                            ? ` • ${course.lecturerProfession}`
-                            : ""}
-                        </div>
+                  courses.map((user) => (
+                    <TableRow
+                      className={cn("flex items-center")}
+                      key={`courses_${user.id}`}
+                    >
+                      <TableCell className={cn("flex-1")}>
+                        {user.firstName}
                       </TableCell>
 
-                      <TableCell className="text-center">
-                        {course.totalContents} عدد
-                      </TableCell>
+                      <TableCell className=" flex-1">{user.lastName}</TableCell>
 
-                      <TableCell className="text-center">
-                        {formatDuration(course.totalContentsLength)}
-                      </TableCell>
+                      <TableCell className=" flex-1">{user.mobile}</TableCell>
 
-                      <TableCell className="text-center">
+                      <TableCell className="flex-1">
                         <Badge
-                          variant={course.isPublished ? "default" : "secondary"}
+                          variant={user.isActive ? "default" : "secondary"}
                         >
-                          {course.isPublished ? "انتشار یافته" : "پیش‌نویس"}
+                          {user.isActive ? "فعال" : "غیر فعال"}
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-left">
-                        <DropdownMenu modal={true}>
+                      <TableCell className="text-left flex-1">
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger>
                             <Button
                               variant="ghost"
@@ -165,29 +164,20 @@ export default function AdminPanelCourses() {
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem
                               className="cursor-pointer text-xs"
-                              onClick={() => nav(`/Admin/Courses/${course.id}`)}
+                              onClick={() => setSelectedUserForUpdate(user)}
                             >
                               <Pencil className="mr-2 h-4 w-4 " />
-                              نمایش
+                              ویرایش
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
 
                             <DropdownMenuItem
-                              className="cursor-pointer text-xs"
-                              onClick={() => {
-                                setSelectedCourseForPublish(course);
-                              }}
+                              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
+                              onClick={() => setSelectedUserForSetActive(user)}
                             >
-                              <MonitorUpIcon className="mr-2 h-4 w-4 " />
-                              {"تغییر وضعیت انتشار"}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              حذف
+                              <CheckCircleIcon className="mr-2 h-4 w-4" />
+                              تغییر وضعیت
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

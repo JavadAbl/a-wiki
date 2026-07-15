@@ -1,4 +1,11 @@
-import { BadRequestException, Inject, Injectable, Type, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Type,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   generateActionPermissionName,
   generateControllerPermissionName,
@@ -21,6 +28,9 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { type Cache as NestCache } from 'cache-manager';
 import { LoginOtpDto } from '../dto/request/login-otp.dto';
 import { SendOtpDto } from '../dto/request/send-otp.dto';
+import { ConfigService } from '@nestjs/config';
+import { AppConfig } from 'src/common/config/config.type';
+import axios, { AxiosError } from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -36,13 +46,17 @@ export class AuthService {
     @Inject(ITokenService) private readonly tokenService: ITokenService,
     @Inject(UserServiceContract) private readonly userService: UserServiceContract,
     @Inject(CACHE_MANAGER) private cacheManager: NestCache,
+    private readonly config: ConfigService<AppConfig>,
   ) {}
 
   async login(payload: LoginDto): Promise<AuthDto> {
     const { password, mobile } = payload;
 
     const user = await this.userService.userGetByMobile(mobile);
+
     if (!user) throw new UnauthorizedException('Incorrect username or password');
+
+    if (!user.isActive) throw new UnauthorizedException('کاربر غیر فعال است');
 
     const validateResult = await this.passwordService.validatePassword(password, user.password);
     if (!validateResult) throw new UnauthorizedException('Incorrect username or password');
@@ -79,9 +93,34 @@ export class AuthService {
 
   async sendOtp(payload: SendOtpDto) {
     const { mobile } = payload;
-    //Todo
-    //Send sms
+    const random5Digit = Math.floor(Math.random() * 90000) + 10000;
+    await this.sendSms(mobile, random5Digit.toFixed());
     await this.cacheManager.set(`otp-${mobile}`, '123456', 120000);
+  }
+
+  private async sendSms(to: string, text: string) {
+    const endpoint = 'https://edge.ippanel.com/v1/api/send';
+    const apiKey = this.config.get<string>('SMS_API_KEY');
+    const from_number = this.config.get<string>('SMS_FROM_NUMBER');
+    const templateCode = this.config.get<string>('SMS_TEMPLATE_CODE');
+
+    try {
+      const payload = {
+        sending_type: 'pattern',
+        from_number: from_number,
+        code: templateCode,
+        recipients: ['+98' + to.slice(1)],
+        params: { code: text },
+      };
+
+      const res = await axios.post(endpoint, payload, { headers: { Authorization: apiKey } });
+
+      console.log(res.status, res.data);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) console.log(error.response?.status, error?.response?.data);
+      else console.log(error);
+      throw new InternalServerErrorException('اشکال در ارسال پیام کوتاه');
+    }
   }
 
   //Permission-----------------------------------------------

@@ -8,6 +8,7 @@ import type { CourseCreateDto } from "./schemas/course-create-schema";
 import type { CourseDetailsDto } from "./dto/course.details.dto";
 import type { SectionCreateDto } from "./schemas/section-create-schema";
 import type { PartCreateDto } from "./schemas/part-create-schema";
+import type { CategoryUpdateDto } from "./schemas/category-update-schema";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
@@ -21,6 +22,26 @@ export const courseApi = createApi({
         url: "Categories",
         method: "POST",
         body,
+      }),
+      invalidatesTags: ["category"],
+    }),
+
+    CategoryUpdate: builder.mutation<
+      void,
+      { body: CategoryUpdateDto; categoryId: number }
+    >({
+      query: ({ body, categoryId }) => ({
+        url: `Categories/${categoryId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["category"],
+    }),
+
+    CategoryDeleteById: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `Categories/${id}`,
+        method: "DELETE",
       }),
       invalidatesTags: ["category"],
     }),
@@ -43,6 +64,17 @@ export const courseApi = createApi({
     >({
       query: (params) => ({
         url: "Courses",
+        params: params ?? undefined,
+      }),
+      providesTags: ["course"],
+    }),
+
+    CoursesGetManyAdmin: builder.query<
+      GetManyReply<CourseDto>,
+      (GetManyQuery & { categoryId?: number }) | void
+    >({
+      query: (params) => ({
+        url: "Courses/Admin/GetMany",
         params: params ?? undefined,
       }),
       providesTags: ["course"],
@@ -140,4 +172,7 @@ export const {
   useContentCreateMutation,
   useDocumentCreateMutation,
   useCourseSetPublishedMutation,
+  useCoursesGetManyAdminQuery,
+  useCategoryDeleteByIdMutation,
+  useCategoryUpdateMutation,
 } = courseApi;

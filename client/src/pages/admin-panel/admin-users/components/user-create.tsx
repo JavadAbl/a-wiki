@@ -39,7 +39,7 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
   }
 
   return (
-    <Modal open={isOpen} onOpenChange={setIsOpen} title="ایجا کاربر جدید">
+    <Modal open={isOpen} onOpenChange={setIsOpen} title="ایجاد کاربر جدید">
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
         className={cn("flex flex-col gap-0 py-4 px-[40px]")}

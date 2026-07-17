@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/* data-grid.css */
+
+/* ==========================================
+   1. Define Raw Values (Light & Dark)
+   ========================================== */
+:root {
+  /* Grid Colors */
+  --dg-bg: #ffffff;
+  --dg-border: #e5e7eb;
+  --dg-primary: #2563eb;
+
+  /* Header */
+  --dg-header-bg: #f9fafb;
+  --dg-header-text: #4b5563;
+  --dg-header-hover: #111827;
+
+  /* Body & Cells */
+  --dg-cell: #1f2937;
+  --dg-row-hover: #f3f4f6;
+  --dg-row-selected: #eff6ff;
+
+  /* Footer / Pagination */
+  --dg-footer-bg: #f9fafb;
+  --dg-footer-text: #1f2937;
+
+  /* Spacing - Table Cells & Headers */
+  --dg-cell-px: 1rem; /* 16px */
+  --dg-cell-py: 0.75rem; /* 12px */
+  --dg-header-px: 1rem; /* 16px */
+  --dg-header-py: 0.75rem; /* 12px */
+  --dg-empty-py: 3rem; /* 48px - for loading/empty states */
+
+  /* Spacing - Footer & Gaps */
+  --dg-footer-px: 1rem; /* 16px */
+  --dg-footer-py: 0.75rem; /* 12px */
+  --dg-footer-gap: 1rem; /* 16px - gap between left and right footer groups */
+  --dg-control-gap: 0.75rem; /* 12px - gap inside rows-per-page group */
+  --dg-btn-gap: 0.5rem; /* 8px - gap between prev/next buttons */
+  --dg-icon-gap: 0.25rem; /* 4px - gap between header text and sort icon */
+
+  /* Spacing - Form Controls (Select & Buttons) */
+  --dg-control-px: 0.75rem; /* 12px */
+  --dg-control-py: 0.375rem; /* 6px */
+  --dg-control-pr: 2rem; /* 32px - space for select chevron */
+  --dg-btn-px: 0.75rem; /* 12px */
+  --dg-btn-py: 0.375rem; /* 6px */
+
+  /* Sizing - Icons & Handles */
+  --dg-icon-size: 1rem; /* 16px - chevron icon */
+  --dg-resize-w: 0.25rem; /* 4px - resize handle width */
+
+  /* Radius */
+  --dg-radius: 0.75rem;
+}
+
+[data-theme="dark"] {
+  /* Grid Colors */
+  --dg-bg: #1f2937;
+  --dg-border: #374151;
+  --dg-primary: #3b82f6;
+
+  /* Header */
+  --dg-header-bg: #111827;
+  --dg-header-text: #9ca3af;
+  --dg-header-hover: #f9fafb;
+
+  /* Body & Cells */
+  --dg-cell: #e5e7eb;
+  --dg-row-hover: #374151;
+  --dg-row-selected: #1e3a8a;
+
+  /* Footer / Pagination */
+  --dg-footer-bg: #111827;
+  --dg-footer-text: #e5e7eb;
+}
+
+/* ==========================================
+   2. Register Tokens with Tailwind Theme
+   ========================================== */
+@theme {
+  /* Colors */
+  --color-dg-bg: var(--dg-bg);
+  --color-dg-border: var(--dg-border);
+  --color-dg-primary: var(--dg-primary);
+  --color-dg-header-bg: var(--dg-header-bg);
+  --color-dg-header-text: var(--dg-header-text);
+  --color-dg-header-hover: var(--dg-header-hover);
+  --color-dg-cell: var(--dg-cell);
+  --color-dg-row-hover: var(--dg-row-hover);
+  --color-dg-row-selected: var(--dg-row-selected);
+  --color-dg-footer-bg: var(--dg-footer-bg);
+  --color-dg-footer-text: var(--dg-footer-text);
+
+  /* Spacing */
+  --spacing-dg-cell-x: var(--dg-cell-px);
+  --spacing-dg-cell-y: var(--dg-cell-py);
+  --spacing-dg-header-x: var(--dg-header-px);
+  --spacing-dg-header-y: var(--dg-header-py);
+  --spacing-dg-empty-y: var(--dg-empty-py);
+  --spacing-dg-footer-x: var(--dg-footer-px);
+  --spacing-dg-footer-y: var(--dg-footer-py);
+  --spacing-dg-footer-gap: var(--dg-footer-gap);
+  --spacing-dg-control-gap: var(--dg-control-gap);
+  --spacing-dg-btn-gap: var(--dg-btn-gap);
+  --spacing-dg-icon-gap: var(--dg-icon-gap);
+  --spacing-dg-control-px: var(--dg-control-px);
+  --spacing-dg-control-py: var(--dg-control-py);
+  --spacing-dg-control-pr: var(--dg-control-pr);
+  --spacing-dg-btn-px: var(--dg-btn-px);
+  --spacing-dg-btn-py: var(--dg-btn-py);
+
+  /* Sizing */
+  --width-dg-icon: var(--dg-icon-size);
+  --height-dg-icon: var(--dg-icon-size);
+  --width-dg-resize: var(--dg-resize-w);
+
+  /* Radius */
+  --radius-dg-card: var(--dg-radius);
+}
+
+/* Example: Compact Density Theme */
+.density-compact {
+  --dg-cell-px: 0.5rem;
+  --dg-cell-py: 0.25rem;
+  --dg-header-px: 0.5rem;
+  --dg-header-py: 0.375rem;
+  --dg-footer-py: 0.5rem;
+  --dg-control-py: 0.25rem;
+  --dg-btn-py: 0.25rem;
+}

@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* theme-modern-flat.css */
+
+/* ==========================================
+   1. Define Raw Values (Light Mode)
+   ========================================== */
+:root {
+  /* Grid Colors */
+  --dg-bg: transparent; /* Blends into page background */
+  --dg-border: transparent; /* No borders */
+  --dg-primary: #7c3aed; /* Violet 600 */
+
+  /* Header */
+  --dg-header-bg: transparent; /* No distinct header bg */
+  --dg-header-text: #64748b; /* Slate 500 */
+  --dg-header-hover: #0f172a; /* Slate 900 */
+
+  /* Body & Cells */
+  --dg-cell: #334155; /* Slate 700 */
+  --dg-row-hover: #f8fafc; /* Slate 50 */
+  --dg-row-selected: #f5f3ff; /* Violet 50 */
+
+  /* Footer / Pagination */
+  --dg-footer-bg: transparent;
+  --dg-footer-text: #64748b; /* Slate 500 */
+
+  /* Spacing - Spacious look */
+  --dg-cell-px: 1.25rem; /* 20px */
+  --dg-cell-py: 1rem; /* 16px - Taller rows */
+  --dg-header-px: 1.25rem;
+  --dg-header-py: 1.25rem; /* 20px - Tall header */
+  --dg-empty-py: 4rem; /* 64px */
+
+  /* Spacing - Footer & Gaps */
+  --dg-footer-px: 1.25rem;
+  --dg-footer-py: 1rem;
+  --dg-footer-gap: 1.5rem;
+  --dg-control-gap: 0.5rem;
+  --dg-btn-gap: 0.25rem;
+  --dg-icon-gap: 0.5rem;
+
+  /* Spacing - Form Controls */
+  --dg-control-px: 0.75rem;
+  --dg-control-py: 0.5rem;
+  --dg-control-pr: 2rem;
+  --dg-btn-px: 1rem;
+  --dg-btn-py: 0.5rem;
+
+  /* Sizing */
+  --dg-icon-size: 1.125rem; /* 18px - Slightly larger icons */
+  --dg-resize-w: 0.125rem; /* 2px - Thinner resize handle */
+
+  /* Radius - Chunkier corners */
+  --dg-radius: 1rem; /* 16px - Large radius for inputs/buttons */
+}
+
+/* ==========================================
+   2. Dark Mode Overrides
+   ========================================== */
+[data-theme="dark"] {
+  /* Grid Colors */
+  --dg-bg: transparent;
+  --dg-border: transparent;
+  --dg-primary: #a78bfa; /* Violet 400 */
+
+  /* Header */
+  --dg-header-bg: transparent;
+  --dg-header-text: #94a3b8; /* Slate 400 */
+  --dg-header-hover: #f1f5f9; /* Slate 100 */
+
+  /* Body & Cells */
+  --dg-cell: #e2e8f0; /* Slate 200 */
+  --dg-row-hover: #1e293b; /* Slate 800 */
+  --dg-row-selected: #2e1065; /* Violet 950 */
+
+  /* Footer / Pagination */
+  --dg-footer-bg: transparent;
+  --dg-footer-text: #94a3b8;
+}
+
+/* ==========================================
+   3. Register Tokens with Tailwind Theme
+   ========================================== */
+@theme {
+  /* Colors */
+  --color-dg-bg: var(--dg-bg);
+  --color-dg-border: var(--dg-border);
+  --color-dg-primary: var(--dg-primary);
+  --color-dg-header-bg: var(--dg-header-bg);
+  --color-dg-header-text: var(--dg-header-text);
+  --color-dg-header-hover: var(--dg-header-hover);
+  --color-dg-cell: var(--dg-cell);
+  --color-dg-row-hover: var(--dg-row-hover);
+  --color-dg-row-selected: var(--dg-row-selected);
+  --color-dg-footer-bg: var(--dg-footer-bg);
+  --color-dg-footer-text: var(--dg-footer-text);
+
+  /* Spacing */
+  --spacing-dg-cell-x: var(--dg-cell-px);
+  --spacing-dg-cell-y: var(--dg-cell-py);
+  --spacing-dg-header-x: var(--dg-header-px);
+  --spacing-dg-header-y: var(--dg-header-py);
+  --spacing-dg-empty-y: var(--dg-empty-py);
+  --spacing-dg-footer-x: var(--dg-footer-px);
+  --spacing-dg-footer-y: var(--dg-footer-py);
+  --spacing-dg-footer-gap: var(--dg-footer-gap);
+  --spacing-dg-control-gap: var(--dg-control-gap);
+  --spacing-dg-btn-gap: var(--dg-btn-gap);
+  --spacing-dg-icon-gap: var(--dg-icon-gap);
+  --spacing-dg-control-px: var(--dg-control-px);
+  --spacing-dg-control-py: var(--dg-control-py);
+  --spacing-dg-control-pr: var(--dg-control-pr);
+  --spacing-dg-btn-px: var(--dg-btn-px);
+  --spacing-dg-btn-py: var(--dg-btn-py);
+
+  /* Sizing */
+  --width-dg-icon: var(--dg-icon-size);
+  --height-dg-icon: var(--dg-icon-size);
+  --width-dg-resize: var(--dg-resize-w);
+
+  /* Radius */
+  --radius-dg-card: var(--dg-radius);
+}

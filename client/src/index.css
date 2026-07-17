@@ -3,10 +3,6 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
-html {
-  zoom: 0.9; /* 90% */
-}
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

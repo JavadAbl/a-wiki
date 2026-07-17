@@ -79,17 +79,16 @@ export function AdminSidebar() {
 
       {/* Footer */}
       <Separator className="my-2" />
-      <div>
-        <Button
-          variant="outline" // Changed from destructive to outline for a cleaner footer
-          size="sm"
-          className="w-full justify-start gap-2 font-normal text-sm text-muted-foreground hover:text-destructive hover:border-destructive"
-          onClick={() => nav("/")}
-        >
-          <LogOut size={16} />
-          <span>بازگشت به سایت</span>
-        </Button>
-      </div>
+
+      <Button
+        variant="destructive"
+        size="sm"
+        className="w-full gap-2 font-normal text-sm hover:text-destructive hover:border-destructive"
+        onClick={() => nav("/")}
+      >
+        <LogOut size={16} />
+        <span>بازگشت به سایت</span>
+      </Button>
     </aside>
   );
 }

@@ -1,13 +1,6 @@
-import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#components/ui/table";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "#components/ui/button";
+import { Input } from "#components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,14 +9,14 @@ import {
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu";
 import {
-  ChevronLeft,
-  ChevronRight,
   MoreVertical,
   Pencil,
+  PlusIcon,
+  SearchIcon,
   Trash2,
+  XIcon,
 } from "lucide-react";
 import CategoryCreate from "./components/category-create";
-import { cn } from "#lib/utils";
 import {
   useCategoryDeleteByIdMutation,
   useCategoryGetManyQuery,
@@ -31,6 +24,9 @@ import {
 import CategoryUpdate from "./components/category-update";
 import type { CategoryDto } from "../../../features/course/dto/category.dto";
 import { ConfirmModal } from "#components/modals/confirm-modal";
+import { type ColumnDef } from "@tanstack/react-table";
+import { DataGrid } from "#components/grids/data-grid";
+import { useDebounce } from "#hooks/use-debounce";
 
 export default function AdminPanelCategories() {
   const [isOpenCategoryCreate, setIsOpenCategoryCreate] = useState(false);
@@ -39,17 +35,24 @@ export default function AdminPanelCategories() {
   const [selectedCategoryForDelete, setSelectedCategoryForDelete] =
     useState<CategoryDto | null>(null);
   const [modalKeys, setModalsKey] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+
+  // Server pagination state
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Search state
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 500);
 
   const increaseModalsKey = () => {
     setModalsKey((val) => val + 1);
   };
 
-  //Data Hooks
-  const { data: coursesRes, isFetching } = useCategoryGetManyQuery({
+  // Data Hooks
+  const { data: categoriesRes, isFetching } = useCategoryGetManyQuery({
     pageSize,
-    page: currentPage,
+    page: pageIndex,
+    search: debouncedSearch ? debouncedSearch : undefined,
   });
 
   const [mutateDelete, { isLoading: isLoadingDelete }] =
@@ -61,12 +64,71 @@ export default function AdminPanelCategories() {
     if (!res.error) setSelectedCategoryForDelete(null);
   };
 
-  const courses = coursesRes?.items || [];
-  const coursesCount = coursesRes?.totalCount || 0;
-  const totalPages = Math.ceil(coursesCount / pageSize);
+  const categories = categoriesRes?.items || [];
+  const totalCount = categoriesRes?.totalCount || 0;
+
+  useEffect(() => {
+    const run = () => setPageIndex(1);
+    run();
+  }, [debouncedSearch]);
+
+  // Column definitions
+  const columns = useMemo<ColumnDef<CategoryDto>[]>(
+    () => [
+      {
+        id: "name",
+        header: "نام",
+        cell: ({ row }) => (
+          <div className="font-medium">{row.original.name}</div>
+        ),
+      },
+      {
+        id: "description",
+        header: "توضیحات",
+        cell: ({ row }) => row.original.description,
+      },
+      {
+        id: "actions",
+        header: "عملیات",
+        size: 100,
+        cell: ({ row }) => {
+          const category = row.original;
+          return (
+            <DropdownMenu modal={true}>
+              <DropdownMenuTrigger>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">باز کردن منو</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  className="cursor-pointer text-xs"
+                  onClick={() => setSelectedCategoryForUpdate(category)}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  ویرایش
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
+                  onClick={() => setSelectedCategoryForDelete(category)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  حذف
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ],
+    [],
+  );
 
   return (
     <>
+      {/* Modals */}
       <CategoryCreate
         key={`Create_${modalKeys}`}
         isOpen={isOpenCategoryCreate}
@@ -96,148 +158,60 @@ export default function AdminPanelCategories() {
         onConfirm={handleDelete}
       />
 
-      <div>
-        <div className="h-screen box-border flex flex-col gap-4 overflow-hidden p-4 ">
-          {/* Header: shrink-0 prevents it from being squished */}
-          <div className="flex items-center justify-between shrink-0">
-            <h2 className="text-2xl font-bold tracking-tight">
-              دوره‌های آموزشی
-            </h2>
-            <Button onClick={() => setIsOpenCategoryCreate(true)}>
-              افزودن دوره
-            </Button>
-          </div>
+      <div className="h-full box-border flex flex-col gap-4 overflow-hidden p-4">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold tracking-tight">دسته‌بندی‌ها</h2>
 
-          {/* Table Container: flex-1 takes remaining space, min-h-0 allows internal scrolling */}
-          <div className="flex-1 min-h-0 rounded-md border overflow-auto">
-            <Table>
-              {/* sticky top-0 keeps the header visible when scrolling the table */}
-              <TableHeader className="sticky top-0 z-10 shadow-sm">
-                <TableRow className={cn("flex items-center  bg-surface-200")}>
-                  <TableHead className="text-start flex-1"> {"نام"}</TableHead>
-                  <TableHead className="text-start flex-3">
-                    {"توضیحات"}
-                  </TableHead>
-                  <TableHead className="text-left w-[80px] flex-1">
-                    عملیات
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
+            {/* Search input */}
+            <div className="relative">
+              <SearchIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-              <TableBody>
-                {isFetching ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      در حال بارگذاری...
-                    </TableCell>
-                  </TableRow>
-                ) : courses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      دوره‌ای یافت نشد.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  courses.map((category) => (
-                    <TableRow
-                      className={cn("flex items-center")}
-                      key={`courses_${category.id}`}
-                    >
-                      <TableCell className={cn("flex-1")}>
-                        <div className="font-medium">{category.name}</div>
-                      </TableCell>
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="جستجوی دسته‌بندی..."
+                className="h-9 w-56 pr-9 pl-8 text-sm rounded-md bg-background"
+              />
 
-                      <TableCell className=" flex-3">
-                        {category.description}
-                      </TableCell>
-
-                      <TableCell className="text-left flex-1">
-                        <DropdownMenu modal={false}>
-                          <DropdownMenuTrigger>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">باز کردن منو</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-
-                          <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem
-                              className="cursor-pointer text-xs"
-                              onClick={() =>
-                                setSelectedCategoryForUpdate(category)
-                              }
-                            >
-                              <Pencil className="mr-2 h-4 w-4 " />
-                              ویرایش
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem
-                              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
-                              onClick={() =>
-                                setSelectedCategoryForDelete(category)
-                              }
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              حذف
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination: shrink-0 prevents it from being squished */}
-          <div className="flex items-center justify-between px-2 shrink-0">
-            <p className="text-sm text-muted-foreground">
-              {coursesCount > 0
-                ? `نمایش ${(currentPage - 1) * pageSize + 1} تا ${Math.min(
-                    currentPage * pageSize,
-                    coursesCount,
-                  )} از ${coursesCount} دوره`
-                : "دوره‌ای برای نمایش وجود ندارد"}
-            </p>
-
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1 || isFetching}
-              >
-                قبلی
-                <ChevronRight className="mr-1 h-4 w-4" />
-              </Button>
-
-              <span className="text-sm font-medium px-2">
-                صفحه {currentPage} از {totalPages || 1}
-              </span>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={
-                  currentPage === totalPages || isFetching || totalPages === 0
-                }
-              >
-                <ChevronLeft className="ml-1 h-4 w-4" />
-                بعدی
-              </Button>
+              {searchInput && (
+                <button
+                  type="button"
+                  aria-label="پاک کردن جستجو"
+                  onClick={() => setSearchInput("")}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  <XIcon className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
+
+          <Button onClick={() => setIsOpenCategoryCreate(true)}>
+            <PlusIcon />
+            افزودن دسته‌بندی
+          </Button>
         </div>
+
+        {/* DataGrid in Server Mode */}
+        <DataGrid
+          mode="server"
+          data={categories}
+          columns={columns}
+          isLoading={isFetching}
+          totalCount={totalCount}
+          // Convert 1-based API page to 0-based TanStack Table page
+          page={pageIndex - 1}
+          pageSize={pageSize}
+          // Convert 0-based TanStack Table page back to 1-based API page
+          onPaginationChange={({ page, pageSize }) => {
+            if (page !== undefined) setPageIndex(page + 1);
+            if (pageSize !== undefined) setPageSize(pageSize);
+          }}
+          className="flex-1 min-h-0"
+          alignLastEnd
+        />
       </div>
     </>
   );

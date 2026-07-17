@@ -17,8 +17,9 @@ export const userApi = createApi({
     }),
 
     UserGetMany: builder.query<GetManyReply<UserDto>, GetManyQuery>({
-      query: () => ({
+      query: (params) => ({
         url: "Users",
+        params,
       }),
       providesTags: ["user"],
     }),

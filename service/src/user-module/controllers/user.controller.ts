@@ -34,8 +34,6 @@ export class UserController {
 
   @Get('Context')
   userGetByContext(@User() tokenPayload: TokenPayload): Promise<UserDto> {
-    console.log(tokenPayload);
-
     return this.userService.userGetById(tokenPayload.userId);
   }
 

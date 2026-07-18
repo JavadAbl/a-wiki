@@ -9,5 +9,8 @@ export class DocumentDto {
   fileUrl: string;
 
   @Expose()
+  fileSize: number;
+
+  @Expose()
   description?: string | null;
 }

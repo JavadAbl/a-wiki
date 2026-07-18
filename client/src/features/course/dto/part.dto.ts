@@ -6,4 +6,6 @@ export interface PartDto {
   description?: string | null;
   partOrder: number;
   contents: ContentDto[];
+  totalContents: number;
+  totalContentsLength: number;
 }

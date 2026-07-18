@@ -19,3 +19,13 @@ export const toPersianDate = (dateStr: string): string => {
     day: "numeric",
   }).format(d);
 };
+
+export function secondToMinute(sec: number): number {
+  if (!sec) return 0;
+  return Math.round(sec / 60);
+}
+
+export function kbToMb(kb: number): number {
+  if (!kb) return 0;
+  return Math.round(kb / 1024);
+}

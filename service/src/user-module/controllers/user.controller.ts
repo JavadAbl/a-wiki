@@ -28,8 +28,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  userGetMany(@Query() query: GetManyQuery): Promise<GetManyReply<UserDto>> {
-    return this.userService.userGetMany(query as GetManyQueryType<'User'>);
+  userGetMany(@Query() query: GetManyQuery, @User() context: TokenPayload): Promise<GetManyReply<UserDto>> {
+    return this.userService.userGetMany(query as GetManyQueryType<'User'>, context);
   }
 
   @Get('Context')

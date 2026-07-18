@@ -118,6 +118,7 @@ model Document {
   courseId    Int
   course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   fileUrl     String
+  fileSize    Int
   sortOrder   Int     @default(0)
   title       String
   description String?

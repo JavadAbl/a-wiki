@@ -12,4 +12,6 @@ export interface CourseDetailsDto {
   sections: SectionDto[];
   lecturer?: string | null;
   lecturerProfession?: string | null;
+  totalContents: number;
+  totalContentsLength: number;
 }

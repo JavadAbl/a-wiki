@@ -33,4 +33,10 @@ export class CourseDetailsDto {
 
   @Expose()
   lecturerProfession?: string | null;
+
+  @Expose()
+  totalContents: number;
+
+  @Expose()
+  totalContentsLength: number;
 }

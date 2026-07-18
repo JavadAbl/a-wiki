@@ -15,6 +15,7 @@ import { Role } from 'src/generated/prisma/enums';
 import { CACHE_MANAGER, type Cache } from '@nestjs/cache-manager';
 import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-otp.dto';
 import { UserUpdateDto } from '../dto/request/user-update.dto';
+import { TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 
 @Injectable()
 export class UserService {
@@ -30,12 +31,16 @@ export class UserService {
     return plainToInstance(UserDto, user);
   }
 
-  async userGetMany(query: GetManyQueryType<'User'>): Promise<GetManyReply<UserDto>> {
-    const adminMobile = this.configService.get<string>('SUPER_ADMIN_MOBILE');
+  async userGetMany(query: GetManyQueryType<'User'>, context: TokenPayload): Promise<GetManyReply<UserDto>> {
+    const userRole = context.role as Role;
+    let adminFilterPredicate: object | undefined;
+    if (userRole === Role.Admin)
+      adminFilterPredicate = { NOT: { role: { in: [Role.Admin, Role.SuperAdmin] } } };
+
     const predicate = buildFindManyArgs(query, { searchableFields: ['firstName', 'lastName', 'mobile'] });
     const { items, totalCount } = await this.userRep.findMany({
       ...predicate,
-      where: { ...predicate.where, NOT: { mobile: adminMobile } },
+      where: { ...predicate.where, ...adminFilterPredicate },
       omit: { password: true },
     });
     const usersDto = plainToInstance(UserDto, items);

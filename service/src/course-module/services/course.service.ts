@@ -22,18 +22,106 @@ export class CourseService {
   ) {}
 
   async courseGetById(id: number): Promise<CourseDetailsDto> {
+    const prisma = this.courseRep.prismaClient;
+
+    // 1. Fetch the course with nested structure (ordered)
     const course = await this.courseRep.findAndCheckExistsBy(
       {
         where: { id },
         include: {
-          sections: { include: { parts: { include: { contents: { omit: { mediaUrl: true } } } } } },
-          documents: true,
+          sections: {
+            orderBy: { sectionOrder: 'asc' },
+            include: {
+              parts: {
+                orderBy: { partOrder: 'asc' },
+                include: { contents: { orderBy: { contentOrder: 'asc' }, omit: { mediaUrl: true } } },
+              },
+            },
+          },
+          documents: { orderBy: { sortOrder: 'asc' } },
         },
       },
       'id',
       id,
     );
-    return course;
+
+    // 2. Course-level aggregates
+    const courseAgg = await prisma.content.aggregate({
+      where: { part: { section: { courseId: id } } },
+      _count: { _all: true },
+      _sum: { durationSeconds: true },
+    });
+
+    // 3. Section-level aggregates (one query, grouped in JS)
+    const sectionAggRows = await prisma.content.findMany({
+      where: { part: { section: { courseId: id } } },
+      select: { durationSeconds: true, part: { select: { sectionId: true } } },
+    });
+
+    const sectionAgg = new Map<number, { count: number; length: number }>();
+    for (const r of sectionAggRows) {
+      const sid = r.part.sectionId;
+      const e = sectionAgg.get(sid) ?? { count: 0, length: 0 };
+      e.count += 1;
+      e.length += r.durationSeconds;
+      sectionAgg.set(sid, e);
+    }
+
+    // 4. Part-level aggregates (reuse same rows or compute from course data)
+    const partAgg = new Map<number, { count: number; length: number }>();
+    for (const r of sectionAggRows) {
+      // need partId too — re-query or include it above
+    }
+    // Simpler: compute part-level from the already-fetched `course` tree
+    for (const s of course.sections) {
+      for (const p of s.parts) {
+        partAgg.set(p.id, {
+          count: p.contents.length,
+          length: p.contents.reduce((a, c) => a + c.durationSeconds, 0),
+        });
+      }
+    }
+
+    // 5. Build DTO
+    const dto: CourseDetailsDto = {
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      categoryId: course.categoryId,
+      isPublished: course.isPublished,
+      thumbnailUrl: course.thumbnailUrl,
+      lecturer: course.lecturer,
+      lecturerProfession: course.lecturerProfession,
+      documents: course.documents, // map to DocumentDto if needed
+      totalContents: courseAgg._count._all,
+      totalContentsLength: courseAgg._sum.durationSeconds ?? 0,
+      sections: course.sections.map((s) => {
+        const sa = sectionAgg.get(s.id) ?? { count: 0, length: 0 };
+        return {
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          sectionOrder: s.sectionOrder,
+          documents: undefined as any,
+          totalContents: sa.count,
+          totalContentsLength: sa.length,
+          parts: s.parts.map((p) => {
+            const pa = partAgg.get(p.id) ?? { count: 0, length: 0 };
+            return {
+              id: p.id,
+              title: p.title,
+              description: p.description,
+              partOrder: p.partOrder,
+              totalContents: pa.count,
+              totalContentsLength: pa.length,
+              contents: p.contents, // map to ContentDto if needed
+            };
+          }),
+        };
+      }),
+    };
+
+    return plainToInstance(CourseDetailsDto, dto, { excludeExtraneousValues: true });
   }
 
   async courseGetMany(

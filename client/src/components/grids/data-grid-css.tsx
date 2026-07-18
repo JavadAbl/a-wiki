@@ -11,8 +11,7 @@ import {
   type PaginationState,
 } from "@tanstack/react-table";
 import { cn } from "#lib/utils";
-import type { GetManyQuery } from "../../../utils/types";
-import "./theme-material.css";
+import type { GetManyQuery } from "../../utils/types";
 
 // [Interfaces remain exactly the same...]
 interface CommonProps<TData extends object> {

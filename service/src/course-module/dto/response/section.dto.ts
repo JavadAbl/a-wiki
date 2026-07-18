@@ -17,4 +17,10 @@ export class SectionDto {
 
   @Expose()
   parts: PartDto[];
+
+  @Expose()
+  totalContents: number;
+
+  @Expose()
+  totalContentsLength: number;
 }

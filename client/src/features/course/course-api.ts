@@ -146,6 +146,13 @@ export const courseApi = createApi({
       },
     ),
 
+    ContentGetURLById: builder.query<{ url: string }, number>({
+      query: (contentId) => ({
+        url: `Courses/Contents/${contentId}/URL`,
+      }),
+      keepUnusedDataFor: 0,
+    }),
+
     //Document-------------------------------------------------------
     DocumentCreate: builder.mutation<
       number,
@@ -175,4 +182,5 @@ export const {
   useCoursesGetManyAdminQuery,
   useCategoryDeleteByIdMutation,
   useCategoryUpdateMutation,
+  useContentGetURLByIdQuery,
 } = courseApi;

@@ -1,11 +1,13 @@
 import { Separator } from "#components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#components/ui/tabs";
-import { useAppSelector } from "#hooks/redux-hooks";
+import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
 import { cn } from "#lib/utils";
 import { ChevronLeftIcon, SquarePlayIcon, Users2Icon } from "lucide-react";
 import { useState } from "react";
+import { courseActions } from "../../../../features/course/course-slice";
 
 export default function CourseBrowserParts() {
+  const dis = useAppDispatch();
   const selectedSection = useAppSelector(
     (s) => s.course.courseBrowserSelectedSection,
   );
@@ -95,11 +97,19 @@ export default function CourseBrowserParts() {
                         <div
                           key={contentIndex}
                           className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-md cursor-pointer transition-colors"
+                          onClick={() =>
+                            dis(
+                              courseActions.setCourseBrowserSelectedContent({
+                                content,
+                              }),
+                            )
+                          }
                         >
                           {/* Added a placeholder icon or number for the content */}
                           <span className="w-6 h-6 flex items-center justify-center bg-gray-100 text-gray-600 rounded-full text-xs">
                             {contentIndex + 1}
                           </span>
+
                           <span className="text-sm text-gray-700">
                             {content.title}
                           </span>

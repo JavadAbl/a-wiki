@@ -15,6 +15,8 @@ export const config = () => ({
   SMS_TEMPLATE_CODE: process.env.SMS_TEMPLATE_CODE!,
   SMS_FROM_NUMBER: process.env.SMS_FROM_NUMBER!,
   SMS_API_KEY: process.env.SMS_API_KEY!,
+  S3_accessKeyId: process.env.S3_accessKeyId!,
+  S3_secretAccessKey: process.env.S3_secretAccessKey!,
 });
 
 export const appConfig = registerAs('app', config);
@@ -38,6 +40,9 @@ export const configValidationSchema = Joi.object({
   SMS_TEMPLATE_CODE: Joi.string().required(),
   SMS_FROM_NUMBER: Joi.string().required(),
   SMS_API_KEY: Joi.string().required(),
+
+  S3_accessKeyId: Joi.string().required(),
+  S3_secretAccessKey: Joi.string().required(),
 });
 
 export const isDev = config().NODE_ENV === (nodeEnvs.Development as any);

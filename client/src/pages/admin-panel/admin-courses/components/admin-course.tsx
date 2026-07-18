@@ -418,10 +418,15 @@ export default function AdminCourse() {
 
               <div className="ml-3 pl-[52px]">
                 <Select
-                  // styles={reactSelectStyles}
+                  styles={reactSelectStyles} // ✅ Re-enabled
                   className="w-full sm:w-[320px]"
                   options={contentOptions}
-                  value={null}
+                  value={selectedContentOption} // ✅ Bound to state
+                  onChange={(option) => {
+                    // ✅ Added handler
+                    const opt = option as OptionType | null;
+                    setSelectedContentId(opt?.value ?? null);
+                  }}
                   placeholder={
                     selectedPartId
                       ? "یک محتوا را برای مشاهده جزئیات انتخاب کنید..."

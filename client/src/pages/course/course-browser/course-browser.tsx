@@ -1,30 +1,16 @@
 import { cn } from "#lib/utils";
 import { useCourseGetByIdQuery } from "../../../features/course/course-api";
-import { useParams, useSearchParams } from "react-router";
+import { useParams } from "react-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { BookOpen } from "lucide-react";
 import CourseBrowserSectionList from "./components/course-browser-section-list";
 import CourseBrowserDocuments from "./components/course-browser-documents.tsx";
 import CourseBrowserPlayer from "./components/course-browser-player.tsx";
-import { useAppSelector } from "#hooks/redux-hooks";
 import CourseBrowserParts from "./components/course-browser-parts.tsx";
 
 export default function CourseBrowser() {
-  const selectedContent = useAppSelector(
-    (s) => s.course.courseBrowserSelectedContent,
-  );
   const params = useParams();
   const courseId = params?.id;
-
-  /*  useEffect(() => {
-    const run = () => {
-        if(selectedContentId)
-        {
-            const selectedContent = cour
-        }
-    };
-    run();
-  }, [selectedContentId]); */
 
   //Data Hooks
   const { data: course, isLoading } = useCourseGetByIdQuery(
@@ -49,8 +35,7 @@ export default function CourseBrowser() {
       </div>
     );
   }
-  console.log(courseId);
-  console.log(course);
+
   if (!course) return null;
 
   return (
@@ -58,7 +43,7 @@ export default function CourseBrowser() {
       <div className={cn(" container mx-auto space-y-[16px]")}>
         <div className={cn("flex  gap-[16px] flex-2 h-[500px] ")}>
           <div className={cn("grow shrink h-full")}>
-            <CourseBrowserPlayer content={selectedContent} />
+            <CourseBrowserPlayer />
           </div>
 
           <div className={cn("w-[300px] h-full")}>

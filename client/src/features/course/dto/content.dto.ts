@@ -5,5 +5,5 @@ export interface ContentDto {
   title: string;
   mediaType: MediaType;
   description?: string | null;
-  contentOrder: number;
+  order: number;
 }

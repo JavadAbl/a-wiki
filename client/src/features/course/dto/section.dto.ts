@@ -4,7 +4,7 @@ export interface SectionDto {
   id: number;
   title: string;
   description?: string | null;
-  sectionOrder: number;
+  order: number;
   parts: PartDto[];
   totalContents: number;
   totalContentsLength: number;

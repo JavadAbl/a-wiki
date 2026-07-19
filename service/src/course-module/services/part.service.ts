@@ -20,7 +20,7 @@ export class PartService {
     const course = await this.sectionRep.findAndCheckExistsBy(
       {
         where: { id: sectionId },
-        include: { parts: { select: { partOrder: true }, orderBy: { partOrder: 'desc' }, take: 1 } },
+        include: { parts: { select: { order: true }, orderBy: { order: 'desc' }, take: 1 } },
       },
       'sectionId',
       sectionId,
@@ -32,14 +32,11 @@ export class PartService {
       'Part is already exists',
     );
 
-    let partOrder = 0;
-    const lastPart = course.parts?.[0]?.partOrder;
-    if (lastPart != undefined) partOrder = lastPart + 1;
+    let order = 0;
+    const lastPart = course.parts?.[0]?.order;
+    if (lastPart != undefined) order = lastPart + 1;
 
-    const part = await this.partRep.create({
-      data: { ...payload, partOrder, sectionId },
-      select: { id: true },
-    });
+    const part = await this.partRep.create({ data: { ...payload, order, sectionId }, select: { id: true } });
     return part.id;
   }
 

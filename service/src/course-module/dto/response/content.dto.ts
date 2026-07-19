@@ -16,5 +16,5 @@ export class ContentDto {
   description?: string | null;
 
   @Expose()
-  contentOrder: number;
+  order: number;
 }

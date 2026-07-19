@@ -30,15 +30,15 @@ export class CourseService {
         where: { id },
         include: {
           sections: {
-            orderBy: { sectionOrder: 'asc' },
+            orderBy: { order: 'asc' },
             include: {
               parts: {
-                orderBy: { partOrder: 'asc' },
-                include: { contents: { orderBy: { contentOrder: 'asc' }, omit: { mediaUrl: true } } },
+                orderBy: { order: 'asc' },
+                include: { contents: { orderBy: { order: 'asc' }, omit: { mediaUrl: true } } },
               },
             },
           },
-          documents: { orderBy: { sortOrder: 'asc' } },
+          documents: { orderBy: { order: 'asc' } },
         },
       },
       'id',
@@ -101,7 +101,7 @@ export class CourseService {
           id: s.id,
           title: s.title,
           description: s.description,
-          sectionOrder: s.sectionOrder,
+          order: s.order,
           documents: undefined as any,
           totalContents: sa.count,
           totalContentsLength: sa.length,
@@ -111,7 +111,7 @@ export class CourseService {
               id: p.id,
               title: p.title,
               description: p.description,
-              partOrder: p.partOrder,
+              order: p.order,
               totalContents: pa.count,
               totalContentsLength: pa.length,
               contents: p.contents, // map to ContentDto if needed

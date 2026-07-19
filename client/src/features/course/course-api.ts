@@ -9,6 +9,9 @@ import type { CourseDetailsDto } from "./dto/course.details.dto";
 import type { SectionCreateDto } from "./schemas/section-create-schema";
 import type { PartCreateDto } from "./schemas/part-create-schema";
 import type { CategoryUpdateDto } from "./schemas/category-update-schema";
+import type { ContentUpdateDto } from "./schemas/content-update-schema";
+import type { PartUpdateDto } from "./schemas/part-update-schema";
+import type { SectionUpdateDto } from "./schemas/section-update-schema";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
@@ -121,6 +124,26 @@ export const courseApi = createApi({
       invalidatesTags: ["course"],
     }),
 
+    SectionUpdate: builder.mutation<
+      number,
+      { body: SectionUpdateDto; sectionId: number }
+    >({
+      query: ({ body, sectionId }) => ({
+        url: `Courses/Sections/${sectionId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    SectionDelete: builder.mutation<void, number>({
+      query: (sectionId) => ({
+        url: `Courses/Sections/${sectionId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["course"],
+    }),
+
     //Part-------------------------------------------------------
     PartCreate: builder.mutation<
       number,
@@ -130,6 +153,26 @@ export const courseApi = createApi({
         url: `Courses/Sections/${sectionId}/Parts`,
         method: "POST",
         body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    PartUpdate: builder.mutation<
+      number,
+      { body: PartUpdateDto; partId: number }
+    >({
+      query: ({ body, partId }) => ({
+        url: `Courses/Parts/${partId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    PartDelete: builder.mutation<void, number>({
+      query: (partId) => ({
+        url: `Courses/Parts/${partId}`,
+        method: "DELETE",
       }),
       invalidatesTags: ["course"],
     }),
@@ -145,6 +188,26 @@ export const courseApi = createApi({
         invalidatesTags: ["course"],
       },
     ),
+
+    ContentUpdate: builder.mutation<
+      number,
+      { body: ContentUpdateDto; contentId: number }
+    >({
+      query: ({ body, contentId }) => ({
+        url: `Courses/Contents/${contentId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    ContentDelete: builder.mutation<void, number>({
+      query: (contentId) => ({
+        url: `Courses/Contents/${contentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["course"],
+    }),
 
     ContentGetURLById: builder.query<{ url: string }, number>({
       query: (contentId) => ({
@@ -183,4 +246,10 @@ export const {
   useCategoryDeleteByIdMutation,
   useCategoryUpdateMutation,
   useContentGetURLByIdQuery,
+  useContentDeleteMutation,
+  useContentUpdateMutation,
+  usePartUpdateMutation,
+  useSectionUpdateMutation,
+  usePartDeleteMutation,
+  useSectionDeleteMutation,
 } = courseApi;

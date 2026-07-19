@@ -13,7 +13,7 @@ export class PartDto {
   description?: string | null;
 
   @Expose()
-  partOrder: number;
+  order: number;
 
   @Expose()
   contents: ContentDto[];

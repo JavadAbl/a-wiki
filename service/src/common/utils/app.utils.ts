@@ -16,3 +16,5 @@ export async function validateOrRejectObject<T extends object>(model: new () => 
   await validateOrReject(instance);
   return instance;
 }
+
+export const random5Digit = () => Math.floor(Math.random() * 90000) + 10000;

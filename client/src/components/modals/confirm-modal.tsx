@@ -8,7 +8,7 @@ import {
 } from "#components/ui/dialog";
 import { cn } from "#lib/utils";
 import { Button } from "#components/ui/button";
-import { XIcon, Loader2 } from "lucide-react";
+import { XIcon } from "lucide-react";
 
 interface ConfirmModalProps {
   open: boolean;

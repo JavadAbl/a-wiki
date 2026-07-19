@@ -18,7 +18,7 @@ export class SectionService {
     const course = await this.courseRep.findAndCheckExistsBy(
       {
         where: { id: courseId },
-        include: { sections: { select: { sectionOrder: true }, orderBy: { sectionOrder: 'desc' }, take: 1 } },
+        include: { sections: { select: { order: true }, orderBy: { order: 'desc' }, take: 1 } },
       },
       'courseId',
       courseId,
@@ -30,12 +30,12 @@ export class SectionService {
       'Section is already exists',
     );
 
-    let sectionOrder = 0;
-    const lastSection = course.sections?.[0]?.sectionOrder;
-    if (lastSection != undefined) sectionOrder = lastSection + 1;
+    let order = 0;
+    const lastSection = course.sections?.[0]?.order;
+    if (lastSection != undefined) order = lastSection + 1;
 
     const section = await this.sectionRep.create({
-      data: { ...payload, sectionOrder, courseId },
+      data: { ...payload, order, courseId },
       select: { id: true },
     });
     return section.id;

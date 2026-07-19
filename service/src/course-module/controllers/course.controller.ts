@@ -12,7 +12,6 @@ import {
   UseInterceptors,
   UploadedFile,
   Delete,
-  Res,
 } from '@nestjs/common';
 import { GetManyQuery, GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -37,6 +36,7 @@ import { type TokenPayload } from 'src/auth-module/contracts/token-service.contr
 import { Public } from 'src/common/decorators/public.decorator';
 import { DocumentCreateDto } from '../dto/request/document-create.dto';
 import { DocumentService } from '../services/document.service';
+import { ContentUpdateDto } from '../dto/request/content-update.dto';
 
 @Controller('Courses')
 export class CourseController {
@@ -153,7 +153,7 @@ export class CourseController {
     return this.contentService.contentCreate(id, payload, file);
   }
 
-  @Get('stream/:contentId')
+  /* @Get('stream/:contentId')
   async contentStream(@Param('contentId', ParseIntPipe) contentId: number, @Res() res: Response) {
     const absolutePath = await this.contentService.contentFindAbsolutePath(contentId);
 
@@ -168,10 +168,25 @@ export class CourseController {
       }
     });
   }
+ */
 
   @Get('Contents/:contentId/URL')
   async contentGetURL(@Param('contentId', ParseIntPipe) contentId: number): Promise<{ url: string }> {
     return this.contentService.generatePresignedUrl(contentId);
+  }
+
+  @Patch('Contents/:contentId')
+  contentUpdate(
+    @Param('contentId', ParseIntPipe) id: number,
+    @Body() payload: ContentUpdateDto,
+  ): Promise<void> {
+    return this.contentService.contentUpdate(id, payload);
+  }
+
+  @Delete('Contents/:contentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  contentDelete(@Param('contentId', ParseIntPipe) id: number): Promise<void> {
+    return this.contentService.contentDelete(id);
   }
 
   //Document------------------------------------------------------------

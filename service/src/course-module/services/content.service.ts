@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ContentRepository } from '../repositories/content.repository';
 import { ContentCreateDto } from '../dto/request/content-create.dto';
 import { PartRepository } from '../repositories/part.repository';
@@ -6,29 +6,17 @@ import { extname } from 'path';
 import { createHash } from 'crypto';
 import { MediaType } from 'src/generated/prisma/enums';
 import * as mm from 'music-metadata';
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig } from 'src/common/config/config.type';
+import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
+import { random5Digit } from 'src/common/utils/app.utils';
+import { ContentUpdateDto } from '../dto/request/content-update.dto';
 
 @Injectable()
 export class ContentService {
-  private readonly s3Client: S3Client;
-  private readonly s3Bucket = 'javadabl-test';
-
   constructor(
     private readonly contentRep: ContentRepository,
     private readonly partRep: PartRepository,
-    private readonly configService: ConfigService<AppConfig>,
-  ) {
-    const accessKeyId = this.configService.get('S3_accessKeyId');
-    const secretAccessKey = this.configService.get('S3_secretAccessKey');
-    this.s3Client = new S3Client({
-      region: 'auto',
-      endpoint: 'https://s3.filebase.io',
-      credentials: { accessKeyId, secretAccessKey },
-    });
-  }
+    private readonly s3Provider: S3Provider,
+  ) {}
 
   async contentCreate(partId: number, payload: ContentCreateDto, file: Express.Multer.File): Promise<number> {
     if (!file) throw new BadRequestException('Wrong file');
@@ -55,10 +43,10 @@ export class ContentService {
     const mediaType: MediaType = isVideo ? 'Video' : 'Audio';
     const folderType = isVideo ? 'videos' : 'sounds';
 
-    // 2. Build the S3 key (mirrors the old directory structure)
+    // 2. Build the S3 key
     const ext = extname(file.originalname);
     const fileHash = createHash('md5').update(file.buffer).digest('hex');
-    const uniqueFilename = `${fileHash}${ext}`;
+    const uniqueFilename = `${random5Digit()}${fileHash}${ext}`;
     const s3Key = [
       'courses',
       String(courseId),
@@ -75,103 +63,63 @@ export class ContentService {
     const durationSeconds = Math.round(metadata.format.duration || 0);
 
     // 4. Upload to S3
-    await this.s3Client.send(
-      new PutObjectCommand({
-        Bucket: this.s3Bucket,
-        Key: s3Key,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-        // ContentMD5 optional; Filebase supports standard PUT
-      }),
-    );
+    await this.s3Provider.Put(s3Key, file.buffer, file.mimetype);
 
     // 5. Free memory
     file.buffer = null as any;
 
-    // 6. Persist the S3 key (NOT a local path) in mediaUrl
-    const content = await this.contentRep.create({
-      data: {
-        durationSeconds,
-        mediaUrl: s3Key, // store the key only
-        mediaType: mediaType as any,
-        partId: partIdVal,
-        title: payload.title,
-        description: payload.description,
-      },
+    // 6. Persist inside a transaction so order assignment is race-safe
+    const content = await this.contentRep.prismaClient.$transaction(async (tx) => {
+      // Find the current maximum order for this part
+      const lastContent = await tx.content.findFirst({
+        where: { partId: partIdVal },
+        orderBy: { order: 'desc' },
+        select: { order: true },
+      });
+
+      const nextOrder = (lastContent?.order ?? -1) + 1;
+
+      return tx.content.create({
+        data: {
+          durationSeconds,
+          mediaUrl: s3Key,
+          mediaType: mediaType as any,
+          partId: partIdVal,
+          order: nextOrder,
+          title: payload.title,
+          description: payload.description,
+        },
+      });
     });
 
     return content.id;
   }
 
-  /**
-   * Returns a short-lived presigned URL for streaming/downloading the media.
-   * Replace the old "absolute path" use-case with this.
-   */
-  async contentGetPresignedUrl(contentId: number, expiresIn = 3600): Promise<string> {
-    const content = await this.contentRep.findAndCheckExistsBy(
-      {
-        where: { id: contentId },
-        include: { part: { include: { section: { include: { course: true } } } } },
-      },
-      'contentId',
-      contentId,
-    );
+  async contentUpdate(contentId: number, payload: ContentUpdateDto): Promise<void> {
+    await this.contentRep.findAndCheckExistsBy({ where: { id: contentId } }, 'contentId', contentId);
 
-    const key = content.mediaUrl;
-    this.assertKeySafe(key);
-
-    // Verify the object actually exists in the bucket
-    try {
-      await this.s3Client.send(new HeadObjectCommand({ Bucket: this.s3Bucket, Key: key }));
-    } catch {
-      throw new NotFoundException('Media file not found in object storage');
-    }
-
-    return getSignedUrl(this.s3Client, new GetObjectCommand({ Bucket: this.s3Bucket, Key: key }), {
-      expiresIn,
-    });
+    await this.contentRep.update({ where: { id: contentId }, data: payload });
   }
 
-  async generatePresignedUrl(contentId: number, expiresIn = 3600): Promise<{ url: string }> {
+  async contentDelete(contentId: number): Promise<void> {
     const content = await this.contentRep.findAndCheckExistsBy(
       { where: { id: contentId } },
       'contentId',
       contentId,
     );
 
-    try {
-      const bucketName = this.s3Bucket;
-      const command = new GetObjectCommand({ Bucket: bucketName, Key: content.mediaUrl });
-
-      const url = await getSignedUrl(this.s3Client, command, { expiresIn });
-
-      return { url };
-    } catch (error) {
-      console.error('Error generating pre-signed URL:', error);
-      throw error;
-    }
+    await this.s3Provider.delete(content.mediaUrl);
+    await this.contentRep.remove({ where: { id: contentId } });
   }
 
-  /**
-   * If your existing controllers rely on a local absolute path (e.g. res.sendFile),
-   * you can keep the method name but stream from S3 to a temp file instead.
-   */
-  contentFindAbsolutePath(contentId: number): Promise<string> {
-    // Option A: throw, and refactor consumers to use presigned URL.
-    // Option B: download to os.tmpdir() and return the temp path.
-    throw new ForbiddenException(
-      'Local file paths are no longer supported. Use contentGetPresignedUrl instead.',
+  async generatePresignedUrl(contentId: number): Promise<{ url: string }> {
+    const content = await this.contentRep.findAndCheckExistsBy(
+      { where: { id: contentId } },
+      'contentId',
+      contentId,
     );
-  }
-
-  /** Guard against keys that look like paths trying to escape the bucket namespace. */
-  private assertKeySafe(key: string): void {
-    if (!key || key.startsWith('/') || key.includes('..') || key.includes('\\')) {
-      throw new ForbiddenException('Invalid media key.');
-    }
-    if (!key.startsWith('courses/')) {
-      throw new ForbiddenException('Invalid media key.');
-    }
+    const url = await this.s3Provider.getSignedUrlByKey(content.mediaUrl);
+    return { url };
   }
 
   private sanitize(str: string): string {

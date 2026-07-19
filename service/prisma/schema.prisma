@@ -119,7 +119,7 @@ model Document {
   course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   fileUrl     String
   fileSize    Int
-  sortOrder   Int     @default(0)
+  order       Int     @default(0)
   title       String
   description String?
 
@@ -128,12 +128,12 @@ model Document {
 }
 
 model Section {
-  id           Int     @id() @default(autoincrement())
-  courseId     Int
-  course       Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  title        String
-  sectionOrder Int     @default(0)
-  description  String?
+  id          Int     @id() @default(autoincrement())
+  courseId    Int
+  course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  order       Int     @default(0)
+  description String?
 
   parts Part[]
 
@@ -146,7 +146,7 @@ model Part {
   sectionId   Int
   section     Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   title       String
-  partOrder   Int     @default(0)
+  order       Int     @default(0)
   description String?
 
   contents Content[]
@@ -163,7 +163,7 @@ model Content {
   mediaType       MediaType
   mediaUrl        String
   durationSeconds Int       @default(0)
-  contentOrder    Int       @default(0)
+  order           Int       @default(0)
   title           String
   description     String?
 

@@ -38,7 +38,8 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
     },
   });
 
-  const [mutateCreateContent] = useContentCreateMutation();
+  //Data Hooks
+  const [mutateCreateContent, { isLoading }] = useContentCreateMutation();
 
   const validateFile = (file: File): boolean => {
     // Check file size
@@ -138,7 +139,6 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
 
     const res = await mutateCreateContent({ body: formData, partId });
     if (!res.error) {
-      toast.success("محتوا با موفقیت ایجاد شد");
       setIsOpen(false);
       form.reset();
       setFile(null);
@@ -276,6 +276,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
             variant={"primary"}
             size={"lg"}
             className={cn("self-end rounded-[24px] min-w-[75px]")}
+            isLoading={isLoading}
           >
             ایجاد
           </Button>

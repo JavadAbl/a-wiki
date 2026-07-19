@@ -1,13 +1,5 @@
 import { useNavigate, useParams } from "react-router";
-import {
-  useContentDeleteMutation,
-  useContentUpdateMutation,
-  useCourseGetByIdQuery,
-  usePartDeleteMutation,
-  usePartUpdateMutation,
-  useSectionDeleteMutation,
-  useSectionUpdateMutation,
-} from "../../../../features/course/course-api";
+import { useCourseGetByIdQuery } from "../../../../features/course/course-api";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Badge } from "#components/ui/badge";
@@ -49,77 +41,74 @@ import PartCreate from "./part-create";
 import ContentCreate from "./content-create";
 import DocumentCreate from "./document-create";
 import { Button } from "#components/ui/button";
+import Select from "react-select";
 import { cn } from "#lib/utils";
-import { ConfirmModal } from "#components/modals/confirm-modal";
-import type { ContentDto } from "../../../../features/course/dto/content.dto";
-import AdminCourseContentItem from "./admin-course-content-item";
-import AdminCoursePartItem from "./admin-course-part-item";
-import type { PartDto } from "../../../../features/course/dto/part.dto";
-import type { SectionDto } from "../../../../features/course/dto/section.dto";
-import AdminCourseSectionItem from "./admin-course-section-item";
+import { reactSelectStyles } from "../../../../utils/react-select-styles";
+
+// تعریف نوع گزینه‌ها برای react-select
+type OptionType = { value: number; label: string };
 
 export default function AdminCourse() {
   const nav = useNavigate();
   const { id } = useParams();
-  const [modalKeys, setModalsKey] = useState(0);
-
-  const [selectedSection, setSelectedSection] = useState<SectionDto | null>(
-    null,
-  );
-  const [selectedPart, setSelectedPart] = useState<PartDto | null>(null);
-  const [selectedContent, setSelectedContent] = useState<ContentDto | null>(
-    null,
-  );
-
-  //Modals States
   const [isOpenSectionCreate, setIsOpenSectionCreate] = useState(false);
   const [isOpenPartCreate, setIsOpenPartCreate] = useState(false);
   const [isOpenContentCreate, setIsOpenContentCreate] = useState(false);
   const [isOpenDocumentCreate, setIsOpenDocumentCreate] = useState(false);
+  const [modalKeys, setModalsKey] = useState(0);
+  const [selectedSectionId, setSelectedSectionId] = useState<number | null>(
+    null,
+  );
+  const [selectedPartId, setSelectedPartId] = useState<number | null>(null);
+  const [selectedContentId, setSelectedContentId] = useState<number | null>(
+    null,
+  );
 
-  const [isOpenSectionDeleteConfirm, setIsOpenSectionDeleteConfirm] =
-    useState(false);
-  const [isOpenPartDeleteConfirm, setIsOpenPartDeleteConfirm] = useState(false);
-  const [isOpenContentDeleteConfirm, setIsOpenContentDeleteConfirm] =
-    useState(false);
-
-  //Data Hooks
   const {
     data: course,
     isLoading,
     isError,
   } = useCourseGetByIdQuery(id ?? skipToken);
 
-  const [mutateSectionUpdate, { isLoading: isLoadingSectionUpdate }] =
-    useSectionUpdateMutation();
-
-  const [mutatePartUpdate, { isLoading: isLoadingPartUpdate }] =
-    usePartUpdateMutation();
-
-  const [mutateContentUpdate, { isLoading: isLoadingContentUpdate }] =
-    useContentUpdateMutation();
-
-  const [mutateSectionDelete, { isLoading: isLoadingSectionDelete }] =
-    useSectionDeleteMutation();
-
-  const [mutatePartDelete, { isLoading: isLoadingPartDelete }] =
-    usePartDeleteMutation();
-
-  const [mutateContentDelete, { isLoading: isLoadingContentDelete }] =
-    useContentDeleteMutation();
-
   // وضعیت مشتق شده برای سلسله‌مراتب انتخاب شده
-  const sections = course?.sections
-    ? [...course.sections].sort((a, b) => a.order - b.order)
+  const selectedSection = course?.sections?.find(
+    (s) => s.id === selectedSectionId,
+  );
+  const selectedPart = selectedSection?.parts?.find(
+    (p) => p.id === selectedPartId,
+  );
+
+  // ساخت گزینه‌ها برای react-select
+  const sectionOptions: OptionType[] = course?.sections
+    ? [...course.sections]
+        .sort((a, b) => a.sectionOrder - b.sectionOrder)
+        .map((s) => ({ value: s.id, label: s.title }))
     : [];
 
-  const parts = selectedSection?.parts
-    ? [...selectedSection.parts].sort((a, b) => a.order - b.order)
+  const partOptions: OptionType[] = selectedSection?.parts
+    ? [...selectedSection.parts]
+        .sort((a, b) => a.partOrder - b.partOrder)
+        .map((p) => ({ value: p.id, label: p.title }))
+    : [];
+  console.log(selectedPart?.contents);
+
+  const contentOptions: OptionType[] = selectedPart?.contents
+    ? [...selectedPart.contents]
+        .sort((a, b) => a.contentOrder - b.contentOrder)
+        .map((c) => ({ value: c.id, label: c.title }))
     : [];
 
-  const contents = selectedPart?.contents
-    ? [...selectedPart.contents].sort((a, b) => a.order - b.order)
-    : [];
+  // کمک‌گیرنده برای دریافت گزینه انتخاب شده فعلی
+  const selectedSectionOption = sectionOptions.find(
+    (opt) => opt.value === selectedSectionId,
+  );
+  const selectedPartOption = partOptions.find(
+    (opt) => opt.value === selectedPartId,
+  );
+
+  const selectedContentOption = contentOptions.find(
+    (opt) => opt.value === selectedContentId,
+  );
 
   if (isLoading) {
     return (
@@ -164,47 +153,8 @@ export default function AdminCourse() {
     setModalsKey((val) => val + 1);
   };
 
-  const handleSectionSetOrder = async (sectionId: number, order: number) => {
-    await mutateSectionUpdate({ sectionId, body: { order } });
-  };
-
-  const handlePartSetOrder = async (partId: number, order: number) => {
-    await mutatePartUpdate({ partId, body: { order } });
-  };
-
-  const handleContentSetOrder = async (contentId: number, order: number) => {
-    await mutateContentUpdate({ contentId, body: { order } });
-  };
-
-  const handleSectionDelete = async (id: number | undefined) => {
-    if (!id) return;
-    const res = await mutateSectionDelete(id);
-    if (!res.error) {
-      setIsOpenSectionDeleteConfirm(false);
-      setSelectedSection(null);
-    }
-  };
-
-  const handlePartDelete = async (id: number | undefined) => {
-    if (!id) return;
-    const res = await mutatePartDelete(id);
-    if (!res.error) {
-      setIsOpenPartDeleteConfirm(false);
-      setSelectedPart(null);
-    }
-  };
-
-  const handleContentDelete = async (id: number | undefined) => {
-    if (!id) return;
-    const res = await mutateContentDelete(id);
-    if (!res.error) {
-      setIsOpenContentDeleteConfirm(false);
-      setSelectedContent(null);
-    }
-  };
-
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={200}>
       <SectionCreate
         key={`SectionCreate_${modalKeys}`}
         courseId={Number(id)}
@@ -217,7 +167,7 @@ export default function AdminCourse() {
 
       <PartCreate
         key={`PartCreate_${modalKeys}`}
-        sectionId={selectedSection?.id ?? 0}
+        sectionId={Number(selectedSectionId)}
         isOpen={isOpenPartCreate}
         setIsOpen={(open: boolean) => {
           setIsOpenPartCreate(open);
@@ -227,7 +177,7 @@ export default function AdminCourse() {
 
       <ContentCreate
         key={`ContentCreate_${modalKeys}`}
-        partId={selectedPart?.id ?? 0}
+        partId={Number(selectedPartId)}
         isOpen={isOpenContentCreate}
         setIsOpen={(open: boolean) => {
           setIsOpenContentCreate(open);
@@ -243,36 +193,6 @@ export default function AdminCourse() {
           setIsOpenDocumentCreate(open);
           increaseModalsKey();
         }}
-      />
-
-      <ConfirmModal
-        open={isOpenSectionDeleteConfirm}
-        title="حذف بخش"
-        loading={isLoadingSectionDelete}
-        onOpenChange={setIsOpenSectionDeleteConfirm}
-        destructive
-        description={`آیا مایل به حذف بخش ${selectedSection?.title} هستید؟`}
-        onConfirm={() => handleSectionDelete(selectedSection?.id)}
-      />
-
-      <ConfirmModal
-        open={isOpenPartDeleteConfirm}
-        title="حذف قسمت"
-        loading={isLoadingPartDelete}
-        onOpenChange={setIsOpenPartDeleteConfirm}
-        destructive
-        description={`آیا مایل به حذف قسمت ${selectedPart?.title} هستید؟`}
-        onConfirm={() => handlePartDelete(selectedPart?.id)}
-      />
-
-      <ConfirmModal
-        open={isOpenContentDeleteConfirm}
-        title="حذف محتوا"
-        loading={isLoadingContentDelete}
-        onOpenChange={setIsOpenContentDeleteConfirm}
-        destructive
-        description={`آیا مایل به حذف محتوای ${selectedContent?.title} هستید؟`}
-        onConfirm={() => handleContentDelete(selectedContent?.id)}
       />
 
       <div className="space-y-8 p-6 lg:p-8 max-w-7xl mx-auto bg-surface-300">
@@ -380,7 +300,7 @@ export default function AdminCourse() {
                   </div>
                   <span className="text-sm font-semibold">بخش‌ها</span>
                   <Badge variant="secondary" className="text-xs font-normal">
-                    {sections.length}
+                    {sectionOptions.length}
                   </Badge>
                 </div>
                 <Button
@@ -393,21 +313,20 @@ export default function AdminCourse() {
                   افزودن بخش
                 </Button>
               </div>
-
-              <div className="max-h-100 flex flex-col gap-2 ml-3 pl-12 overflow-y-auto">
-                {sections.map((section) => (
-                  <AdminCourseSectionItem
-                    key={`Sections_${section.id}`}
-                    section={section}
-                    onDelete={() => {
-                      setSelectedSection(section);
-                      setIsOpenSectionDeleteConfirm(true);
-                    }}
-                    onAcceptOrder={handleSectionSetOrder}
-                    onSelect={(section) => setSelectedSection(section)}
-                  />
-                ))}
-              </div>
+              <Select
+                styles={reactSelectStyles}
+                className="w-full sm:w-[380px]"
+                options={sectionOptions}
+                value={selectedSectionOption}
+                onChange={(option) => {
+                  const opt = option as OptionType | null;
+                  setSelectedSectionId(opt?.value ?? null);
+                  setSelectedPartId(null);
+                }}
+                placeholder="یک بخش را برای مدیریت قسمت‌ها انتخاب کنید..."
+                isDisabled={sectionOptions.length === 0}
+                isClearable={false}
+              />
             </div>
 
             <Separator />
@@ -416,7 +335,7 @@ export default function AdminCourse() {
             <div
               className={cn(
                 "space-y-3 py-5 transition-all duration-300",
-                selectedSection
+                selectedSectionId
                   ? "opacity-100"
                   : "opacity-40 pointer-events-none",
               )}
@@ -428,7 +347,7 @@ export default function AdminCourse() {
                 </div>
                 <span className="text-sm font-semibold">قسمت‌ها</span>
                 <Badge variant="secondary" className="text-xs font-normal">
-                  {parts.length}
+                  {partOptions.length}
                 </Badge>
                 <div className="flex-1" />
                 <Button
@@ -436,26 +355,30 @@ export default function AdminCourse() {
                   variant="outline"
                   className="h-8 text-xs"
                   onClick={() => setIsOpenPartCreate(true)}
-                  disabled={!selectedSection}
+                  disabled={!selectedSectionId}
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   افزودن قسمت
                 </Button>
               </div>
-
-              <div className="max-h-100 flex flex-col gap-2 ml-3 pl-12 overflow-y-auto">
-                {parts.map((part) => (
-                  <AdminCoursePartItem
-                    key={`Parts_${part.id}`}
-                    part={part}
-                    onDelete={() => {
-                      setSelectedPart(part);
-                      setIsOpenPartDeleteConfirm(true);
-                    }}
-                    onAcceptOrder={handlePartSetOrder}
-                    onSelect={(part) => setSelectedPart(part)}
-                  />
-                ))}
+              <div className="ml-3 pl-7">
+                <Select
+                  styles={reactSelectStyles}
+                  className="w-full sm:w-[350px]"
+                  options={partOptions}
+                  value={selectedPartOption}
+                  onChange={(option) => {
+                    const opt = option as OptionType | null;
+                    setSelectedPartId(opt?.value ?? null);
+                  }}
+                  placeholder={
+                    selectedSectionId
+                      ? "یک قسمت را برای مدیریت محتواها انتخاب کنید..."
+                      : "ابتدا یک بخش را انتخاب کنید"
+                  }
+                  isDisabled={partOptions.length === 0 || !selectedSectionId}
+                  isClearable={false}
+                />
               </div>
             </div>
 
@@ -465,7 +388,9 @@ export default function AdminCourse() {
             <div
               className={cn(
                 "space-y-3 py-5 transition-all duration-300",
-                selectedPart ? "opacity-100" : "opacity-40 pointer-events-none",
+                selectedPartId
+                  ? "opacity-100"
+                  : "opacity-40 pointer-events-none",
               )}
             >
               <div className="flex items-center gap-3 ml-3">
@@ -476,7 +401,7 @@ export default function AdminCourse() {
                 </div>
                 <span className="text-sm font-semibold">محتواها</span>
                 <Badge variant="secondary" className="text-xs font-normal">
-                  {contents.length}
+                  {contentOptions.length}
                 </Badge>
                 <div className="flex-1" />
                 <Button
@@ -484,25 +409,32 @@ export default function AdminCourse() {
                   variant="outline"
                   className="h-8 text-xs"
                   onClick={() => setIsOpenContentCreate(true)}
-                  disabled={!selectedPart}
+                  disabled={!selectedPartId}
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   افزودن محتوا
                 </Button>
               </div>
 
-              <div className="max-h-100 flex flex-col gap-2 ml-3 pl-12 overflow-y-auto">
-                {contents.map((content) => (
-                  <AdminCourseContentItem
-                    key={`Contents_${content.id}`}
-                    content={content}
-                    onDelete={() => {
-                      setSelectedContent(content);
-                      setIsOpenContentDeleteConfirm(true);
-                    }}
-                    onAcceptOrder={handleContentSetOrder}
-                  />
-                ))}
+              <div className="ml-3 pl-[52px]">
+                <Select
+                  styles={reactSelectStyles} // ✅ Re-enabled
+                  className="w-full sm:w-[320px]"
+                  options={contentOptions}
+                  value={selectedContentOption} // ✅ Bound to state
+                  onChange={(option) => {
+                    // ✅ Added handler
+                    const opt = option as OptionType | null;
+                    setSelectedContentId(opt?.value ?? null);
+                  }}
+                  placeholder={
+                    selectedPartId
+                      ? "یک محتوا را برای مشاهده جزئیات انتخاب کنید..."
+                      : "ابتدا یک قسمت را انتخاب کنید"
+                  }
+                  isDisabled={contentOptions.length === 0 || !selectedPartId}
+                  isClearable={false}
+                />
               </div>
             </div>
           </CardContent>

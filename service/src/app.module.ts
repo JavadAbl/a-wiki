@@ -9,6 +9,7 @@ import { AuthenticationGuard } from './common/guards/authentication.guard';
 import { AuthorizationGuard } from './common/guards/authorization.guard';
 import { CourseModule } from './course-module/course.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { S3Module } from './infrastructure-modules/s3-module/s3.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     CacheModule.register({ isGlobal: true }),
 
     PrismaModule,
+    S3Module,
     AuthModule,
     UserModule,
     CourseModule,

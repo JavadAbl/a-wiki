@@ -4,7 +4,7 @@ export interface PartDto {
   id: number;
   title: string;
   description?: string | null;
-  partOrder: number;
+  order: number;
   contents: ContentDto[];
   totalContents: number;
   totalContentsLength: number;

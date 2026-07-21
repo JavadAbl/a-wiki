@@ -10,12 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu";
 import {
+  ListEndIcon,
   MonitorUpIcon,
   MoreVertical,
   Pencil,
   PlusIcon,
   SearchIcon,
-  Trash2,
   XIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -27,12 +27,15 @@ import { Badge } from "#components/ui/badge";
 import { cn } from "#lib/utils";
 import { DataGrid } from "#components/grids/data-grid";
 import { useDebounce } from "#hooks/use-debounce";
+import CourseSetCategory from "./components/course-set-category";
 
 export default function AdminPanelCourses() {
   const nav = useNavigate();
   const [isOpenCourseCreate, setIsOpenCourseCreate] = useState(false);
   const [modalKeys, setModalsKey] = useState(0);
   const [selectedCourseForPublish, setSelectedCourseForPublish] =
+    useState<CourseDto | null>(null);
+  const [selectedCourseForCategory, setSelectedCourseForCategory] =
     useState<CourseDto | null>(null);
 
   // Server pagination state
@@ -129,7 +132,9 @@ export default function AdminPanelCourses() {
                   <Pencil className="mr-2 h-4 w-4" />
                   نمایش
                 </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
+
                 <DropdownMenuItem
                   className="cursor-pointer text-xs"
                   onClick={() => setSelectedCourseForPublish(course)}
@@ -137,11 +142,20 @@ export default function AdminPanelCourses() {
                   <MonitorUpIcon className="mr-2 h-4 w-4" />
                   تغییر وضعیت انتشار
                 </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs">
+
+                <DropdownMenuItem
+                  className="cursor-pointer text-xs"
+                  onClick={() => setSelectedCourseForCategory(course)}
+                >
+                  <ListEndIcon className="mr-2 h-4 w-4" />
+                  تغییر دسته بندی
+                </DropdownMenuItem>
+                {/*  <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs">
                   <Trash2 className="mr-2 h-4 w-4" />
                   حذف
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
               </DropdownMenuContent>
             </DropdownMenu>
           );
@@ -169,6 +183,15 @@ export default function AdminPanelCourses() {
           increaseModalsKey();
         }}
         course={selectedCourseForPublish}
+      />
+
+      <CourseSetCategory
+        key={`SetCategory_${modalKeys}`}
+        setIsOpen={() => {
+          setSelectedCourseForCategory(null);
+          increaseModalsKey();
+        }}
+        course={selectedCourseForCategory}
       />
 
       <div className="h-full box-border flex flex-col gap-4 overflow-hidden p-4">

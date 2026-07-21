@@ -5,10 +5,7 @@ import { cn } from "#lib/utils";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Select from "react-select"; // <-- new import
-
 import { Field, FieldLabel } from "#components/ui/field";
-
-import { toast } from "sonner";
 import { InputMessage } from "#components/inputs/input-message";
 import {
   CourseCreateSchema,
@@ -50,7 +47,6 @@ export default function CourseCreate({ isOpen, setIsOpen }: Props) {
   async function handleSubmit(data: CourseCreateDto) {
     const res = await mutateCreateCourse(data);
     if (!res.error) {
-      toast.success("دوره با موفقیت ایجاد شد");
       setIsOpen(false);
       form.reset();
     }

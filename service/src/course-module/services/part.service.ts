@@ -3,9 +3,9 @@ import { PartRepository } from '../repositories/part.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { PartCreateDto } from '../dto/request/part-create.dto';
 import { PartSetDescriptionDto } from '../dto/request/part-set-description.dto';
-import { join } from 'path';
-import { rm } from 'fs/promises';
 import { PartViewRepository } from '../repositories/part-view.repository';
+import { PartUpdateDto } from '../dto/request/part-update.dto';
+import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 
 @Injectable()
 export class PartService {
@@ -13,6 +13,7 @@ export class PartService {
     private readonly partRep: PartRepository,
     private readonly partViewRep: PartViewRepository,
     private readonly sectionRep: SectionRepository,
+    private readonly s3Provider: S3Provider,
   ) {}
 
   async partCreate(sectionId: number, payload: PartCreateDto): Promise<number> {
@@ -40,6 +41,11 @@ export class PartService {
     return part.id;
   }
 
+  async partUpdate(partId: number, payload: PartUpdateDto): Promise<void> {
+    await this.sectionRep.findAndCheckExistsBy({ where: { id: partId } }, 'partId', partId);
+    await this.partRep.update({ where: { id: partId }, data: payload });
+  }
+
   async partSetDescription(partId: number, payload: PartSetDescriptionDto): Promise<void> {
     const { description } = payload;
     await this.partRep.findAndCheckExistsBy({ where: { id: partId } }, 'id', partId);
@@ -48,7 +54,6 @@ export class PartService {
   }
 
   async partDelete(partId: number): Promise<void> {
-    // Fetch the part with its relations so we can build the file system path
     const part = await this.partRep.findAndCheckExistsBy(
       { where: { id: partId }, include: { section: { include: { course: true } } } },
       'partId',
@@ -58,24 +63,12 @@ export class PartService {
     const courseId = part.section.course.id;
     const sectionId = part.section.id;
 
-    // Construct the base directory for this specific part
-    const partDir = join(
-      process.cwd(),
-      'files',
-      'courses',
-      `${courseId}`,
-      'sections',
-      `${sectionId}`,
-      'parts',
-      `${partId}`,
+    const s3Key = ['courses', String(courseId), 'sections', String(sectionId), 'parts', String(partId)].join(
+      '/',
     );
 
-    // Delete the entire directory for this part (removes both 'videos' and 'sounds' subdirectories)
-    // `recursive: true` ensures all nested files are deleted
-    // `force: true` prevents the app from crashing if the directory was already deleted or never created
-    await rm(partDir, { recursive: true, force: true });
+    await this.s3Provider.deletePrefix(s3Key);
 
-    // Finally, remove the database record
     await this.partRep.remove({ where: { id: partId } });
   }
 

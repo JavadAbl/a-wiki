@@ -13,6 +13,7 @@ import { join } from 'path';
 import { rm } from 'fs/promises';
 import { plainToInstance } from 'class-transformer';
 import { Prisma } from 'src/generated/prisma/client';
+import { CourseUpdateDto } from '../dto/request/course-update.dto';
 
 @Injectable()
 export class CourseService {
@@ -38,7 +39,7 @@ export class CourseService {
               },
             },
           },
-          documents: { orderBy: { order: 'asc' } },
+          documents: true,
         },
       },
       'id',
@@ -69,9 +70,7 @@ export class CourseService {
 
     // 4. Part-level aggregates (reuse same rows or compute from course data)
     const partAgg = new Map<number, { count: number; length: number }>();
-    for (const r of sectionAggRows) {
-      // need partId too — re-query or include it above
-    }
+
     // Simpler: compute part-level from the already-fetched `course` tree
     for (const s of course.sections) {
       for (const p of s.parts) {
@@ -221,6 +220,11 @@ export class CourseService {
     await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'id', courseId);
 
     await this.courseRep.update({ where: { id: courseId }, data: { description: description } });
+  }
+
+  async courseUpdate(courseId: number, payload: CourseUpdateDto): Promise<void> {
+    await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'id', courseId);
+    await this.courseRep.update({ where: { id: courseId }, data: payload });
   }
 
   async courseDelete(courseId: number) {

@@ -12,6 +12,7 @@ import type { CategoryUpdateDto } from "./schemas/category-update-schema";
 import type { ContentUpdateDto } from "./schemas/content-update-schema";
 import type { PartUpdateDto } from "./schemas/part-update-schema";
 import type { SectionUpdateDto } from "./schemas/section-update-schema";
+import type { CourseUpdateDto } from "./schemas/course-update-schema";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
@@ -94,6 +95,18 @@ export const courseApi = createApi({
       query: (body) => ({
         url: "Courses",
         method: "POST",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    CourseUpdate: builder.mutation<
+      number,
+      { body: CourseUpdateDto; courseId: number }
+    >({
+      query: ({ body, courseId }) => ({
+        url: `Courses/${courseId}`,
+        method: "PATCH",
         body,
       }),
       invalidatesTags: ["course"],
@@ -228,6 +241,14 @@ export const courseApi = createApi({
       }),
       invalidatesTags: ["course"],
     }),
+
+    DocumentDelete: builder.mutation<void, number>({
+      query: (documentId) => ({
+        url: `Courses/Documents/${documentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["course"],
+    }),
   }),
 });
 
@@ -236,6 +257,7 @@ export const {
   useCategoryCreateMutation,
   useCoursesGetManyQuery,
   useCourseCreateMutation,
+  useCourseUpdateMutation,
   useCourseGetByIdQuery,
   useSectionCreateMutation,
   usePartCreateMutation,
@@ -252,4 +274,5 @@ export const {
   useSectionUpdateMutation,
   usePartDeleteMutation,
   useSectionDeleteMutation,
+  useDocumentDeleteMutation,
 } = courseApi;

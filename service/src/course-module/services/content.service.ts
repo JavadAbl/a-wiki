@@ -23,7 +23,7 @@ export class ContentService {
 
     const part = await this.partRep.findAndCheckExistsBy(
       { where: { id: partId }, include: { section: { include: { course: true } } } },
-      'sectionId',
+      'partId',
       partId,
     );
 

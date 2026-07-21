@@ -1,7 +1,14 @@
 import { AppConfig } from '../../common/config/config.type';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
@@ -43,6 +50,57 @@ export class S3Provider {
     const url = await getSignedUrl(this.s3Client, command, { expiresIn });
 
     return url;
+  }
+
+  /** Recursively delete every object under a "folder" prefix. */
+  async deletePrefix(prefix: string): Promise<{ deleted: number }> {
+    // Always terminate with '/' so we don't match sibling prefixes
+    // e.g. "parts/5" -> "parts/5/" (avoids matching parts/50, parts/55, ...)
+    const normalized = prefix.endsWith('/') ? prefix : `${prefix}/`;
+
+    let continuationToken: string | undefined;
+    let deletedCount = 0;
+
+    do {
+      const listed = await this.s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: this.s3Bucket,
+          Prefix: normalized,
+          ContinuationToken: continuationToken,
+        }),
+      );
+
+      const objects = listed.Contents ?? [];
+      if (objects.length === 0) {
+        continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+        continue;
+      }
+
+      // DeleteObjectsCommand accepts at most 1000 keys per request,
+      // and ListObjectsV2 returns at most 1000 keys per page, so we're safe.
+      const result = await this.s3Client.send(
+        new DeleteObjectsCommand({
+          Bucket: this.s3Bucket,
+          Delete: {
+            Objects: objects
+              .filter((o) => o.Key) // TS safety
+              .map((o) => ({ Key: o.Key as string })),
+            Quiet: true,
+          },
+        }),
+      );
+
+      deletedCount += objects.length;
+
+      // Surface any per-key errors (Filebase occasionally rejects a key)
+      if (result.Errors && result.Errors.length > 0) {
+        console.error('S3 delete errors:', result.Errors);
+      }
+
+      continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+    } while (continuationToken);
+
+    return { deleted: deletedCount };
   }
 
   /**

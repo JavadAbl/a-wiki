@@ -3,14 +3,15 @@ import { SectionRepository } from '../repositories/section.repository';
 import { CourseRepository } from '../repositories/course.repository';
 import { SectionSetDescriptionDto } from '../dto/request/section-set-description.dto';
 import { SectionCreateDto } from '../dto/request/section-create.dto';
-import { join } from 'path';
-import { rm } from 'fs/promises';
+import { SectionUpdateDto } from '../dto/request/section-update.dto';
+import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 
 @Injectable()
 export class SectionService {
   constructor(
     private readonly sectionRep: SectionRepository,
     private readonly courseRep: CourseRepository,
+    private readonly s3Provider: S3Provider,
   ) {}
 
   async sectionCreate(courseId: number, payload: SectionCreateDto): Promise<number> {
@@ -41,6 +42,11 @@ export class SectionService {
     return section.id;
   }
 
+  async sectionUpdate(sectionId: number, payload: SectionUpdateDto): Promise<void> {
+    await this.sectionRep.findAndCheckExistsBy({ where: { id: sectionId } }, 'sectionId', sectionId);
+    await this.sectionRep.update({ where: { id: sectionId }, data: payload });
+  }
+
   async sectionSetDescription(sectionId: number, payload: SectionSetDescriptionDto): Promise<void> {
     const { description } = payload;
     await this.sectionRep.findAndCheckExistsBy({ where: { id: sectionId } }, 'id', sectionId);
@@ -49,7 +55,6 @@ export class SectionService {
   }
 
   async sectionDelete(sectionId: number) {
-    // Fetch the part with its relations so we can build the file system path
     const section = await this.sectionRep.findAndCheckExistsBy(
       { where: { id: sectionId }, include: { course: true } },
       'sectionId',
@@ -58,15 +63,10 @@ export class SectionService {
 
     const courseId = section.course.id;
 
-    // Construct the base directory for this specific part
-    const partDir = join(process.cwd(), 'files', 'courses', `${courseId}`, 'sections', `${sectionId}`);
+    const s3Key = ['courses', String(courseId), 'sections', String(sectionId)].join('/');
 
-    // Delete the entire directory for this part (removes both 'videos' and 'sounds' subdirectories)
-    // `recursive: true` ensures all nested files are deleted
-    // `force: true` prevents the app from crashing if the directory was already deleted or never created
-    await rm(partDir, { recursive: true, force: true });
+    await this.s3Provider.deletePrefix(s3Key);
 
-    // Finally, remove the database record
     await this.sectionRep.remove({ where: { id: sectionId } });
   }
 }

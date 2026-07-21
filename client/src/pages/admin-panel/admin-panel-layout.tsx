@@ -4,7 +4,7 @@ import { AdminSidebar } from "./admin-sidebar/admin-sidebar";
 
 export default function AdminPanelLayout() {
   return (
-    <div className="h-screen flex fade-in-up bg-surface-300 overflow-hidden">
+    <div className="h-screen flex scale-in bg-surface-300 overflow-hidden">
       <AdminSidebar />
       <main className="flex-1 overflow-auto p-2">
         <Outlet />

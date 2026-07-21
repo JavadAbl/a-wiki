@@ -37,6 +37,9 @@ import { Public } from 'src/common/decorators/public.decorator';
 import { DocumentCreateDto } from '../dto/request/document-create.dto';
 import { DocumentService } from '../services/document.service';
 import { ContentUpdateDto } from '../dto/request/content-update.dto';
+import { PartUpdateDto } from '../dto/request/part-update.dto';
+import { SectionUpdateDto } from '../dto/request/section-update.dto';
+import { CourseUpdateDto } from '../dto/request/course-update.dto';
 
 @Controller('Courses')
 export class CourseController {
@@ -93,6 +96,11 @@ export class CourseController {
     return this.courseService.courseSetDescription(id, payload);
   }
 
+  @Patch(':courseId')
+  courseUpdate(@Param('courseId', ParseIntPipe) id: number, @Body() payload: CourseUpdateDto): Promise<void> {
+    return this.courseService.courseUpdate(id, payload);
+  }
+
   @Delete(':courseId')
   @HttpCode(HttpStatus.NO_CONTENT)
   courseDelete(@Param('courseId', ParseIntPipe) id: number): Promise<void> {
@@ -109,12 +117,26 @@ export class CourseController {
     return this.sectionService.sectionCreate(id, payload);
   }
 
+  @Patch('Sections/:sectionId')
+  sectionUpdate(
+    @Param('sectionId', ParseIntPipe) id: number,
+    @Body() payload: SectionUpdateDto,
+  ): Promise<void> {
+    return this.sectionService.sectionUpdate(id, payload);
+  }
+
   @Patch('Sections/:sectionId/SetDescription')
   sectionSetDescription(
     @Param('sectionId', ParseIntPipe) id: number,
     @Body() payload: SectionSetDescriptionDto,
   ): Promise<void> {
     return this.sectionService.sectionSetDescription(id, payload);
+  }
+
+  @Delete('Sections/:sectionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  sectionDelete(@Param('sectionId', ParseIntPipe) id: number): Promise<void> {
+    return this.sectionService.sectionDelete(id);
   }
 
   //Part------------------------------------------------------------
@@ -133,12 +155,23 @@ export class CourseController {
     return this.partService.partSetView(id, tokenPayload.userId);
   }
 
+  @Patch('Parts/:partId')
+  partUpdate(@Param('partId', ParseIntPipe) id: number, @Body() payload: PartUpdateDto): Promise<void> {
+    return this.partService.partUpdate(id, payload);
+  }
+
   @Patch('Parts/:partId/SetDescription')
   partSetDescription(
     @Param('sectionId', ParseIntPipe) id: number,
     @Body() payload: SectionSetDescriptionDto,
   ): Promise<void> {
     return this.partService.partSetDescription(id, payload);
+  }
+
+  @Delete('Parts/:partId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  partDelete(@Param('partId', ParseIntPipe) id: number): Promise<void> {
+    return this.partService.partDelete(id);
   }
 
   //Content------------------------------------------------------------
@@ -192,12 +225,25 @@ export class CourseController {
   //Document------------------------------------------------------------
   @Post(':courseId/Documents')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 100 * 1024 * 1024, // 100 MB
+      },
+    }),
+  )
   documentCreate(
     @Param('courseId', ParseIntPipe) id: number,
     @Body() payload: DocumentCreateDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<number> {
     return this.documentService.documentCreate(id, payload, file);
+  }
+
+  @Delete('Documents/:documentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  documentDelete(@Param('documentId', ParseIntPipe) id: number): Promise<void> {
+    return this.documentService.documentDelete(id);
   }
 }

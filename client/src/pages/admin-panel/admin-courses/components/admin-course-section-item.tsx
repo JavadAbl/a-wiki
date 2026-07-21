@@ -9,6 +9,7 @@ interface SectionItemProps {
   onDelete: () => void;
   onAcceptOrder: (contentId: number, newOrder: number) => void;
   onSelect: (section: SectionDto) => any;
+  isSelected: boolean;
 }
 
 const AdminCourseSectionItem = ({
@@ -16,6 +17,7 @@ const AdminCourseSectionItem = ({
   onDelete,
   onSelect,
   onAcceptOrder,
+  isSelected,
 }: SectionItemProps) => {
   const [inputValue, setInputValue] = useState<string | number>(section.order);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,27 +42,23 @@ const AdminCourseSectionItem = ({
   };
 
   return (
-    <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-muted rounded-full text-sm font-medium">
-      <div className={cn("flex items-center gap-[16px]")}>
-        <span
-          className="truncate max-w-[100px] flex-1 cursor-pointer hover:bg-primary/25"
-          onClick={() => onSelect(section)}
-        >
-          {section.title}
+    <div
+      className={cn(
+        "flex items-center justify-between gap-2 px-3 py-1.5 bg-muted rounded-full text-sm font-medium",
+        isSelected && "bg-primary-300/25",
+      )}
+    >
+      <div className={cn("flex items-center gap-[16px] grow shrink")}>
+        <span className="truncate flex-1 ">
+          <span
+            className="hover:bg-primary-200/20 cursor-pointer rounded-md px-1"
+            onClick={() => onSelect(section)}
+          >
+            {section.title}
+          </span>
         </span>
 
-        {/* 2. Input and Accept/Reject buttons grouped together */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <span className="text-xs text-muted-foreground">ترتیب:</span>
-
-          {/* 3. Input styled to clearly look editable */}
-          <input
-            type="number"
-            value={inputValue}
-            onChange={handleChange}
-            className="w-18 h-7 text-xs text-center bg-background border border-gray-300 rounded-md px-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow [appearance:textfield] "
-          />
-
+        <div className="flex items-center gap-1 shrink-0">
           {/* Conditionally render Accept/Reject buttons right next to the input */}
           {isEditing && (
             <div className="flex items-center gap-0.5 ml-1">
@@ -84,13 +82,23 @@ const AdminCourseSectionItem = ({
               </button>
             </div>
           )}
+
+          <span className="text-xs text-muted-foreground">ترتیب:</span>
+
+          {/* 3. Input styled to clearly look editable */}
+          <input
+            type="number"
+            value={inputValue}
+            onChange={handleChange}
+            className="w-18 h-7 text-xs text-center bg-background border border-gray-300 rounded-md px-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow [appearance:textfield] "
+          />
         </div>
       </div>
 
       {/* Delete Button (Always visible on the far right) */}
       <button
         onClick={onDelete}
-        className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer hover:bg-destructive/25 rounded-full p-1 flex-shrink-0 ml-1"
+        className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer hover:bg-destructive/25 rounded-full p-1 shrink-0 ml-1"
         aria-label="Remove"
         title="حذف"
       >

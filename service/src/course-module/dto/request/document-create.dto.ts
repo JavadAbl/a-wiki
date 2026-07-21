@@ -10,8 +10,4 @@ export class DocumentCreateDto {
   @MaxLength(1000)
   @IsOptional()
   description?: string | null;
-
-  /*  @Type(() => Number)
-  @IsInt()
-  contentOrder: number; */
 }

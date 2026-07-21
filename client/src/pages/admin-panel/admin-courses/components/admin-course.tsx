@@ -3,6 +3,7 @@ import {
   useContentDeleteMutation,
   useContentUpdateMutation,
   useCourseGetByIdQuery,
+  useDocumentDeleteMutation,
   usePartDeleteMutation,
   usePartUpdateMutation,
   useSectionDeleteMutation,
@@ -37,11 +38,10 @@ import {
   FileText,
   File,
   Plus,
-  ExternalLink,
   Layers,
   FileIcon,
-  ChevronRight,
   ChevronLeft,
+  X,
 } from "lucide-react";
 import SectionCreate from "./section-create";
 import { useState } from "react";
@@ -57,17 +57,22 @@ import AdminCoursePartItem from "./admin-course-part-item";
 import type { PartDto } from "../../../../features/course/dto/part.dto";
 import type { SectionDto } from "../../../../features/course/dto/section.dto";
 import AdminCourseSectionItem from "./admin-course-section-item";
+import type { DocumentDto } from "../../../../features/course/dto/document.dto";
 
 export default function AdminCourse() {
   const nav = useNavigate();
   const { id } = useParams();
   const [modalKeys, setModalsKey] = useState(0);
 
-  const [selectedSection, setSelectedSection] = useState<SectionDto | null>(
+  // به جای ذخیره کل آبجکت، فقط ID را ذخیره می‌کنیم
+  const [selectedSectionId, setSelectedSectionId] = useState<number | null>(
     null,
   );
-  const [selectedPart, setSelectedPart] = useState<PartDto | null>(null);
+  const [selectedPartId, setSelectedPartId] = useState<number | null>(null);
   const [selectedContent, setSelectedContent] = useState<ContentDto | null>(
+    null,
+  );
+  const [selectedDocument, setSelectedDocument] = useState<DocumentDto | null>(
     null,
   );
 
@@ -82,6 +87,8 @@ export default function AdminCourse() {
   const [isOpenPartDeleteConfirm, setIsOpenPartDeleteConfirm] = useState(false);
   const [isOpenContentDeleteConfirm, setIsOpenContentDeleteConfirm] =
     useState(false);
+  const [isOpenDocumentDeleteConfirm, setIsOpenDocumentDeleteConfirm] =
+    useState(false);
 
   //Data Hooks
   const {
@@ -92,34 +99,36 @@ export default function AdminCourse() {
 
   const [mutateSectionUpdate, { isLoading: isLoadingSectionUpdate }] =
     useSectionUpdateMutation();
-
   const [mutatePartUpdate, { isLoading: isLoadingPartUpdate }] =
     usePartUpdateMutation();
-
   const [mutateContentUpdate, { isLoading: isLoadingContentUpdate }] =
     useContentUpdateMutation();
-
   const [mutateSectionDelete, { isLoading: isLoadingSectionDelete }] =
     useSectionDeleteMutation();
-
   const [mutatePartDelete, { isLoading: isLoadingPartDelete }] =
     usePartDeleteMutation();
-
   const [mutateContentDelete, { isLoading: isLoadingContentDelete }] =
     useContentDeleteMutation();
+  const [mutateDocumentDelete, { isLoading: isLoadingDocumentDelete }] =
+    useDocumentDeleteMutation();
 
-  // وضعیت مشتق شده برای سلسله‌مراتب انتخاب شده
-  const sections = course?.sections
-    ? [...course.sections].sort((a, b) => a.order - b.order)
-    : [];
+  // حذف State های اضافی و useEffect ها
+  // مشتق کردن مستقیم داده‌ها از دیتای آپدیت شده RTK Query
+  const sections: SectionDto[] = [...(course?.sections ?? [])].sort(
+    (a, b) => a.order - b.order,
+  );
+  const selectedSection: SectionDto | null =
+    sections.find((s) => s.id === selectedSectionId) || null;
 
-  const parts = selectedSection?.parts
-    ? [...selectedSection.parts].sort((a, b) => a.order - b.order)
-    : [];
+  const parts: PartDto[] = [...(selectedSection?.parts ?? [])].sort(
+    (a, b) => a.order - b.order,
+  );
+  const selectedPart: PartDto | null =
+    parts.find((p) => p.id === selectedPartId) || null;
 
-  const contents = selectedPart?.contents
-    ? [...selectedPart.contents].sort((a, b) => a.order - b.order)
-    : [];
+  const contents: ContentDto[] = [...(selectedPart?.contents ?? [])].sort(
+    (a, b) => a.order - b.order,
+  );
 
   if (isLoading) {
     return (
@@ -181,7 +190,7 @@ export default function AdminCourse() {
     const res = await mutateSectionDelete(id);
     if (!res.error) {
       setIsOpenSectionDeleteConfirm(false);
-      setSelectedSection(null);
+      setSelectedSectionId(null);
     }
   };
 
@@ -190,7 +199,7 @@ export default function AdminCourse() {
     const res = await mutatePartDelete(id);
     if (!res.error) {
       setIsOpenPartDeleteConfirm(false);
-      setSelectedPart(null);
+      setSelectedPartId(null);
     }
   };
 
@@ -200,6 +209,15 @@ export default function AdminCourse() {
     if (!res.error) {
       setIsOpenContentDeleteConfirm(false);
       setSelectedContent(null);
+    }
+  };
+
+  const handleDocumentDelete = async (id: number | undefined) => {
+    if (!id) return;
+    const res = await mutateDocumentDelete(id);
+    if (!res.error) {
+      setIsOpenDocumentDeleteConfirm(false);
+      setSelectedDocument(null);
     }
   };
 
@@ -275,6 +293,16 @@ export default function AdminCourse() {
         onConfirm={() => handleContentDelete(selectedContent?.id)}
       />
 
+      <ConfirmModal
+        open={isOpenDocumentDeleteConfirm}
+        title="حذف سند"
+        loading={isLoadingDocumentDelete}
+        onOpenChange={setIsOpenDocumentDeleteConfirm}
+        destructive
+        description={`آیا مایل به حذف سند ${selectedDocument?.title} هستید؟`}
+        onConfirm={() => handleDocumentDelete(selectedDocument?.id)}
+      />
+
       <div className="space-y-8 p-6 lg:p-8 max-w-7xl mx-auto bg-surface-300">
         {/* کارت هدر */}
         <Card className="overflow-hidden shadow-sm bg-surface-200 p-4 gap-1">
@@ -293,15 +321,13 @@ export default function AdminCourse() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                {/* Reduced gap */}
                 <h1 className="text-xl font-bold tracking-tight">
-                  {/* Reduced text from 3xl to xl */}
                   {course.title}
                 </h1>
                 {course.isPublished ? (
                   <Badge
                     variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-xs px-1.5 py-0" /* Made badge smaller */
+                    className="bg-green-600 hover:bg-green-700 text-xs px-1.5 py-0"
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     منتشر شده
@@ -315,7 +341,6 @@ export default function AdminCourse() {
               </div>
               {course.description && (
                 <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2 max-w-3xl">
-                  {/* Reduced margin, size, and added line-clamp */}
                   {course.description}
                 </p>
               )}
@@ -325,26 +350,23 @@ export default function AdminCourse() {
                 <img
                   src={course.thumbnailUrl}
                   alt={course.title}
-                  className="h-20 w-36 object-cover rounded-lg border shadow-sm" /* Reduced image height and width */
+                  className="h-20 w-36 object-cover rounded-lg border shadow-sm"
                 />
               </div>
             )}
           </div>
 
           <div className="mt-0 flex items-center gap-4">
-            {/* Changed to flex-row to stack horizontally instead of vertically */}
             {course.lecturer && (
               <div className="flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-sm font-medium">{course.lecturer}</span>
-                {/* Reduced size */}
               </div>
             )}
             {course.lecturerProfession && (
               <div className="flex items-center gap-1.5">
                 <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">
-                  {/* Reduced size */}
                   {course.lecturerProfession}
                 </span>
               </div>
@@ -383,6 +405,7 @@ export default function AdminCourse() {
                     {sections.length}
                   </Badge>
                 </div>
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -400,11 +423,12 @@ export default function AdminCourse() {
                     key={`Sections_${section.id}`}
                     section={section}
                     onDelete={() => {
-                      setSelectedSection(section);
+                      setSelectedSectionId(section.id);
                       setIsOpenSectionDeleteConfirm(true);
                     }}
                     onAcceptOrder={handleSectionSetOrder}
-                    onSelect={(section) => setSelectedSection(section)}
+                    onSelect={(section) => setSelectedSectionId(section.id)}
+                    isSelected={section.id === selectedSectionId}
                   />
                 ))}
               </div>
@@ -422,7 +446,6 @@ export default function AdminCourse() {
               )}
             >
               <div className="flex items-center gap-3 ml-3">
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                 <div className="h-6 w-6 rounded-md bg-violet-500/10 flex items-center justify-center">
                   <FolderTree className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
                 </div>
@@ -449,11 +472,12 @@ export default function AdminCourse() {
                     key={`Parts_${part.id}`}
                     part={part}
                     onDelete={() => {
-                      setSelectedPart(part);
+                      setSelectedPartId(part.id);
                       setIsOpenPartDeleteConfirm(true);
                     }}
                     onAcceptOrder={handlePartSetOrder}
-                    onSelect={(part) => setSelectedPart(part)}
+                    onSelect={(part) => setSelectedPartId(part.id)}
+                    isSelected={part.id === selectedPartId}
                   />
                 ))}
               </div>
@@ -469,8 +493,6 @@ export default function AdminCourse() {
               )}
             >
               <div className="flex items-center gap-3 ml-3">
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50 -ml-1" />
                 <div className="h-6 w-6 rounded-md bg-amber-500/10 flex items-center justify-center">
                   <FileText className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                 </div>
@@ -539,23 +561,24 @@ export default function AdminCourse() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="w-[50px]">#</TableHead>
-                      <TableHead>عنوان</TableHead>
-                      <TableHead className="hidden md:table-cell max-w-[300px]">
+                      {/* Added text-right to fix RTL alignment */}
+                      <TableHead className="text-right">عنوان</TableHead>
+
+                      {/* Added text-right to fix RTL alignment */}
+                      <TableHead className="hidden md:table-cell max-w-[300px] text-right">
                         توضیحات
                       </TableHead>
-                      <TableHead className="w-[80px] text-right">
+
+                      <TableHead className="w-[80px] text-left md:text-right">
                         عملیات
                       </TableHead>
                     </TableRow>
                   </TableHeader>
+
                   <TableBody>
                     {course.documents.map((doc, index) => (
-                      <TableRow key={doc.id} className="group">
-                        <TableCell className="text-muted-foreground font-mono text-xs">
-                          {String(index + 1).padStart(2, "0")}
-                        </TableCell>
-                        <TableCell>
+                      <TableRow key={`Docs_${index}`} className="group">
+                        <TableCell className="align-middle">
                           <div className="flex items-center gap-2.5">
                             <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
                               <File className="h-4 w-4 text-muted-foreground" />
@@ -565,30 +588,31 @@ export default function AdminCourse() {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
+
+                        {/* ✅ Added max-w-[300px] to match the header's width constraint */}
+                        <TableCell className="hidden md:table-cell align-middle max-w-[300px]">
                           <span className="text-sm text-muted-foreground line-clamp-1">
                             {doc.description || "—"}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right">
+
+                        {/* ✅ Added w-[80px] to match the header's width constraint */}
+                        <TableCell className="text-left md:text-right align-middle w-[80px]">
                           <Tooltip>
                             <TooltipTrigger>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 opacity-70 group-hover:opacity-100 transition-opacity"
+                              <button
+                                onClick={() => {
+                                  setSelectedDocument(doc);
+                                  setIsOpenDocumentDeleteConfirm(true);
+                                }}
+                                className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer hover:bg-destructive/25 rounded-full p-1 shrink-0 ml-1"
+                                aria-label="Remove"
                               >
-                                <a
-                                  href={doc.fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>
+                                <X size={14} className="text-destructive" />
+                              </button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>باز کردن سند</p>
+                              <p>حذف کردن سند</p>
                             </TooltipContent>
                           </Tooltip>
                         </TableCell>

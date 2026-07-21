@@ -40,6 +40,7 @@ import { ContentUpdateDto } from '../dto/request/content-update.dto';
 import { PartUpdateDto } from '../dto/request/part-update.dto';
 import { SectionUpdateDto } from '../dto/request/section-update.dto';
 import { CourseUpdateDto } from '../dto/request/course-update.dto';
+import { ThumbnailService } from '../services/thumbnail.service';
 
 @Controller('Courses')
 export class CourseController {
@@ -49,6 +50,7 @@ export class CourseController {
     private readonly partService: PartService,
     private readonly contentService: ContentService,
     private readonly documentService: DocumentService,
+    private readonly thumbnailService: ThumbnailService,
   ) {}
 
   //Course---------------------------------------------------------
@@ -245,5 +247,29 @@ export class CourseController {
   @HttpCode(HttpStatus.NO_CONTENT)
   documentDelete(@Param('documentId', ParseIntPipe) id: number): Promise<void> {
     return this.documentService.documentDelete(id);
+  }
+
+  //Thumbnail--------------------------------------------------------
+  @Post(':courseId/Thumbnails')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 1 * 1024 * 1024, // 1 MB
+      },
+    }),
+  )
+  thumbnailCreate(
+    @Param('courseId', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<number> {
+    return this.thumbnailService.thumbnailCreate(id, file);
+  }
+
+  @Delete(':courseId/Thumbnails')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  thumbnailDelete(@Param('courseId', ParseIntPipe) id: number): Promise<void> {
+    return this.thumbnailService.thumbnailDelete(id);
   }
 }

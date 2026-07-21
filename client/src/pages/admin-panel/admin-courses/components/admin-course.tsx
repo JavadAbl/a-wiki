@@ -42,6 +42,7 @@ import {
   FileIcon,
   ChevronLeft,
   X,
+  ImagePlayIcon,
 } from "lucide-react";
 import SectionCreate from "./section-create";
 import { useState } from "react";
@@ -58,6 +59,7 @@ import type { PartDto } from "../../../../features/course/dto/part.dto";
 import type { SectionDto } from "../../../../features/course/dto/section.dto";
 import AdminCourseSectionItem from "./admin-course-section-item";
 import type { DocumentDto } from "../../../../features/course/dto/document.dto";
+import ThumbnailCreate from "./thumbnail-create";
 
 export default function AdminCourse() {
   const nav = useNavigate();
@@ -81,6 +83,7 @@ export default function AdminCourse() {
   const [isOpenPartCreate, setIsOpenPartCreate] = useState(false);
   const [isOpenContentCreate, setIsOpenContentCreate] = useState(false);
   const [isOpenDocumentCreate, setIsOpenDocumentCreate] = useState(false);
+  const [isOpenThumbnailCreate, setIsOpenThumbnailCreate] = useState(false);
 
   const [isOpenSectionDeleteConfirm, setIsOpenSectionDeleteConfirm] =
     useState(false);
@@ -259,6 +262,16 @@ export default function AdminCourse() {
         isOpen={isOpenDocumentCreate}
         setIsOpen={(open: boolean) => {
           setIsOpenDocumentCreate(open);
+          increaseModalsKey();
+        }}
+      />
+
+      <ThumbnailCreate
+        key={`ThumbnailCreate_${modalKeys}`}
+        courseId={Number(id)}
+        isOpen={isOpenThumbnailCreate}
+        setIsOpen={(open: boolean) => {
+          setIsOpenThumbnailCreate(open);
           increaseModalsKey();
         }}
       />
@@ -640,6 +653,59 @@ export default function AdminCourse() {
                 >
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
                   آپلود سند
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* بخش تصویر */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <ImagePlayIcon className="h-[18px] w-[18px] text-emerald-600 dark:text-emerald-400" />
+                </div>
+
+                <div>
+                  <CardTitle className="text-lg">عکس</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    عکس پیش نمایش دوره
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setIsOpenThumbnailCreate(true)}
+                className="h-9"
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                افزودن عکس
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {course.documents && course.documents.length > 0 ? (
+              <div className="rounded-lg border overflow-hidden">
+                <div></div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <FileIcon className="h-7 w-7 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  هنوز عکسی وجود ندارد
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setIsOpenThumbnailCreate(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  آپلود عکس
                 </Button>
               </div>
             )}

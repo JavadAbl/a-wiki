@@ -14,12 +14,14 @@ import { rm } from 'fs/promises';
 import { plainToInstance } from 'class-transformer';
 import { Prisma } from 'src/generated/prisma/client';
 import { CourseUpdateDto } from '../dto/request/course-update.dto';
+import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 
 @Injectable()
 export class CourseService {
   constructor(
     private readonly courseRep: CourseRepository,
     private readonly categoryRep: CategoryRepository,
+    private readonly s3Provider: S3Provider,
   ) {}
 
   async courseGetById(id: number): Promise<CourseDetailsDto> {
@@ -81,6 +83,10 @@ export class CourseService {
       }
     }
 
+    let publicThumbnailUrl;
+    if (course.thumbnailUrl)
+      publicThumbnailUrl = await this.s3Provider.getSignedUrlByKey(course.thumbnailUrl, 86400); //1 day expiration
+
     // 5. Build DTO
     const dto: CourseDetailsDto = {
       id: course.id,
@@ -88,7 +94,7 @@ export class CourseService {
       description: course.description,
       categoryId: course.categoryId,
       isPublished: course.isPublished,
-      thumbnailUrl: course.thumbnailUrl,
+      thumbnailUrl: publicThumbnailUrl,
       lecturer: course.lecturer,
       lecturerProfession: course.lecturerProfession,
       documents: course.documents, // map to DocumentDto if needed
@@ -171,7 +177,11 @@ export class CourseService {
     );
 
     // 4. Merge and transform
-    const mappedItems = items.map((course) => {
+    const mappedItems = items.map(async (course) => {
+      let publicThumbnailUrl;
+      if (course.thumbnailUrl)
+        publicThumbnailUrl = await this.s3Provider.getSignedUrlByKey(course.thumbnailUrl, 86400); //1 day expiration
+
       const stats = aggregateMap.get(course.id) || { totalContents: 0, totalContentsLength: 0 };
 
       return plainToInstance(CourseDto, {
@@ -180,7 +190,7 @@ export class CourseService {
         description: course.description,
         categoryId: course.categoryId,
         isPublished: course.isPublished,
-        thumbnailUrl: course.thumbnailUrl,
+        thumbnailUrl: publicThumbnailUrl,
         lecturer: course.lecturer,
         lecturerProfession: course.lecturerProfession,
         totalContents: stats.totalContents,

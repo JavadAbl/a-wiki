@@ -249,6 +249,27 @@ export const courseApi = createApi({
       }),
       invalidatesTags: ["course"],
     }),
+
+    // Thumbnail-------------------------------------------------------
+    ThumbnailCreate: builder.mutation<
+      number,
+      { body: FormData; courseId: number }
+    >({
+      query: ({ body, courseId }) => ({
+        url: `Courses/${courseId}/Thumbnails`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
+    ThumbnailDelete: builder.mutation<void, number>({
+      query: (courseId) => ({
+        url: `Courses/${courseId}/Thumbnails`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["course"],
+    }),
   }),
 });
 
@@ -275,4 +296,6 @@ export const {
   usePartDeleteMutation,
   useSectionDeleteMutation,
   useDocumentDeleteMutation,
+  useThumbnailCreateMutation,
+  useThumbnailDeleteMutation,
 } = courseApi;

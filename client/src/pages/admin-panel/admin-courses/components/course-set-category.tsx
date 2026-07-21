@@ -27,7 +27,8 @@ export default function CourseSetCategory({ setIsOpen, course }: Props) {
 
   useEffect(() => {
     if (course) {
-      setSelectedCategory(course.categoryId ?? null);
+      const run = () => setSelectedCategory(course.categoryId ?? null);
+      run();
     }
   }, [course]);
 

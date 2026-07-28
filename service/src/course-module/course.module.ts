@@ -14,8 +14,6 @@ import { PartViewRepository } from './repositories/part-view.repository';
 import { CategoryService } from './services/category.service';
 import { CategoryController } from './controllers/category.controller';
 import { DocumentService } from './services/document.service';
-import { ThumbnailRepository } from './repositories/thumbnail.repository';
-import { ThumbnailService } from './services/thumbnail.service';
 
 @Module({
   imports: [],
@@ -28,7 +26,6 @@ import { ThumbnailService } from './services/thumbnail.service';
     DocumentRepository,
     CategoryRepository,
     PartViewRepository,
-    ThumbnailRepository,
 
     CourseService,
     SectionService,
@@ -36,7 +33,6 @@ import { ThumbnailService } from './services/thumbnail.service';
     ContentService,
     CategoryService,
     DocumentService,
-    ThumbnailService,
   ],
   exports: [],
 })

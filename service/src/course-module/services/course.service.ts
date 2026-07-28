@@ -9,12 +9,17 @@ import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 import { buildFindManyArgs } from 'src/common/utils/prisma-util';
 import { CourseDetailsDto } from '../dto/response/course-details.dto';
 import { CourseSetDescriptionDto } from '../dto/request/course-set-description.dto';
-import { join } from 'path';
+import { extname, join } from 'path';
 import { rm } from 'fs/promises';
 import { plainToInstance } from 'class-transformer';
 import { Prisma } from 'src/generated/prisma/client';
 import { CourseUpdateDto } from '../dto/request/course-update.dto';
 import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
+import pLimit from 'p-limit';
+import { createHash } from 'crypto';
+import { random5Digit } from 'src/common/utils/app.utils';
+import { DocumentDto } from '../dto/response/document.dto';
+import { Jimp, JimpMime } from 'jimp';
 
 @Injectable()
 export class CourseService {
@@ -87,6 +92,12 @@ export class CourseService {
     if (course.thumbnailUrl)
       publicThumbnailUrl = await this.s3Provider.getSignedUrlByKey(course.thumbnailUrl, 86400); //1 day expiration
 
+    const documents: DocumentDto[] = [];
+    for (const doc of course.documents) {
+      const publicDocumentUrl = await this.s3Provider.getSignedUrlByKey(doc.fileUrl, 86400); //1 day expiration
+      documents.push({ ...doc, fileUrl: publicDocumentUrl });
+    }
+
     // 5. Build DTO
     const dto: CourseDetailsDto = {
       id: course.id,
@@ -97,7 +108,7 @@ export class CourseService {
       thumbnailUrl: publicThumbnailUrl,
       lecturer: course.lecturer,
       lecturerProfession: course.lecturerProfession,
-      documents: course.documents, // map to DocumentDto if needed
+      documents,
       totalContents: courseAgg._count._all,
       totalContentsLength: courseAgg._sum.durationSeconds ?? 0,
       sections: course.sections.map((s) => {
@@ -176,27 +187,34 @@ export class CourseService {
       ]),
     );
 
+    const limit = pLimit(10);
+
     // 4. Merge and transform
-    const mappedItems = items.map(async (course) => {
-      let publicThumbnailUrl;
-      if (course.thumbnailUrl)
-        publicThumbnailUrl = await this.s3Provider.getSignedUrlByKey(course.thumbnailUrl, 86400); //1 day expiration
+    const mappedItems = await Promise.all(
+      items.map((course) =>
+        limit(async () => {
+          let publicThumbnailUrl;
+          if (course.thumbnailUrl) {
+            publicThumbnailUrl = await this.s3Provider.getSignedUrlByKey(course.thumbnailUrl, 86400);
+          }
 
-      const stats = aggregateMap.get(course.id) || { totalContents: 0, totalContentsLength: 0 };
+          const stats = aggregateMap.get(course.id) || { totalContents: 0, totalContentsLength: 0 };
 
-      return plainToInstance(CourseDto, {
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        categoryId: course.categoryId,
-        isPublished: course.isPublished,
-        thumbnailUrl: publicThumbnailUrl,
-        lecturer: course.lecturer,
-        lecturerProfession: course.lecturerProfession,
-        totalContents: stats.totalContents,
-        totalContentsLength: stats.totalContentsLength,
-      });
-    });
+          return plainToInstance(CourseDto, {
+            id: course.id,
+            title: course.title,
+            description: course.description,
+            categoryId: course.categoryId,
+            isPublished: course.isPublished,
+            thumbnailUrl: publicThumbnailUrl,
+            lecturer: course.lecturer,
+            lecturerProfession: course.lecturerProfession,
+            totalContents: stats.totalContents,
+            totalContentsLength: stats.totalContentsLength,
+          });
+        }),
+      ),
+    );
 
     // Note: For accurate pagination, consider using a separate COUNT query
     // instead of items.length when using LIMIT/OFFSET
@@ -251,5 +269,84 @@ export class CourseService {
 
     // Finally, remove the database record
     await this.courseRep.remove({ where: { id: courseId } });
+  }
+
+  /*  async thumbnailCreate(courseId: number, file: Express.Multer.File): Promise<void> {
+    if (!file) throw new BadRequestException('Wrong file');
+
+    await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'courseId', courseId);
+
+    // 2. Build the S3 key
+    const ext = extname(file.originalname);
+    const fileHash = createHash('md5').update(file.buffer).digest('hex');
+    const uniqueFilename = `${random5Digit()}${fileHash}${ext}`;
+    const s3Key = ['courses', String(courseId), 'thumbnails', uniqueFilename].join('/');
+
+    // 4. Upload to S3
+    await this.s3Provider.Put(s3Key, file.buffer, file.mimetype);
+
+    // 5. Free memory
+    file.buffer = null as any;
+
+    await this.thumbnailDelete(courseId);
+
+    // 6. Persist inside a transaction so order assignment is race-safe
+    await this.courseRep.update({ where: { id: courseId }, data: { thumbnailUrl: s3Key } });
+  } */
+
+  // ... inside your service class
+  async thumbnailCreate(courseId: number, file: Express.Multer.File): Promise<void> {
+    if (!file) throw new BadRequestException('Wrong file');
+
+    await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'courseId', courseId);
+
+    let processedBuffer = file.buffer;
+    let processedMimetype: any = file.mimetype;
+    let processedExt = extname(file.originalname).toLowerCase();
+
+    const SIZE_THRESHOLD = 200 * 1024; // 200KB
+
+    if (file.size > SIZE_THRESHOLD) {
+      // 1. Read buffer (Jimp v1 uses fromBuffer or read)
+      const image = await Jimp.fromBuffer(file.buffer);
+
+      // 2. Scale to fit within 800x800 while maintaining aspect ratio
+      image.scaleToFit({ w: 800, h: 800 });
+
+      // 3. Force JPEG for maximum compression (PNGs stay large even when resized)
+      if (processedMimetype !== 'image/jpeg' && processedMimetype !== 'image/jpg') {
+        processedMimetype = JimpMime.jpeg;
+        processedExt = '.jpg';
+      }
+
+      // 4. In Jimp v1, getBuffer is async and takes an options object for quality
+      processedBuffer = await image.getBuffer(processedMimetype, { quality: 80 });
+    }
+
+    // 5. Build S3 key using the processed buffer
+    const fileHash = createHash('md5').update(processedBuffer).digest('hex');
+    const uniqueFilename = `${random5Digit()}${fileHash}${processedExt}`;
+    const s3Key = ['courses', String(courseId), 'thumbnails', uniqueFilename].join('/');
+
+    await this.s3Provider.Put(s3Key, processedBuffer, processedMimetype);
+
+    // 6. Free memory
+    processedBuffer = null as any;
+    file.buffer = null as any;
+
+    await this.courseRep.update({ where: { id: courseId }, data: { thumbnailUrl: s3Key } });
+  }
+
+  async thumbnailDelete(courseId: number): Promise<void> {
+    const course = await this.courseRep.findAndCheckExistsBy(
+      { where: { id: courseId } },
+      'courseId',
+      courseId,
+    );
+
+    if (course.thumbnailUrl) {
+      await this.s3Provider.delete(course.thumbnailUrl);
+      await this.courseRep.update({ where: { id: courseId }, data: { thumbnailUrl: null } });
+    }
   }
 }

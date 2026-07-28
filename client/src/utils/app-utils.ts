@@ -29,3 +29,18 @@ export function kbToMb(kb: number): number {
   if (!kb) return 0;
   return Math.round(kb / 1024);
 }
+
+// Helper function to format seconds into HH-MM-SS
+export const formatSeconds = (totalSeconds: number = 0) => {
+  totalSeconds = Math.max(0, Math.floor(totalSeconds || 0));
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  const ss = String(seconds).padStart(2, "0");
+
+  return `${hh}:${mm}:${ss}`;
+};

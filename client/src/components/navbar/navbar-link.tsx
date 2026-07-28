@@ -15,7 +15,7 @@ export default function NavbarLink({
   return (
     <Link
       className={cn(
-        "font-b1 text-content-primary px-3 py-2 hover:text-primary",
+        "font-b2 text-content-primary px-3 py-2 hover:text-primary",
         className,
       )}
       to={to}

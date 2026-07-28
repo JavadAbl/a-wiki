@@ -6,4 +6,5 @@ export interface ContentDto {
   mediaType: MediaType;
   description?: string | null;
   order: number;
+  durationSeconds: number;
 }

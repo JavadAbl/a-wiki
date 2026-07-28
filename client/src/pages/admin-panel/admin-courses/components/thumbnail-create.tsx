@@ -4,10 +4,7 @@ import { cn } from "#lib/utils";
 import { Field, FieldLabel } from "#components/ui/field";
 import { toast } from "sonner";
 import { InputMessage } from "#components/inputs/input-message";
-import {
-  useThumbnailCreateMutation,
-  useThumbnailDeleteMutation,
-} from "../../../../features/course/course-api";
+import { useThumbnailCreateMutation } from "../../../../features/course/course-api";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { X, Image as ImageIcon } from "lucide-react";
 
@@ -31,8 +28,7 @@ export default function ThumbnailCreate({
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [mutateDeleteThumbnail] = useThumbnailDeleteMutation();
-  const [mutateCreateThumbnail] = useThumbnailCreateMutation();
+  const [mutateCreateThumbnail, { isLoading }] = useThumbnailCreateMutation();
 
   // Handle image preview creation and cleanup
   useEffect(() => {
@@ -138,15 +134,12 @@ export default function ThumbnailCreate({
 
     const formData = new FormData();
     formData.set("file", file);
-    const resDelete = await mutateDeleteThumbnail(courseId);
-    if (!resDelete.error) {
-      const res = await mutateCreateThumbnail({ body: formData, courseId });
-      if (!res.error) {
-        toast.success("تصویر با موفقیت ایجاد شد");
-        setIsOpen(false);
-        setFile(null);
-        setFileError(null);
-      }
+
+    const res = await mutateCreateThumbnail({ body: formData, courseId });
+    if (!res.error) {
+      setIsOpen(false);
+      setFile(null);
+      setFileError(null);
     }
   }
 
@@ -234,6 +227,7 @@ export default function ThumbnailCreate({
             variant={"primary"}
             size={"lg"}
             className={cn("self-end rounded-[24px] min-w-[75px]")}
+            isLoading={isLoading}
             onClick={handleSubmit}
           >
             ایجاد

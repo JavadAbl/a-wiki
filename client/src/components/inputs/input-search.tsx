@@ -54,7 +54,7 @@ export default function InputSearch() {
       return;
     }
 
-    if (location.pathname.startsWith("/Courses")) {
+    if (location.pathname === "/Courses") {
       // If already on Courses route, update the URL parameter in place
       const newParams = new URLSearchParams(searchParams);
       newParams.set("search", trimmedQuery);

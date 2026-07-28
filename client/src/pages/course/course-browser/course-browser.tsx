@@ -7,15 +7,41 @@ import CourseBrowserSectionList from "./components/course-browser-section-list";
 import CourseBrowserDocuments from "./components/course-browser-documents.tsx";
 import CourseBrowserPlayer from "./components/course-browser-player.tsx";
 import CourseBrowserParts from "./components/course-browser-parts.tsx";
+import { useAppDispatch } from "#hooks/redux-hooks";
+import { courseActions } from "../../../features/course/course-slice.ts";
+import { useEffect } from "react";
 
 export default function CourseBrowser() {
   const params = useParams();
+  const dis = useAppDispatch();
   const courseId = params?.id;
 
   //Data Hooks
   const { data: course, isLoading } = useCourseGetByIdQuery(
     courseId ? courseId : skipToken,
   );
+
+  useEffect(() => {
+    if (course) {
+      const run = () => {
+        dis(courseActions.setCourseBrowserSelectedCourse({ course }));
+        if (course?.sections.length) {
+          dis(
+            courseActions.setCourseBrowserSelectedSection({
+              section: course.sections[0],
+            }),
+          );
+
+          dis(
+            courseActions.setCourseBrowserSelectedContent({
+              content: course.sections[0]?.parts?.[0]?.contents[0],
+            }),
+          );
+        }
+      };
+      run();
+    }
+  }, [course, dis]);
 
   if (isLoading) {
     return (
@@ -39,24 +65,50 @@ export default function CourseBrowser() {
   if (!course) return null;
 
   return (
-    <div className={cn(" bg-surface-300   p-[16px]")}>
-      <div className={cn(" container mx-auto space-y-[16px]")}>
-        <div className={cn("flex  gap-[16px] flex-2 h-[500px] ")}>
-          <div className={cn("grow shrink h-full")}>
-            <CourseBrowserPlayer />
+    <div className={cn("bg-surface-300 p-4 md:p-[16px]")}>
+      <div
+        className={cn("container mx-auto flex flex-col gap-4 md:gap-[16px]")}
+      >
+        {/* Top row – Player + Section List */}
+        <div
+          className={cn(
+            "flex flex-col lg:flex-row gap-4 md:gap-[16px]",
+            // Use flex-[2] on desktop to make this row taller than the bottom row
+            "lg:flex-[2] min-h-0",
+          )}
+        >
+          {/* Player – full width on mobile, grows on desktop */}
+          <div className={cn("w-full lg:flex-1")}>
+            <div
+              className={cn(
+                "h-[220px] sm:h-[300px] md:h-[380px] lg:h-[500px]",
+                "w-full",
+              )}
+            >
+              <CourseBrowserPlayer />
+            </div>
           </div>
 
-          <div className={cn("w-[300px] h-full")}>
+          {/* Section List – full width on mobile, fixed 300px on desktop */}
+          <div className={cn("w-full lg:w-[300px] lg:flex-shrink-0")}>
             <CourseBrowserSectionList course={course} />
           </div>
         </div>
 
-        <div className={cn("flex  gap-[16px] flex-1 h-full")}>
-          <div className={cn("grow shrink")}>
+        {/* Bottom row – Parts + Documents */}
+        <div
+          className={cn(
+            "flex flex-col lg:flex-row gap-4 md:gap-[16px]",
+            "lg:flex-1 min-h-0",
+          )}
+        >
+          {/* Parts – full width on mobile, grows on desktop */}
+          <div className={cn("w-full lg:flex-1")}>
             <CourseBrowserParts />
           </div>
 
-          <div className={cn("w-[300px]")}>
+          {/* Documents – full width on mobile, fixed 300px on desktop */}
+          <div className={cn("w-full lg:w-[300px] lg:flex-shrink-0")}>
             {!!course?.documents?.length && (
               <CourseBrowserDocuments course={course} />
             )}

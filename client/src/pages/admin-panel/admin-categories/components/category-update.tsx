@@ -28,7 +28,7 @@ export default function CategoryUpdate({ close, category }: Props) {
     },
   });
 
-  const [mutateUpdateCategory] = useCategoryUpdateMutation();
+  const [mutateUpdateCategory, { isLoading }] = useCategoryUpdateMutation();
 
   useEffect(() => {
     const run = () => {
@@ -110,6 +110,7 @@ export default function CategoryUpdate({ close, category }: Props) {
             type="submit"
             variant={"primary"}
             size={"lg"}
+            isLoading={isLoading}
             className={cn("self-end rounded-[24px] min-w-[75px]")}
           >
             به‌روزرسانی

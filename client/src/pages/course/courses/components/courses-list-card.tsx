@@ -4,6 +4,7 @@ import type { CourseDto } from "../../../../features/course/dto/course.dto";
 import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
 import { useNavigate } from "react-router";
 import { sharedActions } from "../../../../features/shared/shared-slice";
+import { formatSeconds } from "../../../../utils/app-utils";
 
 interface Props {
   course: CourseDto;
@@ -42,7 +43,7 @@ export default function CoursesListCard({ course }: Props) {
           </span>
 
           <span className={cn("font-b2 text-[#777777]")}>
-            {`تعداد محتوا: ${course.totalContents} قسمت - ${course.totalContentsLength} ساعت`}
+            {`تعداد محتوا: ${course.totalContents} قسمت - ${formatSeconds(course.totalContentsLength)}`}
           </span>
         </div>
 

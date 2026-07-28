@@ -54,7 +54,7 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
     },
   });
 
-  const [mutateCreateDocument] = useDocumentCreateMutation();
+  const [mutateCreateDocument, { isLoading }] = useDocumentCreateMutation();
 
   const validateFile = (file: File): boolean => {
     // Check file size
@@ -186,7 +186,6 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
 
     const res = await mutateCreateDocument({ body: formData, courseId });
     if (!res.error) {
-      toast.success("محتوا با موفقیت ایجاد شد");
       setIsOpen(false);
       form.reset();
       setFile(null);
@@ -319,6 +318,7 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
             type="submit"
             variant={"primary"}
             size={"lg"}
+            isLoading={isLoading}
             className={cn("self-end rounded-[24px] min-w-[75px]")}
           >
             ایجاد

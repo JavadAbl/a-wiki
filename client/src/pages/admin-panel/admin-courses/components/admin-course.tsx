@@ -8,6 +8,7 @@ import {
   usePartUpdateMutation,
   useSectionDeleteMutation,
   useSectionUpdateMutation,
+  useThumbnailDeleteMutation,
 } from "../../../../features/course/course-api";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
@@ -92,6 +93,8 @@ export default function AdminCourse() {
     useState(false);
   const [isOpenDocumentDeleteConfirm, setIsOpenDocumentDeleteConfirm] =
     useState(false);
+  const [isOpenThumbnailDeleteConfirm, setIsOpenThumbnailDeleteConfirm] =
+    useState(false);
 
   //Data Hooks
   const {
@@ -114,6 +117,8 @@ export default function AdminCourse() {
     useContentDeleteMutation();
   const [mutateDocumentDelete, { isLoading: isLoadingDocumentDelete }] =
     useDocumentDeleteMutation();
+  const [mutateDeleteThumbnail, { isLoading: isLoadingThumbnailDelete }] =
+    useThumbnailDeleteMutation();
 
   // حذف State های اضافی و useEffect ها
   // مشتق کردن مستقیم داده‌ها از دیتای آپدیت شده RTK Query
@@ -224,6 +229,14 @@ export default function AdminCourse() {
     }
   };
 
+  const handleThumbnailDelete = async () => {
+    if (!id) return;
+    const res = await mutateDeleteThumbnail(course.id);
+    if (!res.error) {
+      setIsOpenThumbnailDeleteConfirm(false);
+    }
+  };
+
   return (
     <TooltipProvider>
       <SectionCreate
@@ -314,6 +327,16 @@ export default function AdminCourse() {
         destructive
         description={`آیا مایل به حذف سند ${selectedDocument?.title} هستید؟`}
         onConfirm={() => handleDocumentDelete(selectedDocument?.id)}
+      />
+
+      <ConfirmModal
+        open={isOpenThumbnailDeleteConfirm}
+        title="حذف عکس"
+        loading={isLoadingThumbnailDelete}
+        onOpenChange={setIsOpenThumbnailDeleteConfirm}
+        destructive
+        description={`آیا مایل به حذف عکس هستید؟`}
+        onConfirm={() => handleThumbnailDelete()}
       />
 
       <div className="space-y-8 p-6 lg:p-8 max-w-7xl mx-auto bg-surface-300">
@@ -675,20 +698,40 @@ export default function AdminCourse() {
                   </p>
                 </div>
               </div>
-              <Button
-                size="sm"
-                onClick={() => setIsOpenThumbnailCreate(true)}
-                className="h-9"
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                افزودن عکس
-              </Button>
+
+              <div className="flex gap-1 items-center">
+                {course?.thumbnailUrl && (
+                  <Button
+                    variant={"destructive"}
+                    size="sm"
+                    onClick={() => setIsOpenThumbnailDeleteConfirm(true)}
+                    className="h-9"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    حذف عکس
+                  </Button>
+                )}
+
+                <Button
+                  size="sm"
+                  onClick={() => setIsOpenThumbnailCreate(true)}
+                  className="h-9"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  افزودن عکس
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            {course.documents && course.documents.length > 0 ? (
-              <div className="rounded-lg border overflow-hidden">
-                <div></div>
+            {course?.thumbnailUrl ? (
+              <div className=" border  flex items-center justify-center">
+                {/* Use an actual image tag here */}
+                <img
+                  src={course.thumbnailUrl}
+                  alt="پیش نمایش دوره"
+                  className=" h-auto object-cover max-h-[250px] rounded-[8px] "
+                />
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">

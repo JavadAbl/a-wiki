@@ -27,12 +27,11 @@ export default function CategoryCreate({ isOpen, setIsOpen }: Props) {
     },
   });
 
-  const [mutateCreateCategory] = useCategoryCreateMutation();
+  const [mutateCreateCategory, { isLoading }] = useCategoryCreateMutation();
 
   async function handleSubmit(data: CategoryCreateDto) {
     const res = await mutateCreateCategory(data);
     if (!res.error) {
-      toast.success("دوره با موفقیت ایجاد شد");
       setIsOpen(false);
       form.reset();
     }
@@ -102,6 +101,7 @@ export default function CategoryCreate({ isOpen, setIsOpen }: Props) {
             variant={"secondary"}
             size={"lg"}
             className={cn("self-end rounded-[24px] min-w-[75px]")}
+            isLoading={isLoading}
             onClick={() => setIsOpen(false)}
           >
             انصراف

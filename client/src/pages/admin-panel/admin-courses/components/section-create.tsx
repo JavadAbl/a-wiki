@@ -27,7 +27,7 @@ export default function SectionCreate({ isOpen, setIsOpen, courseId }: Props) {
     },
   });
 
-  const [mutateCreateSection] = useSectionCreateMutation();
+  const [mutateCreateSection, { isLoading }] = useSectionCreateMutation();
 
   async function handleSubmit(data: SectionCreateDto) {
     const res = await mutateCreateSection({ body: data, courseId });
@@ -38,7 +38,7 @@ export default function SectionCreate({ isOpen, setIsOpen, courseId }: Props) {
   }
 
   return (
-    <Modal open={isOpen} onOpenChange={setIsOpen} title="ایجاد دوره جدید">
+    <Modal open={isOpen} onOpenChange={setIsOpen} title="ایجاد بخش جدید">
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
         className={cn("flex flex-col gap-0 py-4 px-[40px]")}
@@ -48,12 +48,12 @@ export default function SectionCreate({ isOpen, setIsOpen, courseId }: Props) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="title">عنوان دوره</FieldLabel>
+              <FieldLabel htmlFor="title">عنوان بخش</FieldLabel>
               <FormInput
                 {...field}
                 id="title"
                 aria-invalid={fieldState.invalid}
-                placeholder="عنوان دوره را وارد کنید"
+                placeholder="عنوان بخش را وارد کنید"
                 autoComplete="off"
               />
               <InputMessage>{fieldState.error?.message}</InputMessage>
@@ -101,6 +101,7 @@ export default function SectionCreate({ isOpen, setIsOpen, courseId }: Props) {
             variant={"secondary"}
             size={"lg"}
             className={cn("self-end rounded-[24px] min-w-[75px]")}
+            isLoading={isLoading}
             onClick={() => setIsOpen(false)}
           >
             انصراف

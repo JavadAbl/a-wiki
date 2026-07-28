@@ -28,7 +28,7 @@ export default function PartCreate({ isOpen, setIsOpen, sectionId }: Props) {
     },
   });
 
-  const [mutateCreatePart] = usePartCreateMutation();
+  const [mutateCreatePart, { isLoading }] = usePartCreateMutation();
 
   async function handleSubmit(data: PartCreateDto) {
     const res = await mutateCreatePart({ body: data, sectionId: sectionId! });
@@ -93,6 +93,7 @@ export default function PartCreate({ isOpen, setIsOpen, sectionId }: Props) {
             type="submit"
             variant={"primary"}
             size={"lg"}
+            isLoading={isLoading}
             className={cn("self-end rounded-[24px] min-w-[75px]")}
           >
             ایجاد

@@ -17,4 +17,7 @@ export class ContentDto {
 
   @Expose()
   order: number;
+
+  @Expose()
+  durationSeconds: number;
 }

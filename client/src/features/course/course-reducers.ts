@@ -3,6 +3,7 @@ import type { CourseState } from "./course-slice";
 import type { ContentDto } from "./dto/content.dto";
 import type { SectionDto } from "./dto/section.dto";
 import type { CourseDetailsDto } from "./dto/course.details.dto";
+import type { PartDto } from "./dto/part.dto";
 
 export const courseReducers = {
   setCourseBrowserSelectedCourse: (
@@ -25,14 +26,14 @@ export const courseReducers = {
     state.courseBrowserSelectedSection = section;
   },
 
-  setCourseBrowserSelectedPartId: (
+  setCourseBrowserSelectedPart: (
     state: WritableDraft<CourseState>,
     action: PayloadAction<{
-      partId: number | null;
+      part: PartDto | null;
     }>,
   ) => {
-    const { partId } = action.payload;
-    state.courseBrowserSelectedPartId = partId;
+    const { part } = action.payload;
+    state.courseBrowserSelectedPart = part;
   },
 
   setCourseBrowserSelectedContent: (

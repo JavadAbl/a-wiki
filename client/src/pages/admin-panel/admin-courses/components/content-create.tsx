@@ -28,6 +28,10 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+
+  // 1. Add progress state
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ContentCreateDto>({
@@ -38,23 +42,18 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
     },
   });
 
-  //Data Hooks
   const [mutateCreateContent, { isLoading }] = useContentCreateMutation();
 
   const validateFile = (file: File): boolean => {
-    // Check file size
     if (file.size > MAX_FILE_SIZE) {
       setFileError("حجم فایل نباید بیشتر از 500 مگابایت باشد");
       return false;
     }
-
-    // Check file type (video or audio)
     const isAllowed = ALLOWED_TYPES.some((type) => file.type.startsWith(type));
     if (!isAllowed) {
       setFileError("فقط فایل‌های ویدئویی و صوتی مجاز هستند");
       return false;
     }
-
     setFileError(null);
     return true;
   };
@@ -64,7 +63,6 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
       setFile(null);
       return;
     }
-
     if (validateFile(selectedFile)) {
       setFile(selectedFile);
     } else {
@@ -75,11 +73,8 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
-
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      handleFileSelect(droppedFile);
-    }
+    if (droppedFile) handleFileSelect(droppedFile);
   }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -95,28 +90,21 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
     handleFileSelect(selectedFile);
-    // Reset input so same file can be selected again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removeFile = () => {
     setFile(null);
     setFileError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const getFileIcon = () => {
     if (!file) return null;
-    if (file.type.startsWith("video/")) {
+    if (file.type.startsWith("video/"))
       return <FileVideo className="w-8 h-8 text-blue-500" />;
-    }
-    if (file.type.startsWith("audio/")) {
+    if (file.type.startsWith("audio/"))
       return <FileAudio className="w-8 h-8 text-purple-500" />;
-    }
     return null;
   };
 
@@ -137,17 +125,47 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
     if (data?.description) formData.set("description", data.description);
     formData.set("file", file);
 
-    const res = await mutateCreateContent({ body: formData, partId });
-    if (!res.error) {
+    try {
+      // 2. Pass the onUploadProgress callback to the mutation
+      await mutateCreateContent({
+        body: formData,
+        partId,
+        onUploadProgress: (percent) => setUploadProgress(percent),
+      }).unwrap(); // .unwrap() allows us to use try/catch cleanly
+
+      toast.success("محتوا با موفقیت ایجاد شد");
       setIsOpen(false);
       form.reset();
       setFile(null);
       setFileError(null);
+      setUploadProgress(0); // Reset progress for next time
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      toast.error(
+        error?.data?.message || "خطا در آپلود فایل. لطفاً دوباره تلاش کنید.",
+      );
+      setUploadProgress(0);
     }
   }
 
+  // 3. Reset progress when modal closes
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setUploadProgress(0);
+      setFile(null);
+      setFileError(null);
+      form.reset();
+    }
+    setIsOpen(open);
+  };
+
   return (
-    <Modal open={isOpen} onOpenChange={setIsOpen} title="ایجاد محتوای جدید">
+    <Modal
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      title="ایجاد محتوای جدید"
+      isLock={isLoading}
+    >
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
         className={cn("flex flex-col gap-0 py-4 px-[40px]")}
@@ -237,11 +255,10 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
             <div
               className={cn(
                 "flex items-center gap-4 p-4 border rounded-[16px]",
-                "bg-gray-50 ",
+                "bg-gray-50",
               )}
             >
               {getFileIcon()}
-
               <div className="flex-1 min-w-0 overflow-hidden w-40">
                 <p className="text-sm font-medium truncate max-w-full">
                   {file.name}
@@ -253,12 +270,12 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
                   {file.type || "نوع فایل نامشخص"}
                 </p>
               </div>
-
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={removeFile}
+                disabled={isLoading}
                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
               >
                 <X className="w-5 h-5" />
@@ -270,25 +287,46 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
           )}
         </Field>
 
-        <div className={cn("flex justify-end gap-1 pt-2")}>
-          <Button
-            type="submit"
-            variant={"primary"}
-            size={"lg"}
-            className={cn("self-end rounded-[24px] min-w-[75px]")}
-            isLoading={isLoading}
-          >
-            ایجاد
-          </Button>
+        {/* 4. Progress Bar UI */}
+        {isLoading && (
+          <div className="mt-4 w-full animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex justify-between text-xs text-gray-600 mb-1.5 font-medium">
+              <span>در حال آپلود فایل...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
+        <div
+          className={cn(
+            "flex justify-end gap-2 pt-4 mt-2 border-t border-gray-100",
+          )}
+        >
           <Button
             type="button"
             variant={"secondary"}
             size={"lg"}
-            className={cn("self-end rounded-[24px] min-w-[75px]")}
-            onClick={() => setIsOpen(false)}
+            className={cn("rounded-[24px] min-w-[100px]")}
+            onClick={() => handleOpenChange(false)}
+            disabled={isLoading}
           >
             انصراف
+          </Button>
+          <Button
+            type="submit"
+            variant={"primary"}
+            size={"lg"}
+            className={cn("rounded-[24px] min-w-[100px]")}
+            isLoading={isLoading}
+            disabled={!file || !!fileError || isLoading}
+          >
+            {isLoading ? `آپلود ${uploadProgress}%` : "ایجاد"}
           </Button>
         </div>
       </form>

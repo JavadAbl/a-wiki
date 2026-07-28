@@ -7,6 +7,8 @@ import { UserPermissionCreateDto } from '../dto/request/user-permission-create.d
 import { Public } from 'src/common/decorators/public.decorator';
 import { SendOtpDto } from '../dto/request/send-otp.dto';
 import { LoginOtpDto } from '../dto/request/login-otp.dto';
+import { RefreshTokenDto } from '../dto/request/refresh-token.dto';
+import { TokensDto } from '../dto/response/tokens.dto';
 
 @Controller('Auth')
 export class AuthController {
@@ -28,6 +30,12 @@ export class AuthController {
   @Post('LoginOtp')
   loginOtp(@Body() payload: LoginOtpDto): Promise<AuthDto> {
     return this.authService.loginWithOto(payload);
+  }
+
+  @Public()
+  @Post('RefreshToken')
+  refreshToken(@Body() payload: RefreshTokenDto): Promise<TokensDto> {
+    return this.authService.refreshToken(payload);
   }
 
   @Post('RolePermissions')

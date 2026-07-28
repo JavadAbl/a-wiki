@@ -31,6 +31,8 @@ import { SendOtpDto } from '../dto/request/send-otp.dto';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'src/common/config/config.type';
 import axios, { AxiosError } from 'axios';
+import { RefreshTokenDto } from '../dto/request/refresh-token.dto';
+import { TokensDto } from '../dto/response/tokens.dto';
 
 @Injectable()
 export class AuthService {
@@ -96,6 +98,20 @@ export class AuthService {
     const random5Digit = Math.floor(Math.random() * 90000) + 10000;
     await this.sendSms(mobile, random5Digit.toFixed());
     await this.cacheManager.set(`otp-${mobile}`, '123456', 120000);
+  }
+
+  async refreshToken(payload: RefreshTokenDto): Promise<TokensDto> {
+    const { refreshToken } = payload;
+
+    const tokenPayload = await this.tokenService.verifyRefreshToken(refreshToken);
+
+    const tokens = await this.tokenService.generateTokens({
+      permissions: tokenPayload.permissions,
+      role: tokenPayload.role,
+      userId: tokenPayload.userId,
+    });
+
+    return tokens;
   }
 
   private async sendSms(to: string, text: string) {

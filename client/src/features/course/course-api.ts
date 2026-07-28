@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseApi } from "../base-api";
+import { BASE_ADDRESS, baseApi } from "../base-api";
 import type { GetManyQuery, GetManyReply } from "../../utils/types";
 import type { CategoryCreateDto } from "./schemas/category-create-schema";
 import type { CategoryDto } from "./dto/category.dto";
@@ -13,6 +13,8 @@ import type { ContentUpdateDto } from "./schemas/content-update-schema";
 import type { PartUpdateDto } from "./schemas/part-update-schema";
 import type { SectionUpdateDto } from "./schemas/section-update-schema";
 import type { CourseUpdateDto } from "./schemas/course-update-schema";
+import { refreshAccessToken } from "../../utils/refresh-token";
+import type { AppState } from "../store";
 
 export const courseApi = createApi({
   reducerPath: "courseApi",
@@ -191,7 +193,88 @@ export const courseApi = createApi({
     }),
 
     //Content-------------------------------------------------------
-    ContentCreate: builder.mutation<number, { body: FormData; partId: number }>(
+    contentCreate: builder.mutation<
+      any,
+      {
+        partId: number;
+        body: FormData;
+        onUploadProgress?: (percent: number) => void;
+      }
+    >({
+      invalidatesTags: ["course"],
+      queryFn: async ({ partId, body, onUploadProgress }, api) => {
+        // Helper function to execute the XHR request
+        const executeUpload = () => {
+          return new Promise<{ data?: any; error?: any }>((resolve) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", `${BASE_ADDRESS}Courses/Parts/${partId}/Contents`);
+
+            // CRITICAL: Get the FRESH token from state right before sending.
+            // This ensures that if a refresh just happened, we use the new token.
+            const state = api.getState() as AppState;
+            const accessToken = state?.auth?.accessToken;
+
+            if (accessToken) {
+              xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+            }
+
+            if (onUploadProgress) {
+              xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                  const percent = Math.round(
+                    (event.loaded * 100) / event.total,
+                  );
+                  onUploadProgress(percent);
+                }
+              };
+            }
+
+            api.signal?.addEventListener("abort", () => {
+              xhr.abort();
+            });
+
+            xhr.onload = () => {
+              let data;
+              try {
+                data = JSON.parse(xhr.responseText);
+              } catch {
+                data = xhr.responseText;
+              }
+
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve({ data });
+              } else {
+                resolve({ error: { status: xhr.status, data } });
+              }
+            };
+
+            xhr.onerror = () => {
+              resolve({ error: { status: 0, data: "Network Error" } });
+            };
+
+            xhr.send(body);
+          });
+        };
+
+        // 1. Execute the initial upload
+        let result = await executeUpload();
+
+        // 2. If 401, use the shared refresh logic and retry
+        if (result.error && result.error.status === 401) {
+          const refreshed = await refreshAccessToken(api);
+
+          if (refreshed) {
+            // Retry the upload with the newly acquired token
+            result = await executeUpload();
+          }
+        }
+
+        // 3. Return the final result to RTK Query
+        return result;
+      },
+    }),
+
+    /*   ContentCreate: builder.mutation<number, { body: FormData; partId: number }>(
       {
         query: ({ body, partId }) => ({
           url: `Courses/Parts/${partId}/Contents`,
@@ -200,7 +283,7 @@ export const courseApi = createApi({
         }),
         invalidatesTags: ["course"],
       },
-    ),
+    ), */
 
     ContentUpdate: builder.mutation<
       number,

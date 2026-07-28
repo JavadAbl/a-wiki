@@ -36,7 +36,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
     mode: "onSubmit",
   });
 
-  const [mutateLogin] = useLoginMutation();
+  const [mutateLogin, { isLoading }] = useLoginMutation();
 
   async function handleLogin(data: LoginDto) {
     const res = await mutateLogin(data);
@@ -113,6 +113,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
                 type="submit"
                 variant={"primary"}
                 size={"lg"}
+                isLoading={isLoading}
                 className={cn(" self-end rounded-[24px]  min-w-[75px]")}
               >
                 {"ورود"}

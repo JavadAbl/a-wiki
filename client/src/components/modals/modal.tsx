@@ -15,6 +15,7 @@ interface Props {
   title: string;
   description?: string;
   children: React.ReactNode;
+  isLock?: boolean; // Added isLock prop
 }
 
 export function Modal({
@@ -23,9 +24,16 @@ export function Modal({
   title,
   description,
   children,
+  isLock = false,
 }: Props) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && isLock) return;
+        onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent className={cn("p-0 rounded-[10px]")}>
         <DialogHeader className="bg-surface-300 py-[10px] px-[16px] rounded-t-[10px] border-b border-neutral-200">
           <DialogTitle className={cn("flex justify-between items-center p-0")}>
@@ -33,9 +41,10 @@ export function Modal({
 
             <XIcon
               className={cn(
-                " text-white bg-gray-400 rounded-full p-1 cursor-pointer",
+                " text-white bg-gray-400 rounded-full p-1",
+                isLock ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
               )}
-              onClick={() => onOpenChange(false)}
+              onClick={() => !isLock && onOpenChange(false)}
             />
           </DialogTitle>
 

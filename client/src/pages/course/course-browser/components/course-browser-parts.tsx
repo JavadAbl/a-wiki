@@ -45,6 +45,7 @@ export default function CourseBrowserParts() {
 
   return (
     <div
+      id="parts"
       className={cn(
         "bg-surface-100 rounded-[20px] px-[8px] pt-[8px] pb-[12px]",
       )}
@@ -90,13 +91,13 @@ export default function CourseBrowserParts() {
               return (
                 <div
                   key={index}
-                  className="border border-gray-100 bg-primary-500/25 text-content-primary mb-2 rounded-lg overflow-hidden"
+                  className="border border-gray-100 bg-primary-500/5 text-content-primary mb-2 rounded-lg overflow-hidden"
                 >
                   {/* Accordion Header (Clickable) */}
                   <div
                     onClick={() => handleToggle(index, part)}
                     className={cn(
-                      "flex justify-between items-center p-[18px_12px] cursor-pointer hover:bg-primary-500/75 transition-colors",
+                      "flex justify-between items-center p-[12px_12px] cursor-pointer hover:bg-primary-500/25 transition-colors",
                     )}
                   >
                     <span className="flex items-center gap-2 font-medium">
@@ -126,20 +127,29 @@ export default function CourseBrowserParts() {
                             <div
                               key={contentIndex}
                               className={cn(
-                                "flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors",
+                                "flex items-center gap-3 p-1 rounded-md cursor-pointer transition-colors",
                                 isSelected
                                   ? "bg-blue-50 text-blue-600" // Active/Selected styling
                                   : "hover:bg-gray-50 text-gray-700", // Default hover styling
                               )}
-                              onClick={() =>
+                              onClick={() => {
                                 dis(
                                   courseActions.setCourseBrowserSelectedContent(
                                     {
                                       content,
                                     },
                                   ),
-                                )
-                              }
+                                );
+
+                                setTimeout(
+                                  () =>
+                                    window.scrollTo({
+                                      top: 0,
+                                      behavior: "smooth",
+                                    }),
+                                  0,
+                                );
+                              }}
                             >
                               {/* Added a placeholder icon or number for the content */}
                               <span

@@ -108,7 +108,7 @@ export class ContentService {
       contentId,
     );
 
-    await this.s3Provider.delete(content.mediaUrl);
+    await this.s3Provider.deleteAllVersions(content.mediaUrl);
     await this.contentRep.remove({ where: { id: contentId } });
   }
 

@@ -67,7 +67,7 @@ export class PartService {
       '/',
     );
 
-    await this.s3Provider.deletePrefix(s3Key);
+    await this.s3Provider.deletePrefixVersions(s3Key);
 
     await this.partRep.remove({ where: { id: partId } });
   }

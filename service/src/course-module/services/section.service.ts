@@ -65,7 +65,7 @@ export class SectionService {
 
     const s3Key = ['courses', String(courseId), 'sections', String(sectionId)].join('/');
 
-    await this.s3Provider.deletePrefix(s3Key);
+    await this.s3Provider.deletePrefixVersions(s3Key);
 
     await this.sectionRep.remove({ where: { id: sectionId } });
   }

@@ -25,7 +25,7 @@ export default function HomeCourses() {
 
       <button
         className={cn(
-          "bg-transparent border border-primary-500 text-primary-500 font-h3 px-8 py-3 rounded-[24px]",
+          "bg-transparent border border-primary-500 text-primary-500 font-h3 px-8 py-3 rounded-[24px] cursor-pointer",
         )}
         onClick={() => nav("/Courses")}
       >

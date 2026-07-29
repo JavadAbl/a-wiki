@@ -44,13 +44,22 @@ export default function CourseBrowserSectionList({ course }: Props) {
               section={section}
               index={index + 1}
               isSelected={section.id === selectedSection?.id}
-              onClick={() =>
+              onClick={() => {
                 dis(
                   courseActions.setCourseBrowserSelectedSection({
                     section: section,
                   }),
-                )
-              }
+                );
+
+                const element = document.getElementById("parts");
+                const yOffset = 200;
+                const y =
+                  element.getBoundingClientRect().top +
+                  window.pageYOffset -
+                  yOffset;
+
+                window.scrollTo({ top: y, behavior: "smooth" });
+              }}
             />
           ))
         ) : (

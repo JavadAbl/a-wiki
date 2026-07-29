@@ -17,7 +17,7 @@ const HomeHero = (): JSX.Element => {
     {
       label: "شروع یادگیری",
       variant: "primary",
-      onClick: () => {},
+      onClick: () => nav("/Courses"),
     },
     {
       label: "مشاهده دوره‌ها",

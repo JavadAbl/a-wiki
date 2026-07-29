@@ -80,10 +80,9 @@ export default function CourseBrowser() {
           {/* Player – full width on mobile, grows on desktop */}
           <div className={cn("w-full lg:flex-1")}>
             <div
-              className={cn(
-                "h-[220px] sm:h-[300px] md:h-[380px] lg:h-[500px]",
-                "w-full",
-              )}
+              // Replaces your current height classes
+              className="w-full aspect-video h-auto"
+              // className="w-full aspect-video max-h-[280px] sm:max-h-[350px] md:max-h-[420px] lg:max-h-[800px]"
             >
               <CourseBrowserPlayer />
             </div>

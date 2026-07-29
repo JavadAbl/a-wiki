@@ -3,7 +3,16 @@ import { cn } from "#lib/utils";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useContentGetURLByIdQuery } from "../../../../features/course/course-api";
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, Maximize, Minimize, Video, Volume2 } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Maximize,
+  Minimize,
+  Video,
+  Volume2,
+  Volume1,
+  VolumeX,
+} from "lucide-react";
 import { formatSeconds } from "../../../../utils/app-utils";
 
 const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 2];
@@ -38,12 +47,20 @@ export default function CourseBrowserPlayer() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
 
+  // Volume states
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
 
   // State to track recovery during a TTL expiration
   const [resumeTime, setResumeTime] = useState<number | null>(null);
   const [hasRetried, setHasRetried] = useState(false);
+
+  // Calculate the percentage of the current time for the seekbar fill
+  const seekPercentage = duration ? (currentTime / duration) * 100 : 0;
+  const volumePercentage = (isMuted ? 0 : volume) * 100;
 
   // Reset states when the lesson changes
   useEffect(() => {
@@ -55,12 +72,13 @@ export default function CourseBrowserPlayer() {
     setPlaybackRate(1); // Reset speed on new lesson
   }, [selectedContent?.id]);
 
-  // Sync playback rate with media element when it changes or URL loads
+  // Sync playback rate and volume with media element when they change or URL loads
   useEffect(() => {
     if (mediaRef.current) {
       mediaRef.current.playbackRate = playbackRate;
+      mediaRef.current.volume = isMuted ? 0 : volume;
     }
-  }, [playbackRate, url]);
+  }, [playbackRate, volume, isMuted, url]);
 
   // Listen for native fullscreen changes (e.g., user presses ESC)
   useEffect(() => {
@@ -102,6 +120,25 @@ export default function CourseBrowserPlayer() {
     }
   };
 
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = Number(e.target.value);
+    setVolume(newVolume);
+    if (newVolume > 0 && isMuted) {
+      setIsMuted(false);
+    }
+    if (mediaRef.current) {
+      mediaRef.current.volume = newVolume;
+    }
+  };
+
+  const toggleMute = () => {
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    if (mediaRef.current) {
+      mediaRef.current.volume = newMutedState ? 0 : volume;
+    }
+  };
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen().catch((err) => {
@@ -139,6 +176,10 @@ export default function CourseBrowserPlayer() {
       setIsPlaying(true);
     }
   };
+
+  // Dynamic volume icon based on state
+  const VolumeIcon =
+    isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
     <div
@@ -187,7 +228,7 @@ export default function CourseBrowserPlayer() {
             <video
               ref={mediaRef as React.RefObject<HTMLVideoElement>}
               src={url}
-              onClick={togglePlay} // Added onClick to pause/play
+              onClick={togglePlay}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onEnded={() => setIsPlaying(false)}
@@ -195,7 +236,7 @@ export default function CourseBrowserPlayer() {
               onLoadedMetadata={handleLoadedMetadata}
               onError={handleMediaError}
               onLoadedData={handleLoadedData}
-              className="absolute inset-0 w-full h-full object-contain z-20 cursor-pointer" // Added cursor-pointer
+              className="absolute inset-0 w-full h-full object-contain z-20 cursor-pointer"
             />
           ) : (
             <audio
@@ -233,7 +274,7 @@ export default function CourseBrowserPlayer() {
               isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100",
             )}
           >
-            {/* Progress Bar (Forced LTR for correct left-to-right seeking) */}
+            {/* Progress Bar */}
             <input
               type="range"
               dir="ltr"
@@ -241,18 +282,46 @@ export default function CourseBrowserPlayer() {
               max={duration || 100}
               value={currentTime}
               onChange={handleSeek}
-              className="w-full h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer accent-primary-500 mb-3 hover:h-2 transition-all"
+              style={{
+                backgroundSize: `${seekPercentage}% 100%`,
+              }}
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer mb-3 hover:h-2 transition-all bg-white/30 bg-gradient-to-r from-primary-500 to-primary-500 bg-no-repeat bg-left [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary-500 [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:transition-transform [&::-moz-range-thumb]:hover:scale-125"
               aria-label="Seek media"
             />
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
+                {/* Volume Control */}
+                <div className="group/volume flex items-center gap-2">
+                  <button
+                    onClick={toggleMute}
+                    className="flex items-center justify-center w-8 h-8 hover:bg-white/20 rounded-full transition-all"
+                    aria-label={isMuted ? "Unmute" : "Mute"}
+                  >
+                    <VolumeIcon size={20} className="text-white" />
+                  </button>
+                  <input
+                    type="range"
+                    dir="ltr"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={isMuted ? 0 : volume}
+                    onChange={handleVolumeChange}
+                    style={{
+                      backgroundSize: `${volumePercentage}% 100%`,
+                    }}
+                    className="w-16 md:group-hover/volume:w-24 h-1 rounded-full appearance-none cursor-pointer transition-all duration-300 bg-white/30 bg-gradient-to-r from-primary-500 to-primary-500 bg-no-repeat bg-left [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary-500 [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:cursor-pointer"
+                    aria-label="Volume"
+                  />
+                </div>
+
                 {/* Time Display */}
                 <span
                   className="text-white text-sm font-medium font-mono"
                   dir="ltr"
                 >
-                  {formatSeconds(duration)} / {formatSeconds(currentTime)}
+                  {formatSeconds(currentTime)} / {formatSeconds(duration)}
                 </span>
               </div>
 

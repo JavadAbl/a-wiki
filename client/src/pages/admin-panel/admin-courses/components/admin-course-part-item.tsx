@@ -10,6 +10,7 @@ interface PartItemProps {
   onAcceptOrder: (contentId: number, newOrder: number) => void;
   onSelect: (part: PartDto) => any;
   isSelected: boolean;
+  index: number;
 }
 
 const AdminCoursePartItem = ({
@@ -18,6 +19,7 @@ const AdminCoursePartItem = ({
   onSelect,
   onAcceptOrder,
   isSelected,
+  index,
 }: PartItemProps) => {
   const [inputValue, setInputValue] = useState<string | number>(part.order);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,18 +46,19 @@ const AdminCoursePartItem = ({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-2 px-3 py-1.5 bg-muted rounded-full text-sm font-medium",
-        isSelected && "bg-primary-300/25",
+        "flex items-center justify-between gap-2 px-3 py-1.5 bg-muted rounded-full text-sm font-medium hover:bg-primary-200/10",
+        isSelected && "bg-primary-300/25 border border-primary-300 ",
       )}
     >
-      <div className={cn("flex items-center gap-[16px] grow shrink")}>
-        <span className="truncate flex-1 ">
-          <span
-            className="hover:bg-primary-200/20 cursor-pointer rounded-md px-1"
-            onClick={() => onSelect(part)}
-          >
-            {part.title}
-          </span>
+      <div
+        className={cn(
+          "flex items-center gap-[16px] grow shrink cursor-pointer",
+        )}
+        onClick={() => onSelect(part)}
+      >
+        <span className="flex items-center gap-1 truncate flex-1 ">
+          <span className="p-1 bg-neutral-50 rounded-full size-5 flex items-center justify-center text-xs">{`${index + 1}-`}</span>
+          <span className=" rounded-md px-1">{part.title}</span>
         </span>
 
         <div className="flex items-center gap-1 shrink-0">

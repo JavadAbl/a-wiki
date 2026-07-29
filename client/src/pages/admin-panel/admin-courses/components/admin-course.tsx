@@ -454,9 +454,10 @@ export default function AdminCourse() {
               </div>
 
               <div className="max-h-100 flex flex-col gap-2 ml-3 pl-12 overflow-y-auto">
-                {sections.map((section) => (
+                {sections.map((section, index) => (
                   <AdminCourseSectionItem
                     key={`Sections_${section.id}`}
+                    index={index}
                     section={section}
                     onDelete={() => {
                       setSelectedSectionId(section.id);
@@ -503,9 +504,10 @@ export default function AdminCourse() {
               </div>
 
               <div className="max-h-100 flex flex-col gap-2 ml-3 pl-12 overflow-y-auto">
-                {parts.map((part) => (
+                {parts.map((part, index) => (
                   <AdminCoursePartItem
                     key={`Parts_${part.id}`}
+                    index={index}
                     part={part}
                     onDelete={() => {
                       setSelectedPartId(part.id);

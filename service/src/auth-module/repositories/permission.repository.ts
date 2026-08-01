@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
-import { PermissionType } from 'src/generated/prisma/enums';
 import { Repository } from 'src/infrastructure-modules/prsima-module/base.repository';
 import { PrismaProvider } from 'src/infrastructure-modules/prsima-module/prisma.provider';
+import { PermissionType } from '../enums/permission-type.enum';
 
 @Injectable()
 export class PermissionRepository extends Repository<'permission'> {

@@ -11,7 +11,6 @@ import {
   generateControllerPermissionName,
   SERVICE_PERMISSION,
 } from '../auth.utils';
-import { PermissionType, Role } from 'src/generated/prisma/enums';
 import { ITokenService } from '../contracts/token-service.contract';
 import { LoginDto } from '../dto/request/login.dto';
 import { UserServiceContract } from 'src/user-module/contracts/user-service.contract';
@@ -33,6 +32,8 @@ import { AppConfig } from 'src/common/config/config.type';
 import axios, { AxiosError } from 'axios';
 import { RefreshTokenDto } from '../dto/request/refresh-token.dto';
 import { TokensDto } from '../dto/response/tokens.dto';
+import { PermissionType } from '../enums/permission-type.enum';
+import { Role } from '../enums/role.enum';
 
 @Injectable()
 export class AuthService {

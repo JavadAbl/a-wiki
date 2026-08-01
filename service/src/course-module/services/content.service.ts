@@ -4,7 +4,6 @@ import { ContentCreateDto } from '../dto/request/content-create.dto';
 import { PartRepository } from '../repositories/part.repository';
 import { extname } from 'path';
 import { createHash } from 'crypto';
-import { MediaType } from 'src/generated/prisma/enums';
 import * as mm from 'music-metadata';
 import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 import { random5Digit } from 'src/common/utils/app.utils';
@@ -40,7 +39,7 @@ export class ContentService {
       );
     }
 
-    const mediaType: MediaType = isVideo ? 'Video' : 'Audio';
+    const mediaType = isVideo ? 'Video' : 'Audio';
     const folderType = isVideo ? 'videos' : 'sounds';
 
     // 2. Build the S3 key

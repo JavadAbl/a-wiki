@@ -5,7 +5,6 @@ import { PartRepository } from '../repositories/part.repository';
 import { extname, join, relative } from 'path';
 import { createHash } from 'crypto';
 import { mkdir, stat, writeFile } from 'fs/promises';
-import { MediaType } from 'src/generated/prisma/enums';
 import * as mm from 'music-metadata';
 import { S3Client } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
@@ -55,7 +54,7 @@ export class ContentService {
       );
     }
 
-    const mediaType: MediaType = isVideo ? 'Video' : 'Audio';
+    const mediaType = isVideo ? 'Video' : 'Audio';
     const folderType = isVideo ? 'videos' : 'sounds';
 
     // 3. Build the directory path

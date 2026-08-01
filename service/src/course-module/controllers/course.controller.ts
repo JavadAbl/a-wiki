@@ -40,6 +40,7 @@ import { ContentUpdateDto } from '../dto/request/content-update.dto';
 import { PartUpdateDto } from '../dto/request/part-update.dto';
 import { SectionUpdateDto } from '../dto/request/section-update.dto';
 import { CourseUpdateDto } from '../dto/request/course-update.dto';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @Controller('Courses')
 export class CourseController {
@@ -61,6 +62,7 @@ export class CourseController {
     return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, false, categoryId);
   }
 
+  @Admin()
   @Get('/Admin/GetMany')
   courseGetManyAdmin(
     @Query() query: GetManyQuery,
@@ -74,12 +76,14 @@ export class CourseController {
     return this.courseService.courseGetById(id);
   }
 
+  @Admin()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   courseCreate(@Body() payload: CourseCreateDto): Promise<number> {
     return this.courseService.courseCreate(payload);
   }
 
+  @Admin()
   @Patch(':courseId/SetPublished')
   courseSetIsActive(
     @Param('courseId', ParseIntPipe) id: number,
@@ -88,6 +92,7 @@ export class CourseController {
     return this.courseService.courseSetPublished(id, payload);
   }
 
+  @Admin()
   @Patch(':courseId/SetDescription')
   courseSetDescription(
     @Param('courseId', ParseIntPipe) id: number,
@@ -96,11 +101,13 @@ export class CourseController {
     return this.courseService.courseSetDescription(id, payload);
   }
 
+  @Admin()
   @Patch(':courseId')
   courseUpdate(@Param('courseId', ParseIntPipe) id: number, @Body() payload: CourseUpdateDto): Promise<void> {
     return this.courseService.courseUpdate(id, payload);
   }
 
+  @Admin()
   @Delete(':courseId')
   @HttpCode(HttpStatus.NO_CONTENT)
   courseDelete(@Param('courseId', ParseIntPipe) id: number): Promise<void> {
@@ -108,6 +115,7 @@ export class CourseController {
   }
 
   //Section---------------------------------------------------------
+  @Admin()
   @Post(':courseId/Sections')
   @HttpCode(HttpStatus.CREATED)
   sectionCreate(
@@ -117,6 +125,7 @@ export class CourseController {
     return this.sectionService.sectionCreate(id, payload);
   }
 
+  @Admin()
   @Patch('Sections/:sectionId')
   sectionUpdate(
     @Param('sectionId', ParseIntPipe) id: number,
@@ -125,6 +134,7 @@ export class CourseController {
     return this.sectionService.sectionUpdate(id, payload);
   }
 
+  @Admin()
   @Patch('Sections/:sectionId/SetDescription')
   sectionSetDescription(
     @Param('sectionId', ParseIntPipe) id: number,
@@ -133,6 +143,7 @@ export class CourseController {
     return this.sectionService.sectionSetDescription(id, payload);
   }
 
+  @Admin()
   @Delete('Sections/:sectionId')
   @HttpCode(HttpStatus.NO_CONTENT)
   sectionDelete(@Param('sectionId', ParseIntPipe) id: number): Promise<void> {
@@ -140,6 +151,7 @@ export class CourseController {
   }
 
   //Part------------------------------------------------------------
+  @Admin()
   @Post('Sections/:sectionId/Parts')
   @HttpCode(HttpStatus.CREATED)
   partCreate(@Param('sectionId', ParseIntPipe) id: number, @Body() payload: PartCreateDto): Promise<number> {
@@ -155,11 +167,13 @@ export class CourseController {
     return this.partService.partSetView(id, tokenPayload.userId);
   }
 
+  @Admin()
   @Patch('Parts/:partId')
   partUpdate(@Param('partId', ParseIntPipe) id: number, @Body() payload: PartUpdateDto): Promise<void> {
     return this.partService.partUpdate(id, payload);
   }
 
+  @Admin()
   @Patch('Parts/:partId/SetDescription')
   partSetDescription(
     @Param('sectionId', ParseIntPipe) id: number,
@@ -168,6 +182,7 @@ export class CourseController {
     return this.partService.partSetDescription(id, payload);
   }
 
+  @Admin()
   @Delete('Parts/:partId')
   @HttpCode(HttpStatus.NO_CONTENT)
   partDelete(@Param('partId', ParseIntPipe) id: number): Promise<void> {
@@ -175,6 +190,8 @@ export class CourseController {
   }
 
   //Content------------------------------------------------------------
+
+  @Admin()
   @Post('Parts/:partId/Contents')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
@@ -208,6 +225,7 @@ export class CourseController {
     return this.contentService.generatePresignedUrl(contentId);
   }
 
+  @Admin()
   @Patch('Contents/:contentId')
   contentUpdate(
     @Param('contentId', ParseIntPipe) id: number,
@@ -216,6 +234,7 @@ export class CourseController {
     return this.contentService.contentUpdate(id, payload);
   }
 
+  @Admin()
   @Delete('Contents/:contentId')
   @HttpCode(HttpStatus.NO_CONTENT)
   contentDelete(@Param('contentId', ParseIntPipe) id: number): Promise<void> {
@@ -223,6 +242,7 @@ export class CourseController {
   }
 
   //Document------------------------------------------------------------
+  @Admin()
   @Post(':courseId/Documents')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
@@ -241,6 +261,7 @@ export class CourseController {
     return this.documentService.documentCreate(id, payload, file);
   }
 
+  @Admin()
   @Delete('Documents/:documentId')
   @HttpCode(HttpStatus.NO_CONTENT)
   documentDelete(@Param('documentId', ParseIntPipe) id: number): Promise<void> {
@@ -248,6 +269,7 @@ export class CourseController {
   }
 
   //Thumbnail--------------------------------------------------------
+  @Admin()
   @Post(':courseId/Thumbnails')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
@@ -265,6 +287,7 @@ export class CourseController {
     return this.courseService.thumbnailCreate(id, file);
   }
 
+  @Admin()
   @Delete(':courseId/Thumbnails')
   @HttpCode(HttpStatus.NO_CONTENT)
   thumbnailDelete(@Param('courseId', ParseIntPipe) id: number): Promise<void> {

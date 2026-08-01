@@ -8,10 +8,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { Role } from 'src/generated/prisma/enums';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { generateActionPermissionName } from 'src/auth-module/auth.utils';
 import { AuthServiceContract } from 'src/auth-module/contracts/auth-service.contract';
+import { Role } from 'src/auth-module/enums/role.enum';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
@@ -39,7 +39,7 @@ export class AuthorizationGuard implements CanActivate {
     const userRole = user.role;
     const userPermissions = user.permissions;
 
-    if (userRole === Role.SuperAdmin) return true;
+    if (userRole === (Role.SuperAdmin as string)) return true;
 
     if (userPermissions && Array.isArray(userPermissions)) {
       const permissionMatch = userPermissions.some((userPermission) =>

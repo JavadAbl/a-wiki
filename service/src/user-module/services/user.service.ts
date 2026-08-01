@@ -11,11 +11,11 @@ import { PasswordService } from 'src/auth-module/services/password.service';
 import { UserChangePasswordDto } from '../dto/request/user-change-password.dto';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'src/common/config/config.type';
-import { Role } from 'src/generated/prisma/enums';
 import { CACHE_MANAGER, type Cache } from '@nestjs/cache-manager';
 import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-otp.dto';
 import { UserUpdateDto } from '../dto/request/user-update.dto';
 import { TokenPayload } from 'src/auth-module/contracts/token-service.contract';
+import { Role } from 'src/auth-module/enums/role.enum';
 
 @Injectable()
 export class UserService {

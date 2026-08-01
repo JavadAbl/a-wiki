@@ -1,8 +1,8 @@
 // seed.ts
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import * as bcrypt from 'bcryptjs';
-import { Role } from '../src/generated/prisma/enums';
 import { PrismaClient } from '../src/generated/prisma/client';
+import { Role } from 'src/auth-module/enums/role.enum';
 
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });

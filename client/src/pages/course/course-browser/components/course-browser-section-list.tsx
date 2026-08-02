@@ -54,7 +54,7 @@ export default function CourseBrowserSectionList({ course }: Props) {
                 const element = document.getElementById("parts");
                 const yOffset = 200;
                 const y =
-                  element.getBoundingClientRect().top +
+                  element!.getBoundingClientRect().top +
                   window.pageYOffset -
                   yOffset;
 

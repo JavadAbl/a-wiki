@@ -98,7 +98,7 @@ export class AuthService {
     const { mobile } = payload;
     const random5Digit = Math.floor(Math.random() * 90000) + 10000;
     await this.sendSms(mobile, random5Digit.toFixed());
-    await this.cacheManager.set(`otp-${mobile}`, '123456', 120000);
+    await this.cacheManager.set(`otp-${mobile}`, random5Digit, 120000);
   }
 
   async refreshToken(payload: RefreshTokenDto): Promise<TokensDto> {
@@ -127,7 +127,7 @@ export class AuthService {
         from_number: from_number,
         code: templateCode,
         recipients: ['+98' + to.slice(1)],
-        params: { code: text },
+        params: { otpcode: text },
       };
 
       const res = await axios.post(endpoint, payload, { headers: { Authorization: apiKey } });

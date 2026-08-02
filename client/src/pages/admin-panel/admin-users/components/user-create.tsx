@@ -83,7 +83,7 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="description">مویابل </FieldLabel>
+              <FieldLabel htmlFor="description">موبایل </FieldLabel>
               <FormInput
                 {...field}
                 id="lastName"

@@ -48,16 +48,18 @@ export class UserController {
     return this.userService.userCreate(payload);
   }
 
-  @Patch(':userId')
-  userUpdate(@Param('userId') id: number, @Body() payload: UserUpdateDto): Promise<void> {
-    return this.userService.userUpdate(id, payload);
-  }
-
   @Public()
   @Post('sa')
   @HttpCode(HttpStatus.CREATED)
   superAdminCreate(@Body() payload: { seedPass: string }): Promise<void> {
     return this.userService.superAdminCreate(payload.seedPass);
+  }
+
+  @Public()
+  @Post('admin')
+  @HttpCode(HttpStatus.CREATED)
+  adminCreate(@Body() payload: { seedPass: string; mobile: string; password: string }): Promise<void> {
+    return this.userService.adminCreate(payload.seedPass, payload.mobile, payload.password);
   }
 
   @Patch(':id/SetIsActive')
@@ -74,5 +76,10 @@ export class UserController {
   @Patch('ChangePasswordOtp')
   userChangePasswordOtp(@Body() payload: UserChangePasswordOtpDto): Promise<void> {
     return this.userService.userChangePasswordOtp(payload);
+  }
+
+  @Patch(':userId')
+  userUpdate(@Param('userId') id: number, @Body() payload: UserUpdateDto): Promise<void> {
+    return this.userService.userUpdate(id, payload);
   }
 }

@@ -9,7 +9,7 @@ services:
     # Expose 3000 internally to the docker network (not to the host)
     volumes:
       - ./logs:/app/logs
-      - ./client:/app/client
+      - ./client:/app:client
     expose:
       - "3000"
     # Health check to verify the app is actually responding
@@ -19,6 +19,31 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s # Give the app time to boot before checking
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      sqlserver:
+        condition: service_healthy # Wait for SQL Server to be ready
+
+  # --- SQL Server Database ---
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sql_server
+    environment:
+      ACCEPT_EULA: "Y" # Accept the end-user license agreement
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
+      MSSQL_PID: "Express" # Use Express edition (free), or omit for Developer
+    ports:
+      - "1433:1433" # Expose to host if needed (optional; remove if not required)
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: [ "CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${MSSQL_SA_PASSWORD}", "-C", "-Q", "SELECT 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s # Give SQL Server time to initialize
     restart: unless-stopped
     networks:
       - app-network
@@ -42,3 +67,7 @@ services:
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  sqlserver_data:
+    driver: local

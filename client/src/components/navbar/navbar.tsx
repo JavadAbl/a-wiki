@@ -11,6 +11,8 @@ import { useNavigate } from "react-router";
 import AuthorizationComponent from "#components/auth/role-authorization-component";
 import { Role } from "../../features/auth/enums/role";
 import { toast } from "sonner";
+import NavbarResetPassword from "./navbar-reset-password";
+import { useState } from "react";
 
 const links = [
   { text: "صفحه اصلی", to: "/" },
@@ -23,9 +25,15 @@ export default function Navbar() {
   const nav = useNavigate();
   const { isAuth, user } = useAppSelector((s) => s.auth);
   const dis = useAppDispatch();
+  const [isOpenResetPassword, setIsOpenResetPassword] = useState(false);
 
   return (
     <>
+      <NavbarResetPassword
+        isOpen={isOpenResetPassword}
+        setIsOpen={setIsOpenResetPassword}
+      />
+
       <div className={cn("flex flex-col ")}>
         <div className={cn("flex items-center justify-between py-3 px-6")}>
           <div className={cn("flex text-sm items-end gap-4")}>
@@ -56,6 +64,15 @@ export default function Navbar() {
                     {"پنل ادمین"}
                   </Button>
                 </AuthorizationComponent>
+
+                <Button
+                  className={cn(" rounded-2xl")}
+                  size={"sm"}
+                  variant={"secondary"}
+                  onClick={() => setIsOpenResetPassword(true)}
+                >
+                  {"تغییر رمز عبور"}
+                </Button>
 
                 <span className={cn("text-sm text-content-tertiary")}>
                   {user?.firstName + " " + user?.lastName}

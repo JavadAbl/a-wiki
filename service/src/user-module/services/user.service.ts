@@ -1,4 +1,10 @@
-import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { UserRepository } from '../repository/user.repository';
 import { UserDto } from '../dto/response/user.dto';
@@ -66,6 +72,19 @@ export class UserService {
     await this.userRep.update({ data: payload, where: { id: userId } });
   }
 
+  async adminCreate(seedPass: string, mobile: string, password: string): Promise<void> {
+    if (seedPass != this.configService.getOrThrow('SUPER_ADMIN_SEED_PASSWORD'))
+      throw new UnauthorizedException();
+
+    await this.userRep.checkDuplicateBy({ where: { mobile } }, 'mobile', mobile);
+
+    const hashedPassword = await this.passwordService.hashPassword(password);
+
+    await this.userRep.create({
+      data: { firstName: 'admin', lastName: 'admin', mobile, role: Role.Admin, password: hashedPassword },
+    });
+  }
+
   async superAdminCreate(seedPass: string): Promise<void> {
     if (seedPass != this.configService.getOrThrow('SUPER_ADMIN_SEED_PASSWORD'))
       throw new UnauthorizedException();
@@ -106,7 +125,9 @@ export class UserService {
     const { newPassword, otp, mobile } = payload;
 
     const cachedOtp = await this.cacheManager.get(`otp-${mobile}`);
-    if (cachedOtp != otp) throw new UnauthorizedException('Incorrect otp code');
+    console.log(cachedOtp, otp);
+
+    if (cachedOtp != otp) throw new BadRequestException('Incorrect otp code');
 
     const user = await this.userRep.findAndCheckExistsBy({ where: { mobile } }, 'mobile', mobile);
 

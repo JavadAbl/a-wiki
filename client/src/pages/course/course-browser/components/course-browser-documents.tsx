@@ -44,14 +44,14 @@ export default function CourseBrowserDocuments({ course }: Props) {
             >
               {/* File Info */}
               <div className="flex items-center gap-3 min-w-0">
-                <span className="truncate font-medium group-hover:text-primary-100 transition-colors">
+                <span className="truncate font-medium group-hover:text-primary-100 transition-colors text-sm">
                   {doc.title}
                 </span>
               </div>
 
               {/* File Actions/Meta */}
               <div className="relative flex items-center shrink-0 text-content-secondary">
-                <span className="text-xs font-medium bg-primary-400 px-2.5 py-1 rounded-full transition-all duration-300 group-hover:translate-x-10 group-hover:bg-primary-600 group-hover:text-primary-100">
+                <span className="text-xs bg-primary-400 px-2.5 py-1 rounded-full transition-all duration-300 group-hover:translate-x-10 group-hover:bg-primary-600 group-hover:text-primary-100">
                   {`${doc.fileSize} کیلوبایت`}
                 </span>
 

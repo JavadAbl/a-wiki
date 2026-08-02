@@ -345,7 +345,7 @@ export class CourseService {
     );
 
     if (course.thumbnailUrl) {
-      await this.s3Provider.delete(course.thumbnailUrl);
+      await this.s3Provider.deleteAllVersions(course.thumbnailUrl);
       await this.courseRep.update({ where: { id: courseId }, data: { thumbnailUrl: null } });
     }
   }

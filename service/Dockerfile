@@ -1,4 +1,3 @@
-# Use the official Node.js LTS (Long Term Support) Alpine image
 FROM node:24.18.1
 
 # Set the working directory inside the container

@@ -6,10 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Field, FieldLabel } from "#components/ui/field";
 import { InputMessage } from "#components/inputs/input-message";
 import {
-  ResetPasswordSchema,
-  type ResetPasswordDto,
-} from "../../features/auth/schemas/reset-password-schema";
-import {
   useResetPasswordOtpMutation,
   useSendOtpMutation,
 } from "../../features/auth/auth-api";
@@ -18,14 +14,19 @@ import {
   type SendOtpDto,
 } from "../../features/auth/schemas/send-otp-schema";
 import { useState } from "react";
+import {
+  ResetPasswordOtpSchema,
+  type ResetPasswordOtpDto,
+} from "../../features/auth/schemas/reset-password-otp-schema";
 
 interface Props {
   done: () => any;
 }
 export default function ResetPassword({ done }: Props) {
   const [step, setStep] = useState<"otp" | "reset">("otp");
-  const formResetPassword = useForm<ResetPasswordDto>({
-    resolver: zodResolver(ResetPasswordSchema),
+
+  const formResetPassword = useForm<ResetPasswordOtpDto>({
+    resolver: zodResolver(ResetPasswordOtpSchema),
     defaultValues: {
       mobile: "",
       newPassword: "",
@@ -46,7 +47,7 @@ export default function ResetPassword({ done }: Props) {
     useResetPasswordOtpMutation();
   const [mutateSendOtp, { isLoading: isLoadingSendOtp }] = useSendOtpMutation();
 
-  async function handleResetPassword(data: ResetPasswordDto) {
+  async function handleResetPassword(data: ResetPasswordOtpDto) {
     const res = await mutateResetPassword(data);
     if (!res.error) done();
   }
@@ -59,8 +60,10 @@ export default function ResetPassword({ done }: Props) {
   if (step === "otp")
     return (
       <form
+        key="otp-step"
         onSubmit={formSendOtp.handleSubmit(handleSendOtp)}
         className={cn("flex flex-col gap-[4px] py-4 px-[40px] ")}
+        autoComplete="off" // Added to form level
       >
         <div>
           <Controller
@@ -110,8 +113,10 @@ export default function ResetPassword({ done }: Props) {
   if (step === "reset")
     return (
       <form
+        key="reset-step"
         onSubmit={formResetPassword.handleSubmit(handleResetPassword)}
         className={cn("flex flex-col gap-[4px] py-4 px-[40px] ")}
+        autoComplete="off" // Added to form level
       >
         <div>
           <Controller
@@ -145,7 +150,7 @@ export default function ResetPassword({ done }: Props) {
                   aria-invalid={fieldState.invalid}
                   placeholder="رمز عبور"
                   type="password"
-                  autoComplete="off"
+                  autoComplete="new-password" // Browsers respect this to prevent autofill
                 />
 
                 <InputMessage>{fieldState.error?.message}</InputMessage>
@@ -164,7 +169,8 @@ export default function ResetPassword({ done }: Props) {
                   {...field}
                   aria-invalid={fieldState.invalid}
                   placeholder="کد ارسالی"
-                  autoComplete="off"
+                  inputMode="numeric" // Opens numeric keyboard on mobile
+                  autoComplete="one-time-code" // Prevents history, allows SMS autofill if desired. Change to "off" if you want to block SMS autofill too.
                 />
 
                 <InputMessage>{fieldState.error?.message}</InputMessage>

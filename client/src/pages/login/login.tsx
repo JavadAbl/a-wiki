@@ -27,6 +27,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
   const [isOpenResetPassword, setIsOpenResetPassword] = useState(false);
   const nav = useNavigate();
   const dis = useAppDispatch();
+
   const form = useForm<LoginDto>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -49,7 +50,11 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
   }
 
   return (
-    <Modal open={isOpen} onOpenChange={setIsOpen} title="ورود">
+    <Modal
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      title={isOpenResetPassword ? "فراموشی رمز عبور" : "ورود"}
+    >
       {isOpenResetPassword && (
         <ResetPassword done={() => setIsOpenResetPassword(false)} />
       )}

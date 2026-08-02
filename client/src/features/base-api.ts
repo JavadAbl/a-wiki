@@ -11,6 +11,7 @@ import type { AppState } from "./store";
 import status from "http-status";
 import { refreshAccessToken } from "../utils/refresh-token";
 
+// export const BASE_ADDRESS = "http://192.168.1.89/api/";
 export const BASE_ADDRESS = "http://localhost:3000/api/";
 
 const rawBaseQuery = fetchBaseQuery({
@@ -50,16 +51,21 @@ export const baseApi: BaseQueryFn<
 
   // 2. 401 Handling & Token Refresh (Using shared utility)
   if (result.error && result.error.status === 401) {
-    const refreshed = await refreshAccessToken(api);
+    if (api.endpoint !== "login") {
+      const refreshed = await refreshAccessToken(api);
 
-    if (refreshed) {
-      // Retry the original request with the new token (prepareHeaders will pick it up)
-      result = await rawBaseQuery(args, api, extraOptions);
+      if (refreshed) {
+        // Retry the original request with the new token (prepareHeaders will pick it up)
+        result = await rawBaseQuery(args, api, extraOptions);
+      }
     }
   }
 
   // 3. Error Toasts (Non-401)
-  if (result.error && result.error.status !== 401) {
+  if (
+    (result.error && result.error.status !== 401) ||
+    (result.error && api.endpoint === "login")
+  ) {
     if (api.endpoint !== "getUserByContext") {
       let message = "Server error";
       if (typeof result.error.data === "string") {

@@ -24,6 +24,7 @@ export default function CourseBrowser() {
   useEffect(() => {
     if (course) {
       const run = () => {
+        document.title = course.title;
         dis(courseActions.setCourseBrowserSelectedCourse({ course }));
         if (course?.sections.length) {
           dis(
@@ -41,6 +42,10 @@ export default function CourseBrowser() {
       };
       run();
     }
+
+    return () => {
+      document.title = "ویکی آتیه";
+    };
   }, [course, dis]);
 
   if (isLoading) {
@@ -65,7 +70,7 @@ export default function CourseBrowser() {
   if (!course) return null;
 
   return (
-    <div className={cn("bg-surface-300 p-4 md:p-[16px]")}>
+    <div className={cn("bg-surface-300 p-4 md:p-[16px] mask-reveal-l")}>
       <div
         className={cn("container mx-auto flex flex-col gap-4 md:gap-[16px]")}
       >

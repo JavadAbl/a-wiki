@@ -51,6 +51,10 @@ export default function CourseBrowserPlayer() {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
 
+  // ADDED: Controls visibility state and timer
+  const [areControlsVisible, setAreControlsVisible] = useState(true);
+  const hideControlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
 
@@ -89,6 +93,36 @@ export default function CourseBrowserPlayer() {
     return () =>
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
+
+  // ADDED: useEffect to manage auto-hiding controls based on play state
+  useEffect(() => {
+    if (isPlaying) {
+      // Start the timer to hide controls
+      hideControlsTimer.current = setTimeout(() => {
+        setAreControlsVisible(false);
+      }, 3000); // 3 seconds delay
+    } else {
+      // If paused, clear timer and ensure controls are visible
+      if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
+      setAreControlsVisible(true);
+    }
+
+    return () => {
+      if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
+    };
+  }, [isPlaying]);
+
+  // ADDED: Function to handle mouse movement
+  const handleMouseMove = () => {
+    setAreControlsVisible(true);
+    if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
+
+    if (isPlaying) {
+      hideControlsTimer.current = setTimeout(() => {
+        setAreControlsVisible(false);
+      }, 3000); // Hide again after 3 seconds of inactivity
+    }
+  };
 
   const togglePlay = () => {
     if (mediaRef.current) {
@@ -184,9 +218,12 @@ export default function CourseBrowserPlayer() {
   return (
     <div
       ref={containerRef}
+      // MODIFIED: Added onMouseMove and cursor-none conditionally
+      onMouseMove={handleMouseMove}
       className={cn(
         "group relative flex items-center justify-center bg-surface-100 p-[16px_12px] rounded-[20px] gap-[16px] text-content-secondary h-full w-full overflow-hidden",
-        isFullscreen && "rounded-none p-0", // Remove padding/radius in fullscreen
+        isFullscreen && "rounded-none p-0",
+        isPlaying && !areControlsVisible && "cursor-none", // Hide cursor when controls are hidden
       )}
     >
       {/* Handle States */}
@@ -219,7 +256,7 @@ export default function CourseBrowserPlayer() {
           <div
             className={cn(
               "absolute inset-0 bg-black/40 z-10 transition-opacity duration-300",
-              isPlaying ? "opacity-100 group-hover:opacity-60" : "opacity-100",
+              areControlsVisible ? "opacity-100" : "opacity-0", // MODIFIED: Tie overlay to controls visibility
             )}
           />
 
@@ -271,7 +308,10 @@ export default function CourseBrowserPlayer() {
           <div
             className={cn(
               "absolute bottom-0 left-0 right-0 p-4 z-30 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300",
-              isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100",
+              // MODIFIED: Use areControlsVisible instead of group-hover
+              areControlsVisible
+                ? "opacity-100"
+                : "opacity-0 pointer-events-none",
             )}
           >
             {/* Progress Bar */}
@@ -293,6 +333,8 @@ export default function CourseBrowserPlayer() {
               <div className="flex items-center gap-4">
                 {/* Volume Control */}
                 <div className="group/volume flex items-center gap-2">
+                  <span className="truncate grow shrink">{title}</span>
+
                   <button
                     onClick={toggleMute}
                     className="flex items-center justify-center w-8 h-8 hover:bg-white/20 rounded-full transition-all"

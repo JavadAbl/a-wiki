@@ -65,7 +65,6 @@ export default function CoursesListCard({ course }: Props) {
           </div>
 
           <div className={cn("flex items-center text-primary-300 ")}>
-            <ChevronLeftIcon />
             <span
               className={cn("font-[16px] font-medium cursor-pointer")}
               onClick={() => {
@@ -81,6 +80,7 @@ export default function CoursesListCard({ course }: Props) {
             >
               {"مشاهده آموزش"}
             </span>
+            <ChevronLeftIcon />
           </div>
         </div>
       </div>

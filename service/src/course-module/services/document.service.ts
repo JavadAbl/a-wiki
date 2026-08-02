@@ -63,7 +63,7 @@ export class DocumentService {
       documentId,
     );
 
-    await this.s3Provider.delete(document.fileUrl);
+    await this.s3Provider.deleteAllVersions(document.fileUrl);
     await this.documentRep.remove({ where: { id: documentId } });
   }
 }

@@ -289,7 +289,9 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
             >
               {getFileIcon()}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{file.name}</p>
+                <p className="text-sm font-medium truncate max-w-50">
+                  {file.name}
+                </p>
                 <p className="text-xs text-gray-500">
                   {formatFileSize(file.size)} • {getFileTypeLabel(file.type)}
                 </p>

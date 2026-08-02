@@ -201,7 +201,9 @@ export default function ThumbnailCreate({
                 <ImageIcon className="w-8 h-8 text-gray-400" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{file.name}</p>
+                <p className="text-sm font-medium truncate max-w-50">
+                  {file.name}
+                </p>
                 <p className="text-xs text-gray-500">
                   {formatFileSize(file.size)} • {getFileTypeLabel(file.type)}
                 </p>

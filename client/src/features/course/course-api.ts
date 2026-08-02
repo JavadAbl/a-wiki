@@ -203,14 +203,12 @@ export const courseApi = createApi({
     >({
       invalidatesTags: ["course"],
       queryFn: async ({ partId, body, onUploadProgress }, api) => {
-        // Helper function to execute the XHR request
         const executeUpload = () => {
           return new Promise<{ data?: any; error?: any }>((resolve) => {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", `${BASE_ADDRESS}Courses/Parts/${partId}/Contents`);
 
             // CRITICAL: Get the FRESH token from state right before sending.
-            // This ensures that if a refresh just happened, we use the new token.
             const state = api.getState() as AppState;
             const accessToken = state?.auth?.accessToken;
 
@@ -218,22 +216,70 @@ export const courseApi = createApi({
               xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
             }
 
+            let fakeProgressInterval: ReturnType<typeof setInterval> | null =
+              null;
+            let startTime: number | null = null;
+            let phaseOneDuration = 0;
+
             if (onUploadProgress) {
+              // Start timing the client upload
+              startTime = Date.now();
+
+              // 1. Client to Server upload (Maps 0-100% to 0-50% of total progress)
               xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
-                  const percent = Math.round(
-                    (event.loaded * 100) / event.total,
-                  );
-                  onUploadProgress(percent);
+                  const actualPercent = (event.loaded * 100) / event.total;
+                  // Divide by 2 so client upload represents only the first half
+                  const reportedPercent = Math.round(actualPercent / 2);
+                  onUploadProgress(reportedPercent);
                 }
+              };
+
+              // 2. Server to 3rd Party processing (Simulate the second half: 50% to 95%)
+              xhr.upload.onload = () => {
+                // Client upload is complete. Calculate how long it took.
+                if (startTime) {
+                  phaseOneDuration = Date.now() - startTime;
+                }
+
+                if (fakeProgressInterval) clearInterval(fakeProgressInterval);
+
+                // Start the timer for Phase 2
+                const phaseTwoStartTime = Date.now();
+
+                // Prevent division by zero if the upload was instant (e.g., tiny file)
+                const duration = Math.max(phaseOneDuration, 1);
+
+                // Update every 50ms for a smooth bar
+                fakeProgressInterval = setInterval(() => {
+                  const elapsedPhaseTwo = Date.now() - phaseTwoStartTime;
+                  let fraction = elapsedPhaseTwo / duration;
+
+                  // Cap the fraction at 1 so it stops at 95%
+                  if (fraction >= 1) {
+                    fraction = 1;
+                    if (fakeProgressInterval)
+                      clearInterval(fakeProgressInterval);
+                  }
+
+                  // Map fraction (0 to 1) to progress (50 to 95)
+                  const currentProgress = 50 + fraction * 45;
+                  onUploadProgress(Math.round(currentProgress));
+                }, 50);
               };
             }
 
+            // Handle abort
             api.signal?.addEventListener("abort", () => {
+              if (fakeProgressInterval) clearInterval(fakeProgressInterval);
               xhr.abort();
             });
 
+            // 3. Handle final server response
             xhr.onload = () => {
+              if (fakeProgressInterval) clearInterval(fakeProgressInterval);
+              if (onUploadProgress) onUploadProgress(100); // Jump to 100% on success
+
               let data;
               try {
                 data = JSON.parse(xhr.responseText);
@@ -249,6 +295,7 @@ export const courseApi = createApi({
             };
 
             xhr.onerror = () => {
+              if (fakeProgressInterval) clearInterval(fakeProgressInterval);
               resolve({ error: { status: 0, data: "Network Error" } });
             };
 
@@ -264,6 +311,8 @@ export const courseApi = createApi({
           const refreshed = await refreshAccessToken(api);
 
           if (refreshed) {
+            // Reset progress if retrying
+            if (onUploadProgress) onUploadProgress(0);
             // Retry the upload with the newly acquired token
             result = await executeUpload();
           }

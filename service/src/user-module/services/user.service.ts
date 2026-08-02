@@ -72,7 +72,13 @@ export class UserService {
     await this.userRep.update({ data: payload, where: { id: userId } });
   }
 
-  async adminCreate(seedPass: string, mobile: string, password: string): Promise<void> {
+  async adminCreate(
+    seedPass: string,
+    mobile: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+  ): Promise<void> {
     if (seedPass != this.configService.getOrThrow('SUPER_ADMIN_SEED_PASSWORD'))
       throw new UnauthorizedException();
 
@@ -81,7 +87,7 @@ export class UserService {
     const hashedPassword = await this.passwordService.hashPassword(password);
 
     await this.userRep.create({
-      data: { firstName: 'admin', lastName: 'admin', mobile, role: Role.Admin, password: hashedPassword },
+      data: { firstName, lastName, mobile, role: Role.Admin, password: hashedPassword },
     });
   }
 

@@ -58,8 +58,23 @@ export class UserController {
   @Public()
   @Post('admin')
   @HttpCode(HttpStatus.CREATED)
-  adminCreate(@Body() payload: { seedPass: string; mobile: string; password: string }): Promise<void> {
-    return this.userService.adminCreate(payload.seedPass, payload.mobile, payload.password);
+  adminCreate(
+    @Body()
+    payload: {
+      seedPass: string;
+      mobile: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    },
+  ): Promise<void> {
+    return this.userService.adminCreate(
+      payload.seedPass,
+      payload.mobile,
+      payload.password,
+      payload.firstName,
+      payload.lastName,
+    );
   }
 
   @Patch(':id/SetIsActive')

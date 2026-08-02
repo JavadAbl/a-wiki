@@ -14,7 +14,7 @@ export const UserCreateSchema = z.object({
   mobile: z
     .string()
     .length(11, { message: "شماره موبایل باید دقیقاً ۱۱ کاراکتر باشد" })
-    .regex(/^0(9[0-9]{2})\d{7}$/, "شماره موبایل صحیح نیست"),
+    .regex(/^0[0-9]{10}$/, "شماره موبایل صحیح نیست"),
 });
 
 export type UserCreateDto = z.infer<typeof UserCreateSchema>;

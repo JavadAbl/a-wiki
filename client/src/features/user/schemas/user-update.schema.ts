@@ -16,7 +16,7 @@ export const UserUpdateSchema = z.object({
   mobile: z
     .string()
     .length(11, { message: "شماره موبایل باید دقیقاً ۱۱ کاراکتر باشد" })
-    .regex(/^[0-9+\-\s()]{10,}$/, "Invalid mobile number format")
+    .regex(/^0[0-9]{10}$/, "Invalid mobile number format")
     .optional(),
 
   isActive: z.boolean().optional(),

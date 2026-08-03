@@ -359,11 +359,8 @@ export default function CourseBrowserPlayer() {
                 </div>
 
                 {/* Time Display */}
-                <span
-                  className="text-white text-sm font-medium font-mono"
-                  dir="ltr"
-                >
-                  {formatSeconds(currentTime)} / {formatSeconds(duration)}
+                <span className="text-white text-sm font-medium " dir="ltr">
+                  {formatSeconds(duration)} / {formatSeconds(currentTime)}
                 </span>
               </div>
 

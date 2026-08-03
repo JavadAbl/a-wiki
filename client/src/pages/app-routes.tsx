@@ -8,6 +8,7 @@ import CourseRoutes from "./course/course-routes";
 import AdminPanelRoutes from "./admin-panel/admin-panel-routes";
 import RoleAuthorizationRoute from "#components/auth/role-authorization-route";
 import { Role } from "../features/auth/enums/role";
+import About from "./about/about";
 
 export default function AppRoutes() {
   // const theme = useAppSelector((s) => s.app.theme);
@@ -26,6 +27,7 @@ export default function AppRoutes() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/About" element={<About />} />
           <Route path="/Courses/*" element={<CourseRoutes />} />
         </Route>
 

@@ -17,8 +17,8 @@ import { useState } from "react";
 const links = [
   { text: "صفحه اصلی", to: "/" },
   { text: "دوره‌های آموزشی", to: "/Courses" },
-  { text: "درباره ما", to: "/" },
-  { text: "تماس با ما", to: "/" },
+  { text: "درباره ما", to: "/About" },
+  // { text: "تماس با ما", to: "/" },
 ];
 
 export default function Navbar() {

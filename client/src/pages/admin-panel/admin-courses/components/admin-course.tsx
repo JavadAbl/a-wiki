@@ -3,6 +3,7 @@ import {
   useContentDeleteMutation,
   useContentUpdateMutation,
   useCourseGetByIdQuery,
+  useCourseUpdateMutation,
   useDocumentDeleteMutation,
   usePartDeleteMutation,
   usePartUpdateMutation,
@@ -44,6 +45,8 @@ import {
   ChevronLeft,
   X,
   ImagePlayIcon,
+  Pencil,
+  Check,
 } from "lucide-react";
 import SectionCreate from "./section-create";
 import { useState } from "react";
@@ -103,6 +106,8 @@ export default function AdminCourse() {
     isError,
   } = useCourseGetByIdQuery(id ?? skipToken);
 
+  const [muatateCourseUpdate] = useCourseUpdateMutation();
+
   const [mutateSectionUpdate, { isLoading: isLoadingSectionUpdate }] =
     useSectionUpdateMutation();
   const [mutatePartUpdate, { isLoading: isLoadingPartUpdate }] =
@@ -137,6 +142,14 @@ export default function AdminCourse() {
   const contents: ContentDto[] = [...(selectedPart?.contents ?? [])].sort(
     (a, b) => a.order - b.order,
   );
+
+  // Separate state for Title editing
+  const [titleValue, setTitleValue] = useState<string | undefined>(
+    course?.title,
+  );
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isLoadingCourseTitleUpdate, setIsLoadingCourseTitleUpdate] =
+    useState(false);
 
   if (isLoading) {
     return (
@@ -235,6 +248,30 @@ export default function AdminCourse() {
     if (!res.error) {
       setIsOpenThumbnailDeleteConfirm(false);
     }
+  };
+
+  // --- Title Handlers ---
+  const handleUpdateTitle = async () => {
+    setIsLoadingCourseTitleUpdate(true);
+    try {
+      await muatateCourseUpdate({
+        courseId: course.id,
+        body: { title: titleValue },
+      }).unwrap();
+
+      console.log("Updating content title:", titleValue); // Placeholder
+      setIsEditingTitle(false);
+    } catch (error) {
+      console.error("Failed to update content title", error);
+      setTitleValue(course.title); // Revert to original on failure
+    } finally {
+      setIsLoadingCourseTitleUpdate(false);
+    }
+  };
+
+  const handleRejectTitle = () => {
+    setTitleValue(course.title);
+    setIsEditingTitle(false);
   };
 
   return (
@@ -357,9 +394,53 @@ export default function AdminCourse() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold tracking-tight">
-                  {course.title}
-                </h1>
+                {isEditingTitle ? (
+                  <div className="flex items-center gap-1 flex-1">
+                    <input
+                      type="text"
+                      value={titleValue}
+                      onChange={(e) => setTitleValue(e.target.value)}
+                      className="flex-1 h-7 text-xs bg-background border border-gray-300 rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleUpdateTitle}
+                      className="text-green-600 hover:text-white hover:bg-green-600 transition-colors cursor-pointer rounded-md p-1 shrink-0"
+                      aria-label="Accept Title"
+                      title="تایید"
+                      disabled={isLoading}
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={handleRejectTitle}
+                      className="text-yellow-600 hover:text-white hover:bg-yellow-600 transition-colors cursor-pointer rounded-md p-1 shrink-0"
+                      aria-label="Reject Title"
+                      title="رد تغییرات"
+                      disabled={isLoading}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <h1 className="text-xl font-bold tracking-tight">
+                    {course.title}
+                  </h1>
+                )}
+
+                <button
+                  onClick={() => {
+                    setTitleValue(course.title);
+                    setIsEditingTitle(true);
+                  }}
+                  className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer rounded-full p-1"
+                  aria-label="Edit Title"
+                  title="ویرایش عنوان"
+                  disabled={isEditingTitle || isLoadingCourseTitleUpdate}
+                >
+                  <Pencil size={14} />
+                </button>
+
                 {course.isPublished ? (
                   <Badge
                     variant="default"
@@ -381,6 +462,7 @@ export default function AdminCourse() {
                 </p>
               )}
             </div>
+
             {course.thumbnailUrl && (
               <div className="hidden sm:block shrink-0">
                 <img

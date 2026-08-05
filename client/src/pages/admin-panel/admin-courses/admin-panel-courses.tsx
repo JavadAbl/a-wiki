@@ -1,5 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import { useCoursesGetManyAdminQuery } from "../../../features/course/course-api";
+import {
+  useCourseDeleteMutation,
+  useCoursesGetManyAdminQuery,
+} from "../../../features/course/course-api";
 import { Button } from "#components/ui/button";
 import { Input } from "#components/ui/input";
 import {
@@ -16,6 +19,7 @@ import {
   Pencil,
   PlusIcon,
   SearchIcon,
+  Trash2,
   XIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router";
@@ -28,6 +32,7 @@ import { cn } from "#lib/utils";
 import { DataGrid } from "#components/grids/data-grid";
 import { useDebounce } from "#hooks/use-debounce";
 import CourseSetCategory from "./components/course-set-category";
+import { ConfirmModal } from "#components/modals/confirm-modal";
 
 export default function AdminPanelCourses() {
   const nav = useNavigate();
@@ -36,6 +41,8 @@ export default function AdminPanelCourses() {
   const [selectedCourseForPublish, setSelectedCourseForPublish] =
     useState<CourseDto | null>(null);
   const [selectedCourseForCategory, setSelectedCourseForCategory] =
+    useState<CourseDto | null>(null);
+  const [selectedCourseForDelete, setSelectedCourseForDelete] =
     useState<CourseDto | null>(null);
 
   // Server pagination state
@@ -54,14 +61,22 @@ export default function AdminPanelCourses() {
     page: pageIndex,
     search: debouncedSearch,
   });
-
   const courses = coursesRes?.items || [];
   const totalCount = coursesRes?.totalCount || 0;
+
+  const [mutateCourseDelete, { isLoading: isLoadingCourseDelete }] =
+    useCourseDeleteMutation();
 
   useEffect(() => {
     const run = () => setPageIndex(1);
     run();
   }, [debouncedSearch]);
+
+  const handleCourseDelete = async () => {
+    if (!selectedCourseForDelete) return;
+    const res = await mutateCourseDelete(selectedCourseForDelete.id);
+    if (!res.error) setSelectedCourseForDelete(null);
+  };
 
   // Column definitions
   const columns = useMemo<ColumnDef<CourseDto>[]>(
@@ -152,10 +167,16 @@ export default function AdminPanelCourses() {
                   <ListEndIcon className="mr-2 h-4 w-4" />
                   تغییر دسته بندی
                 </DropdownMenuItem>
-                {/*  <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs">
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
+                  onClick={() => setSelectedCourseForDelete(course)}
+                >
                   <Trash2 className="mr-2 h-4 w-4" />
                   حذف
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           );
@@ -192,6 +213,16 @@ export default function AdminPanelCourses() {
           increaseModalsKey();
         }}
         course={selectedCourseForCategory}
+      />
+
+      <ConfirmModal
+        open={!!selectedCourseForDelete}
+        onOpenChange={() => setSelectedCourseForDelete(null)}
+        onConfirm={handleCourseDelete}
+        description={`آیا از حذف دوره ${selectedCourseForDelete?.title} مطمئن هستید؟`}
+        destructive
+        title="حذف دوره"
+        loading={isLoadingCourseDelete}
       />
 
       <div className="h-full box-border flex flex-col gap-4 overflow-hidden p-4">

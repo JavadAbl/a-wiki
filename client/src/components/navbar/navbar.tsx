@@ -40,7 +40,7 @@ export default function Navbar() {
             <AtieLogo />
 
             {isAuth ? (
-              <div className={cn("flex gap-4 items-center")}>
+              <div className={cn("flex gap-1 items-center")}>
                 <Button
                   size={"sm"}
                   variant={"destructive"}

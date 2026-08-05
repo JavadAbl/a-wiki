@@ -1,9 +1,15 @@
 import { cn } from "#lib/utils";
 import { useNavigate } from "react-router";
 import HomeCourseCard from "./home-course-card";
+import { useCoursesGetManyQuery } from "../../../features/course/course-api";
 
 export default function HomeCourses() {
   const nav = useNavigate();
+
+  const { data: coursesRes } = useCoursesGetManyQuery();
+  const courses = coursesRes?.items;
+
+  if (!courses) return null;
 
   return (
     <div className={cn("flex flex-col items-center gap-8 py-6 text-center")}>
@@ -18,8 +24,8 @@ export default function HomeCourses() {
       </div>
 
       <div className={cn("flex flex-wrap gap-14")}>
-        {Array.from({ length: 3 }).map(() => (
-          <HomeCourseCard />
+        {courses.map((course) => (
+          <HomeCourseCard course={course} />
         ))}
       </div>
 

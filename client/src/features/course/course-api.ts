@@ -126,6 +126,14 @@ export const courseApi = createApi({
       invalidatesTags: ["course"],
     }),
 
+    CourseDelete: builder.mutation<void, number>({
+      query: (courseId) => ({
+        url: `Courses/${courseId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["course"],
+    }),
+
     //Section-------------------------------------------------------
     SectionCreate: builder.mutation<
       number,
@@ -430,4 +438,5 @@ export const {
   useDocumentDeleteMutation,
   useThumbnailCreateMutation,
   useThumbnailDeleteMutation,
+  useCourseDeleteMutation,
 } = courseApi;

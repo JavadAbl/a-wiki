@@ -2,7 +2,7 @@
 /dist
 /node_modules
 /build
-/service/client
+/client
 
 /files
 *.db

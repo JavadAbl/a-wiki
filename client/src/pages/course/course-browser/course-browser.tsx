@@ -9,7 +9,7 @@ import CourseBrowserPlayer from "./components/course-browser-player.tsx";
 import CourseBrowserParts from "./components/course-browser-parts.tsx";
 import { useAppDispatch } from "#hooks/redux-hooks";
 import { courseActions } from "../../../features/course/course-slice.ts";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 export default function CourseBrowser() {
   const params = useParams();
@@ -20,6 +20,10 @@ export default function CourseBrowser() {
   const { data: course, isLoading } = useCourseGetByIdQuery(
     courseId ? courseId : skipToken,
   );
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     if (course) {

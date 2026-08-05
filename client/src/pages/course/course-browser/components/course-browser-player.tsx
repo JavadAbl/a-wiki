@@ -25,7 +25,6 @@ export default function CourseBrowserPlayer() {
 
   const {
     data: urlRes,
-    isLoading,
     isError,
     refetch,
   } = useContentGetURLByIdQuery(
@@ -42,6 +41,7 @@ export default function CourseBrowserPlayer() {
   const title = selectedContent?.title;
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false); // ADDED: Buffering state
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -74,6 +74,7 @@ export default function CourseBrowserPlayer() {
     setCurrentTime(0);
     setDuration(0);
     setPlaybackRate(1); // Reset speed on new lesson
+    setIsBuffering(true); // Set buffering true initially when lesson changes
   }, [selectedContent?.id]);
 
   // Sync playback rate and volume with media element when they change or URL loads
@@ -218,20 +219,16 @@ export default function CourseBrowserPlayer() {
   return (
     <div
       ref={containerRef}
-      // MODIFIED: Added onMouseMove and cursor-none conditionally
       onMouseMove={handleMouseMove}
       className={cn(
         "group relative flex items-center justify-center bg-surface-100 p-[16px_12px] rounded-[20px] gap-[16px] text-content-secondary h-full w-full overflow-hidden",
         isFullscreen && "rounded-none p-0",
-        isPlaying && !areControlsVisible && "cursor-none", // Hide cursor when controls are hidden
+        isPlaying && !areControlsVisible && "cursor-none",
       )}
     >
       {/* Handle States */}
       {!selectedContent && (
         <p className="z-50 text-white">Please select a lesson to begin.</p>
-      )}
-      {selectedContent && isLoading && (
-        <p className="z-50 text-white">Loading media...</p>
       )}
       {selectedContent && isError && (
         <p className="z-50 text-white">Failed to load media.</p>
@@ -256,7 +253,7 @@ export default function CourseBrowserPlayer() {
           <div
             className={cn(
               "absolute inset-0 bg-black/40 z-10 transition-opacity duration-300",
-              areControlsVisible ? "opacity-100" : "opacity-0", // MODIFIED: Tie overlay to controls visibility
+              areControlsVisible ? "opacity-100" : "opacity-0",
             )}
           />
 
@@ -273,6 +270,10 @@ export default function CourseBrowserPlayer() {
               onLoadedMetadata={handleLoadedMetadata}
               onError={handleMediaError}
               onLoadedData={handleLoadedData}
+              // ADDED: Buffering events
+              onWaiting={() => setIsBuffering(true)}
+              onPlaying={() => setIsBuffering(false)}
+              onCanPlay={() => setIsBuffering(false)}
               className="absolute inset-0 w-full h-full object-contain z-20 cursor-pointer"
             />
           ) : (
@@ -286,11 +287,22 @@ export default function CourseBrowserPlayer() {
               onLoadedMetadata={handleLoadedMetadata}
               onError={handleMediaError}
               onLoadedData={handleLoadedData}
+              // ADDED: Buffering events
+              onWaiting={() => setIsBuffering(true)}
+              onPlaying={() => setIsBuffering(false)}
+              onCanPlay={() => setIsBuffering(false)}
             />
           )}
 
-          {/* Center Play Button (Only when paused) */}
-          {!isPlaying && (
+          {/* ADDED: Center Buffering Spinner */}
+          {isBuffering && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+              <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+            </div>
+          )}
+
+          {/* Center Play Button (Only when paused and not buffering) */}
+          {!isPlaying && !isBuffering && (
             <button
               onClick={togglePlay}
               className="absolute z-40 flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/40 transition-all duration-200 group/play"
@@ -308,7 +320,6 @@ export default function CourseBrowserPlayer() {
           <div
             className={cn(
               "absolute bottom-0 left-0 right-0 p-4 z-30 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300",
-              // MODIFIED: Use areControlsVisible instead of group-hover
               areControlsVisible
                 ? "opacity-100"
                 : "opacity-0 pointer-events-none",
@@ -439,70 +450,3 @@ export default function CourseBrowserPlayer() {
     </div>
   );
 }
-const CameraLight = () => (
-  <svg
-    width="18"
-    height="11"
-    viewBox="0 0 18 11"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12.1667 6.33315L16.5192 9.23481C16.5819 9.27657 16.6548 9.30052 16.7301 9.30412C16.8054 9.30772 16.8802 9.29084 16.9467 9.25526C17.0131 9.21969 17.0687 9.16676 17.1074 9.10211C17.1461 9.03746 17.1666 8.96352 17.1667 8.88815V2.05815C17.1667 1.98483 17.1474 1.91281 17.1106 1.84935C17.0739 1.7859 17.0211 1.73325 16.9576 1.69673C16.894 1.66021 16.8219 1.64111 16.7486 1.64136C16.6753 1.64161 16.6033 1.6612 16.54 1.69815L12.1667 4.24981M2.16667 0.5H10.5C11.4205 0.5 12.1667 1.24619 12.1667 2.16667V8.83333C12.1667 9.75381 11.4205 10.5 10.5 10.5H2.16667C1.24619 10.5 0.5 9.75381 0.5 8.83333V2.16667C0.5 1.24619 1.24619 0.5 2.16667 0.5Z"
-      stroke="#EBEBEB"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </svg>
-);
-
-const CameraDark = () => (
-  <svg
-    width="18"
-    height="11"
-    viewBox="0 0 18 11"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12.1667 6.33315L16.5192 9.23481C16.5819 9.27657 16.6548 9.30052 16.7301 9.30412C16.8054 9.30772 16.8802 9.29084 16.9467 9.25526C17.0131 9.21969 17.0687 9.16676 17.1074 9.10211C17.1461 9.03746 17.1666 8.96352 17.1667 8.88815V2.05815C17.1667 1.98483 17.1474 1.91281 17.1106 1.84935C17.0739 1.7859 17.0211 1.73325 16.9576 1.69673C16.894 1.66021 16.8219 1.64111 16.7486 1.64136C16.6753 1.64161 16.6033 1.6612 16.54 1.69815L12.1667 4.24981M2.16667 0.5H10.5C11.4205 0.5 12.1667 1.24619 12.1667 2.16667V8.83333C12.1667 9.75381 11.4205 10.5 10.5 10.5H2.16667C1.24619 10.5 0.5 9.75381 0.5 8.83333V2.16667C0.5 1.24619 1.24619 0.5 2.16667 0.5Z"
-      stroke="#4A5565"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </svg>
-);
-
-const SoundLight = () => (
-  <svg
-    width="14"
-    height="18"
-    viewBox="0 0 14 18"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M7.16667 13.8333C7.16667 15.6743 5.67428 17.1667 3.83333 17.1667C1.99238 17.1667 0.5 15.6743 0.5 13.8333C0.5 11.9924 1.99238 10.5 3.83333 10.5C5.67428 10.5 7.16667 11.9924 7.16667 13.8333ZM7.16667 13.8333V0.5L13 3.83333"
-      stroke="#EBEBEB"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </svg>
-);
-
-const SoundDark = () => (
-  <svg
-    width="14"
-    height="18"
-    viewBox="0 0 14 18"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M7.16667 13.8333C7.16667 15.6743 5.67428 17.1667 3.83333 17.1667C1.99238 17.1667 0.5 15.6743 0.5 13.8333C0.5 11.9924 1.99238 10.5 3.83333 10.5C5.67428 10.5 7.16667 11.9924 7.16667 13.8333ZM7.16667 13.8333V0.5L13 3.83333"
-      stroke="#4A5565"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </svg>
-);

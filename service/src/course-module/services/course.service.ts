@@ -9,8 +9,7 @@ import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 import { buildFindManyArgs } from 'src/common/utils/prisma-util';
 import { CourseDetailsDto } from '../dto/response/course-details.dto';
 import { CourseSetDescriptionDto } from '../dto/request/course-set-description.dto';
-import { extname, join } from 'path';
-import { rm } from 'fs/promises';
+import { extname } from 'path';
 import { plainToInstance } from 'class-transformer';
 import { Prisma } from 'src/generated/prisma/client';
 import { CourseUpdateDto } from '../dto/request/course-update.dto';
@@ -256,18 +255,12 @@ export class CourseService {
   }
 
   async courseDelete(courseId: number) {
-    // Fetch the part with its relations so we can build the file system path
     await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'courseId', courseId);
 
-    // Construct the base directory for this specific part
-    const partDir = join(process.cwd(), 'files', 'courses', `${courseId}`);
+    const s3Key = ['courses', String(courseId)].join('/');
 
-    // Delete the entire directory for this part (removes both 'videos' and 'sounds' subdirectories)
-    // `recursive: true` ensures all nested files are deleted
-    // `force: true` prevents the app from crashing if the directory was already deleted or never created
-    await rm(partDir, { recursive: true, force: true });
+    await this.s3Provider.deletePrefixVersions(s3Key);
 
-    // Finally, remove the database record
     await this.courseRep.remove({ where: { id: courseId } });
   }
 

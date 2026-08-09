@@ -19,7 +19,7 @@ export default function CourseBrowserSectionList({ course }: Props) {
   return (
     <div
       className={cn(
-        "flex h-full flex-col bg-surface-100 border border-neutral-100 p-6 rounded-3xl gap-6 overflow-auto scrollbar-thin",
+        "flex h-full flex-col bg-surface-100 border border-neutral-100 p-6 rounded-3xl gap-6 overflow-y-auto scrollbar-thin ",
       )}
     >
       {/* Header Section */}
@@ -36,31 +36,33 @@ export default function CourseBrowserSectionList({ course }: Props) {
       </div>
 
       {/* List Section */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 h-65 lg:h-20">
         {course.sections.length > 0 ? (
           course.sections.map((section, index) => (
-            <CourseBrowserSectionListItem
-              key={`Sections_${section.id}_${index}`}
-              section={section}
-              index={index + 1}
-              isSelected={section.id === selectedSection?.id}
-              onClick={() => {
-                dis(
-                  courseActions.setCourseBrowserSelectedSection({
-                    section: section,
-                  }),
-                );
+            <>
+              <CourseBrowserSectionListItem
+                key={`Sections_${section.id}_${index}`}
+                section={section}
+                index={index + 1}
+                isSelected={section.id === selectedSection?.id}
+                onClick={() => {
+                  dis(
+                    courseActions.setCourseBrowserSelectedSection({
+                      section: section,
+                    }),
+                  );
 
-                const element = document.getElementById("parts");
-                const yOffset = 200;
-                const y =
-                  element!.getBoundingClientRect().top +
-                  window.pageYOffset -
-                  yOffset;
+                  const element = document.getElementById("parts");
+                  const yOffset = 200;
+                  const y =
+                    element!.getBoundingClientRect().top +
+                    window.pageYOffset -
+                    yOffset;
 
-                window.scrollTo({ top: y, behavior: "smooth" });
-              }}
-            />
+                  window.scrollTo({ top: y, behavior: "smooth" });
+                }}
+              />
+            </>
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-10 text-center text-content-tertiary">

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import {
+  useCategoryGetManyQuery,
   useCourseDeleteMutation,
   useCoursesGetManyAdminQuery,
 } from "../../../features/course/course-api";
@@ -64,6 +65,12 @@ export default function AdminPanelCourses() {
   const courses = coursesRes?.items || [];
   const totalCount = coursesRes?.totalCount || 0;
 
+  const { data: categoriesRes, isLoading: isLoadingCategories } =
+    useCategoryGetManyQuery({
+      pageSize: 1000,
+    });
+  const categories = categoriesRes?.items || [];
+
   const [mutateCourseDelete, { isLoading: isLoadingCourseDelete }] =
     useCourseDeleteMutation();
 
@@ -124,6 +131,18 @@ export default function AdminPanelCourses() {
             {row.original.isPublished ? "انتشار یافته" : "پیش‌نویس"}
           </Badge>
         ),
+      },
+      {
+        id: "category",
+        header: "دسته بندی",
+        cell: ({ row }) => {
+          const category = categories.find(
+            (cat) => cat.id == row.original.categoryId,
+          );
+
+          if (!category) return null;
+          return <span>{category.name}</span>;
+        },
       },
       {
         id: "actions",
@@ -268,7 +287,7 @@ export default function AdminPanelCourses() {
           mode="server"
           data={courses}
           columns={columns}
-          isLoading={isFetching}
+          isLoading={isFetching || isLoadingCategories}
           totalCount={totalCount}
           // Convert 1-based API page to 0-based TanStack Table page
           page={pageIndex - 1}

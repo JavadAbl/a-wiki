@@ -57,12 +57,12 @@ export class AuthService {
 
     const user = await this.userService.userGetByMobile(mobile);
 
-    if (!user) throw new UnauthorizedException('Incorrect username or password');
+    if (!user) throw new UnauthorizedException('نام کاربری یا رمز عبور اشتباه است');
 
     if (!user.isActive) throw new UnauthorizedException('کاربر غیر فعال است');
 
     const validateResult = await this.passwordService.validatePassword(password, user.password);
-    if (!validateResult) throw new UnauthorizedException('Incorrect username or password');
+    if (!validateResult) throw new UnauthorizedException('نام کاربری یا رمز عبور اشتباه است');
 
     const { accessToken, refreshToken } = await this.tokenService.generateTokens({
       userId: user.id,
@@ -78,10 +78,10 @@ export class AuthService {
     const { otp, mobile } = payload;
 
     const cachedOtp = await this.cacheManager.get(`otp-${mobile}`);
-    if (cachedOtp != otp) throw new UnauthorizedException('Incorrect otp code');
+    if (cachedOtp != otp) throw new UnauthorizedException('کد اشتباه است');
 
     const user = await this.userService.userGetByMobile(mobile);
-    if (!user) throw new UnauthorizedException('Incorrect user');
+    if (!user) throw new UnauthorizedException('کاربر اشتباه است');
 
     const { accessToken, refreshToken } = await this.tokenService.generateTokens({
       userId: user.id,
@@ -96,6 +96,8 @@ export class AuthService {
 
   async sendOtp(payload: SendOtpDto) {
     const { mobile } = payload;
+    const user = await this.userService.userGetByMobile(mobile);
+    if (!user) return;
     const random5Digit = Math.floor(Math.random() * 90000) + 10000;
     await this.sendSms(mobile, random5Digit.toFixed());
     await this.cacheManager.set(`otp-${mobile}`, random5Digit, 120000);

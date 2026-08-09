@@ -4,8 +4,9 @@ import { cn } from "#lib/utils";
 import {
   ChevronLeftIcon,
   Clock,
+  FileMusicIcon,
+  FileVideo2Icon,
   SquarePlayIcon,
-  Users2Icon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { courseActions } from "../../../../features/course/course-slice";
@@ -16,6 +17,7 @@ export default function CourseBrowserParts() {
   const dis = useAppDispatch();
   const {
     courseBrowserSelectedSection: selectedSection,
+    courseBrowserSelectedCourse: selectedCourse,
     courseBrowserSelectedContent: selectedContent,
   } = useAppSelector((s) => s.course);
 
@@ -57,9 +59,9 @@ export default function CourseBrowserParts() {
             {"انتخاب بخش ها"}
           </TabsTrigger>
 
-          <TabsTrigger value="lecturer">
+          {/*     <TabsTrigger value="lecturer">
             <Users2Icon /> {"مدرس"}
-          </TabsTrigger>
+          </TabsTrigger> */}
 
           <TabsTrigger value="about">
             <svg
@@ -118,12 +120,12 @@ export default function CourseBrowserParts() {
                   {/* Accordion Content (Shows when open) */}
                   {isOpen && (
                     <div className="bg-white border-t border-gray-100 p-2">
-                      {part.contents.map(
-                        (content: any, contentIndex: number) => {
-                          // Check if this content is the currently selected one
-                          const isSelected = selectedContent === content;
+                      {part.contents.map((content, contentIndex: number) => {
+                        // Check if this content is the currently selected one
+                        const isSelected = selectedContent === content;
 
-                          return (
+                        return (
+                          <>
                             <div
                               key={contentIndex}
                               className={cn(
@@ -163,9 +165,15 @@ export default function CourseBrowserParts() {
                                 {contentIndex + 1}
                               </span>
 
-                              <span className="text-sm grow">
+                              <div className="flex items-center gap-1 text-sm grow">
+                                {content.mediaType === "Video" && (
+                                  <FileVideo2Icon size={16} />
+                                )}
+                                {content.mediaType === "Audio" && (
+                                  <FileMusicIcon size={16} />
+                                )}
                                 {content.title}
-                              </span>
+                              </div>
 
                               {/* Duration Display */}
                               <span
@@ -180,9 +188,11 @@ export default function CourseBrowserParts() {
                                 {formatSeconds(content.durationSeconds)}
                               </span>
                             </div>
-                          );
-                        },
-                      )}
+
+                            <Separator />
+                          </>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -191,12 +201,24 @@ export default function CourseBrowserParts() {
           </div>
         </TabsContent>
 
-        <TabsContent value="lecturer">
+        {/*   <TabsContent value="lecturer">
           <div className=""></div>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="about">
-          <div className=""></div>
+          <div className="flex flex-col gap-3 p-5 bg-white rounded-xl shadow-sm border border-gray-100">
+            <span className="text-gray-600 leading-relaxed">
+              {selectedCourse?.description}
+            </span>
+            <div className="flex flex-col gap-1 mt-2">
+              <span className="font-semibold text-gray-900">
+                {selectedCourse?.lecturer}
+              </span>
+              <span className="text-sm text-gray-500 italic">
+                {selectedCourse?.lecturerProfession}
+              </span>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

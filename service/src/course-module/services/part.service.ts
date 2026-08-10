@@ -42,7 +42,7 @@ export class PartService {
   }
 
   async partUpdate(partId: number, payload: PartUpdateDto): Promise<void> {
-    await this.sectionRep.findAndCheckExistsBy({ where: { id: partId } }, 'partId', partId);
+    await this.partRep.findAndCheckExistsBy({ where: { id: partId } }, 'partId', partId);
     await this.partRep.update({ where: { id: partId }, data: payload });
   }
 

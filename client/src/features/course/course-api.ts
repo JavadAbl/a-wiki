@@ -201,7 +201,7 @@ export const courseApi = createApi({
     }),
 
     //Content-------------------------------------------------------
-    contentCreate: builder.mutation<
+    /*  contentCreate: builder.mutation<
       any,
       {
         partId: number;
@@ -329,18 +329,81 @@ export const courseApi = createApi({
         // 3. Return the final result to RTK Query
         return result;
       },
+    }), */
+
+    // Single File Mutation
+    contentCreate: builder.mutation<
+      any,
+      {
+        partId: number;
+        body: FormData;
+        onUploadProgress?: (percent: number) => void;
+      }
+    >({
+      invalidatesTags: ["course"],
+      queryFn: async ({ partId, body, onUploadProgress }, api) => {
+        const url = `${BASE_ADDRESS}Courses/Parts/${partId}/Contents`;
+
+        let result = await executeUploadRequest(
+          url,
+          body,
+          api,
+          onUploadProgress,
+        );
+
+        if (result.error && result.error.status === 401) {
+          const refreshed = await refreshAccessToken(api);
+          if (refreshed) {
+            if (onUploadProgress) onUploadProgress(0);
+            result = await executeUploadRequest(
+              url,
+              body,
+              api,
+              onUploadProgress,
+            );
+          }
+        }
+
+        return result;
+      },
     }),
 
-    /*   ContentCreate: builder.mutation<number, { body: FormData; partId: number }>(
+    // Multiple Files Mutation
+    contentCreateMany: builder.mutation<
+      any, // Or number[] if you typed the backend return
       {
-        query: ({ body, partId }) => ({
-          url: `Courses/Parts/${partId}/Contents`,
-          method: "POST",
+        partId: number;
+        body: FormData;
+        onUploadProgress?: (percent: number) => void;
+      }
+    >({
+      invalidatesTags: ["course"],
+      queryFn: async ({ partId, body, onUploadProgress }, api) => {
+        const url = `${BASE_ADDRESS}Courses/Parts/${partId}/Contents/Many`;
+
+        let result = await executeUploadRequest(
+          url,
           body,
-        }),
-        invalidatesTags: ["course"],
+          api,
+          onUploadProgress,
+        );
+
+        if (result.error && result.error.status === 401) {
+          const refreshed = await refreshAccessToken(api);
+          if (refreshed) {
+            if (onUploadProgress) onUploadProgress(0);
+            result = await executeUploadRequest(
+              url,
+              body,
+              api,
+              onUploadProgress,
+            );
+          }
+        }
+
+        return result;
       },
-    ), */
+    }),
 
     ContentUpdate: builder.mutation<
       number,
@@ -439,4 +502,99 @@ export const {
   useThumbnailCreateMutation,
   useThumbnailDeleteMutation,
   useCourseDeleteMutation,
+  useContentCreateManyMutation,
 } = courseApi;
+
+const executeUploadRequest = (
+  url: string,
+  body: FormData,
+  api: any,
+  onUploadProgress?: (percent: number) => void,
+) => {
+  return new Promise<{ data?: any; error?: any }>((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+
+    // CRITICAL: Get the FRESH token from state right before sending.
+    const state = api.getState() as AppState;
+    const accessToken = state?.auth?.accessToken;
+
+    if (accessToken) {
+      xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+    }
+
+    let fakeProgressInterval: ReturnType<typeof setInterval> | null = null;
+    let startTime: number | null = null;
+    let phaseOneDuration = 0;
+
+    if (onUploadProgress) {
+      startTime = Date.now();
+
+      // 1. Client to Server upload (Maps 0-100% to 0-50% of total progress)
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const actualPercent = (event.loaded * 100) / event.total;
+          const reportedPercent = Math.round(actualPercent / 2);
+          onUploadProgress(reportedPercent);
+        }
+      };
+
+      // 2. Server to 3rd Party processing (Simulate the second half: 50% to 95%)
+      xhr.upload.onload = () => {
+        if (startTime) {
+          phaseOneDuration = Date.now() - startTime;
+        }
+
+        if (fakeProgressInterval) clearInterval(fakeProgressInterval);
+
+        const phaseTwoStartTime = Date.now();
+        const duration = Math.max(phaseOneDuration, 1);
+
+        fakeProgressInterval = setInterval(() => {
+          const elapsedPhaseTwo = Date.now() - phaseTwoStartTime;
+          let fraction = elapsedPhaseTwo / duration;
+
+          if (fraction >= 1) {
+            fraction = 1;
+            if (fakeProgressInterval) clearInterval(fakeProgressInterval);
+          }
+
+          const currentProgress = 50 + fraction * 45;
+          onUploadProgress(Math.round(currentProgress));
+        }, 50);
+      };
+    }
+
+    // Handle abort
+    api.signal?.addEventListener("abort", () => {
+      if (fakeProgressInterval) clearInterval(fakeProgressInterval);
+      xhr.abort();
+    });
+
+    // 3. Handle final server response
+    xhr.onload = () => {
+      if (fakeProgressInterval) clearInterval(fakeProgressInterval);
+      if (onUploadProgress) onUploadProgress(100);
+
+      let data;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        data = xhr.responseText;
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ data });
+      } else {
+        resolve({ error: { status: xhr.status, data } });
+      }
+    };
+
+    xhr.onerror = () => {
+      if (fakeProgressInterval) clearInterval(fakeProgressInterval);
+      resolve({ error: { status: 0, data: "Network Error" } });
+    };
+
+    xhr.send(body);
+  });
+};

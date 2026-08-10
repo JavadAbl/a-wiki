@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Delete,
+  UploadedFiles,
 } from '@nestjs/common';
 import { GetManyQuery, GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -24,7 +25,7 @@ import { CourseSetDescriptionDto } from '../dto/request/course-set-description.d
 import { SectionService } from '../services/section.service';
 import { SectionSetDescriptionDto } from '../dto/request/section-set-description.dto';
 import { PartService } from '../services/part.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ContentCreateDto } from '../dto/request/content-create.dto';
 import { memoryStorage } from 'multer';
 import { ContentService } from '../services/content.service';
@@ -41,6 +42,8 @@ import { PartUpdateDto } from '../dto/request/part-update.dto';
 import { SectionUpdateDto } from '../dto/request/section-update.dto';
 import { CourseUpdateDto } from '../dto/request/course-update.dto';
 import { Admin } from 'src/common/decorators/admin.decorator';
+import { ContentCreateManyDto } from '../dto/request/content-create-many.dto';
+import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 
 @Controller('Courses')
 export class CourseController {
@@ -50,6 +53,7 @@ export class CourseController {
     private readonly partService: PartService,
     private readonly contentService: ContentService,
     private readonly documentService: DocumentService,
+    private readonly s3Provider: S3Provider,
   ) {}
 
   //Course---------------------------------------------------------
@@ -190,6 +194,11 @@ export class CourseController {
   }
 
   //Content------------------------------------------------------------
+  @Public()
+  @Get('Test/Test')
+  test() {
+    return this.s3Provider.deletePrefixVersions('courses/15/sections/26');
+  }
 
   @Admin()
   @Post('Parts/:partId/Contents')
@@ -201,6 +210,18 @@ export class CourseController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<number> {
     return this.contentService.contentCreate(id, payload, file);
+  }
+
+  @Admin()
+  @Post('Parts/:partId/Contents/Many')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FilesInterceptor('files', 20, { storage: memoryStorage() }))
+  contentCreateMany(
+    @Param('partId', ParseIntPipe) id: number,
+    @Body() payload: ContentCreateManyDto, // contains titles: string[] & descriptions: string[]
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<number[]> {
+    return this.contentService.contentCreateMany(id, payload, files);
   }
 
   /* @Get('stream/:contentId')

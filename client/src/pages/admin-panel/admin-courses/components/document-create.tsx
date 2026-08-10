@@ -21,6 +21,7 @@ import {
   File,
   FileArchive,
   FileSearch,
+  Presentation,
 } from "lucide-react";
 
 interface Props {
@@ -37,8 +38,14 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
   "text/csv",
   "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/x-rar-compressed",
+  "application/vnd.rar",
+  "application/vnd.ms-powerpoint", // .ppt
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
 ];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
   const [file, setFile] = useState<File | null>(null);
@@ -59,14 +66,16 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
   const validateFile = (file: File): boolean => {
     // Check file size
     if (file.size > MAX_FILE_SIZE) {
-      setFileError("حجم فایل نباید بیشتر از 10 مگابایت باشد");
+      setFileError("حجم فایل نباید بیشتر از 100 مگابایت باشد");
       return false;
     }
 
     // Check file type
     const isAllowed = ALLOWED_TYPES.includes(file.type);
     if (!isAllowed) {
-      setFileError("فقط فایل‌های PDF، Word، Excel و CSV مجاز هستند");
+      setFileError(
+        "فقط فایل‌های PDF، Word، Excel، CSV، ZIP، RAR و PowerPoint مجاز هستند",
+      );
       return false;
     }
 
@@ -146,7 +155,20 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
     ) {
       return <FileSpreadsheet className="w-8 h-8 text-green-500" />;
     }
-    if (type === "text/csv") {
+    if (
+      type === "application/vnd.ms-powerpoint" ||
+      type ===
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ) {
+      return <Presentation className="w-8 h-8 text-orange-500" />;
+    }
+    if (
+      type === "text/csv" ||
+      type === "application/zip" ||
+      type === "application/x-zip-compressed" ||
+      type === "application/x-rar-compressed" ||
+      type === "application/vnd.rar"
+    ) {
       return <FileArchive className="w-8 h-8 text-yellow-500" />;
     }
     return <File className="w-8 h-8 text-gray-500" />;
@@ -163,6 +185,13 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
         "Excel",
       "application/vnd.ms-excel.sheet.macroEnabled.12": "Excel",
       "text/csv": "CSV",
+      "application/zip": "ZIP",
+      "application/x-zip-compressed": "ZIP",
+      "application/x-rar-compressed": "RAR",
+      "application/vnd.rar": "RAR",
+      "application/vnd.ms-powerpoint": "PowerPoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        "PowerPoint",
     };
     return typeMap[type] || "نوع فایل نامشخص";
   };
@@ -265,7 +294,7 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,.zip,.rar,.ppt,.pptx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/zip,application/x-zip-compressed,application/x-rar-compressed,application/vnd.rar,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
                 onChange={handleFileInputChange}
                 className="hidden"
               />
@@ -277,7 +306,8 @@ export default function DocumentCreate({ isOpen, setIsOpen, courseId }: Props) {
                 یا فایل را بکشید و رها کنید
               </p>
               <p className="text-xs text-gray-400 mt-2">
-                فقط فایل‌های PDF، Word، Excel و CSV (حداکثر 10 مگابایت)
+                فقط فایل‌های PDF، Word، Excel، CSV، ZIP، RAR و PowerPoint
+                (حداکثر 10 مگابایت)
               </p>
             </div>
           ) : (

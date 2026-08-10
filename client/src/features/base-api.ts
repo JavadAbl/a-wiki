@@ -11,8 +11,8 @@ import type { AppState } from "./store";
 import status from "http-status";
 import { refreshAccessToken } from "../utils/refresh-token";
 
-export const BASE_ADDRESS = "http://192.168.1.89/api/";
-// export const BASE_ADDRESS = "http://localhost:3000/api/";
+// export const BASE_ADDRESS = "http://192.168.1.89/api/";
+export const BASE_ADDRESS = "http://localhost:3000/api/";
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: BASE_ADDRESS,
@@ -34,6 +34,7 @@ export const baseApi: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   let result = await rawBaseQuery(args, api, extraOptions);
   const meta = result.meta;
+  console.log(api.endpoint);
 
   // 1. Success Toasts
   if (!result.error && meta) {
@@ -61,6 +62,8 @@ export const baseApi: BaseQueryFn<
     }
   }
 
+  /*   if (api.endpoint === "ContentGetURLById") {
+  } */
   // 3. Error Toasts (Non-401)
   if (
     (result.error && result.error.status !== 401) ||

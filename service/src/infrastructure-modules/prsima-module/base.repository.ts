@@ -1,7 +1,6 @@
 import { Prisma, PrismaClient } from 'src/generated/prisma/client';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaProvider } from './prisma.provider';
-import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 
 export class Repository<TModel extends keyof PrismaClient> {
   constructor(
@@ -116,5 +115,9 @@ export class Repository<TModel extends keyof PrismaClient> {
     args: TArgs,
   ): Promise<Prisma.Result<PrismaClient[TModel], TArgs, 'delete'>> {
     return await (this.prismaProvider[this.model] as any).delete(args);
+  }
+
+  async count<TArgs extends Prisma.Args<PrismaClient[TModel], 'count'>>(args?: TArgs): Promise<number> {
+    return await (this.prismaProvider[this.model] as any).count(args);
   }
 }

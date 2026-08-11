@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router";
-import { useAppSelector } from "../hooks/redux-hooks";
 import { useAuth } from "../hooks/use-auth";
 import { Spinner } from "#components/ui/spinner";
 import Home from "./home/home";
@@ -9,6 +8,7 @@ import AdminPanelRoutes from "./admin-panel/admin-panel-routes";
 import RoleAuthorizationRoute from "#components/auth/role-authorization-route";
 import { Role } from "../features/auth/enums/role";
 import About from "./about/about";
+import NotFound from "#components/utils/not-found";
 
 export default function AppRoutes() {
   // const theme = useAppSelector((s) => s.app.theme);
@@ -41,11 +41,7 @@ export default function AppRoutes() {
           <Route path="/Admin/*" element={<AdminPanelRoutes />} />
         </Route>
 
-        {/*  <Route element={<PublicOnlyRoute />}>
-          <Route path="/Login" element={<Login />} />
-        </Route>
-
-        <Route path="*" element={<NotFound />} /> */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );

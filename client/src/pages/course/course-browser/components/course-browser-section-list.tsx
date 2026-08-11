@@ -36,7 +36,7 @@ export default function CourseBrowserSectionList({ course }: Props) {
       </div>
 
       {/* List Section */}
-      <div className="flex flex-col gap-4 h-65 lg:h-20">
+      <div className="flex flex-col gap-3 h-65 lg:h-20">
         {course.sections.length > 0 ? (
           course.sections.map((section, index) => (
             <>

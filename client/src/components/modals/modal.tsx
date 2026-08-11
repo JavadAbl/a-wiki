@@ -37,7 +37,7 @@ export function Modal({
       <DialogContent className={cn("p-0 rounded-[10px]")}>
         <DialogHeader className="bg-surface-300 py-[10px] px-[16px] rounded-t-[10px] border-b border-neutral-200">
           <DialogTitle className={cn("flex justify-between items-center p-0")}>
-            <span className={cn("text-primary-300 font-h5 ")}>{title}</span>
+            <span className={cn("text-primary-300 font-bold ")}>{title}</span>
 
             <XIcon
               className={cn(

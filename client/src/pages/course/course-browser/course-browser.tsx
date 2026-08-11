@@ -49,6 +49,10 @@ export default function CourseBrowser() {
 
     return () => {
       document.title = "ویکی آتیه";
+      dis(courseActions.setCourseBrowserSelectedCourse({ course: null }));
+      dis(courseActions.setCourseBrowserSelectedSection({ section: null }));
+      dis(courseActions.setCourseBrowserSelectedPart({ part: null }));
+      dis(courseActions.setCourseBrowserSelectedContent({ content: null }));
     };
   }, [course, dis]);
 

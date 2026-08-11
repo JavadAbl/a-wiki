@@ -115,7 +115,7 @@ export default function InputSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative flex items-center">
+    <div ref={containerRef} className="relative flex items-center w-70 ">
       {/* Expanding container */}
       <div
         className={cn(
@@ -175,7 +175,7 @@ export default function InputSearch() {
       {/* Trigger button */}
       <div
         className={cn(
-          "absolute left-0 top-1/2 -translate-y-1/2 z-10",
+          "absolute right-0 sm:left-0 sm:right-auto top-1/2 -translate-y-1/2 z-10",
           "border rounded-full border-[#ABB7C2] p-1.5 size-[58px] flex items-center justify-center transition-opacity duration-200",
           isShowInput
             ? "opacity-0 pointer-events-none"

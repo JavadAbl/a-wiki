@@ -30,38 +30,38 @@ export default function CourseBrowserDocuments({ course }: Props) {
       {hasDocuments ? (
         <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1">
           {course.documents.map((doc) => (
-            <>
-              <a
-                key={`Doc_${doc.id}`}
-                href={doc.fileUrl}
-                download
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "group flex items-center justify-between gap-4 rounded-xl p-4 transition-all duration-300",
-                  "bg-primary/15 hover:bg-primary hover:shadow-md",
-                  "border border-transparent hover:border-white/10",
-                )}
-              >
-                {/* File Info */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="truncate font-medium group-hover:text-primary-100 transition-colors text-sm">
-                    {doc.title}
-                  </span>
-                </div>
+            // Removed the Fragment <> and moved the key directly to the <a> tag
+            <a
+              key={`Doc_${doc.id}`}
+              href={doc.fileUrl}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                "group flex items-center justify-between gap-4 rounded-xl p-4 transition-all duration-300",
+                "bg-primary/15 hover:bg-primary hover:shadow-md",
+                "border border-transparent hover:border-white/10",
+              )}
+            >
+              {/* File Info */}
+              <div className="flex items-center gap-3 min-w-0">
+                <span className=" font-medium group-hover:text-primary-100 transition-colors text-xs">
+                  {doc.title}
+                </span>
+              </div>
 
-                {/* File Actions/Meta */}
-                <div className="relative flex items-center shrink-0 text-content-secondary">
-                  <span className="text-xs bg-primary-400 px-2.5 py-1 rounded-full transition-all duration-300 group-hover:translate-x-10 group-hover:bg-primary-600 group-hover:text-primary-100">
-                    {`${doc.fileSize} کیلوبایت`}
-                  </span>
+              {/* File Actions/Meta */}
+              <div className="relative flex items-center shrink-0 text-content-secondary">
+                {/* Added group-hover:opacity-0 to hide on hover */}
+                <span className="text-xs bg-primary-400 px-2.5 py-1 rounded-full transition-all duration-300 group-hover:opacity-0">
+                  {`${doc.fileSize} کیلوبایت`}
+                </span>
 
-                  <div className="absolute right-0 flex items-center justify-center w-8 h-8 rounded-full opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:-translate-x-12 transition-all duration-300 group-hover:bg-primary-600 group-hover:text-primary-100">
-                    <Download className="w-4 h-4" />
-                  </div>
+                <div className="absolute right-0 flex items-center justify-center w-8 h-8 rounded-full opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:-translate-x-12 transition-all duration-300 group-hover:bg-primary-600 group-hover:text-primary-100">
+                  <Download className="w-4 h-4" />
                 </div>
-              </a>
-            </>
+              </div>
+            </a>
           ))}
         </div>
       ) : (

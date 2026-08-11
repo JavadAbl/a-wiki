@@ -1,8 +1,10 @@
 import AtieLogoFooter from "#components/icons/atie-logo-footer";
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
+import { useAppDispatch } from "#hooks/redux-hooks";
 import { ImageIcon } from "lucide-react";
 import type { JSX } from "react/jsx-runtime";
+import { sharedActions } from "../../features/shared/shared-slice";
 
 const socialLinks = [
   { name: "Facebook", icon: ImageIcon, href: "#" },
@@ -31,6 +33,8 @@ const sectionTitleClassName =
 const bodyTextClassName = "text-xl leading-[34px] font-normal text-[#ebebeb]";
 
 const Footer = (): JSX.Element => {
+  const dis = useAppDispatch();
+
   return (
     <footer className="w-full bg-[#222222] text-[#ebebeb]" dir="rtl">
       <div className="mx-auto max-w-[1180px] px-6 py-12 md:px-10 md:py-16 lg:px-16 lg:py-20">
@@ -111,8 +115,18 @@ const Footer = (): JSX.Element => {
         </div>
 
         <div className="mt-10 border-t border-white/70 pt-6 md:mt-12 md:pt-7">
-          <p className={`font-normal text-[#ebebeb] text-center`}>
-            {copyright}
+          <p
+            className={`flex gap-1 justify-center items-center font-normal text-[#ebebeb] text-center`}
+          >
+            <span> {copyright}</span>
+            <span
+              className="cursor-pointer text-xs text-gray hover:underline hover:text-white"
+              onClick={() =>
+                dis(sharedActions.setIsOpenLogin({ isOpen: true }))
+              }
+            >
+              {"ورود ادمین"}
+            </span>
           </p>
         </div>
       </div>

@@ -75,6 +75,7 @@ export class CourseController {
     return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, true, categoryId);
   }
 
+  @Public()
   @Get(':courseId')
   courseGetById(@Param('courseId', ParseIntPipe) id: number): Promise<CourseDetailsDto> {
     return this.courseService.courseGetById(id);
@@ -194,11 +195,6 @@ export class CourseController {
   }
 
   //Content------------------------------------------------------------
-  @Public()
-  @Get('Test/Test')
-  test() {
-    return this.s3Provider.deletePrefixVersions('courses/15/sections/26');
-  }
 
   @Admin()
   @Post('Parts/:partId/Contents')
@@ -241,6 +237,7 @@ export class CourseController {
   }
  */
 
+  @Public()
   @Get('Contents/:contentId/URL')
   async contentGetURL(@Param('contentId', ParseIntPipe) contentId: number): Promise<{ url: string }> {
     return this.contentService.generatePresignedUrl(contentId);

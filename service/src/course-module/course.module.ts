@@ -14,6 +14,8 @@ import { PartViewRepository } from './repositories/part-view.repository';
 import { CategoryService } from './services/category.service';
 import { CategoryController } from './controllers/category.controller';
 import { DocumentService } from './services/document.service';
+import { CourseProvider } from './providers/course.provider';
+import { CourseServiceContract } from './contracts/course-service.contract';
 
 @Module({
   imports: [],
@@ -33,7 +35,9 @@ import { DocumentService } from './services/document.service';
     ContentService,
     CategoryService,
     DocumentService,
+
+    { provide: CourseServiceContract, useClass: CourseProvider },
   ],
-  exports: [],
+  exports: [CourseServiceContract],
 })
 export class CourseModule {}

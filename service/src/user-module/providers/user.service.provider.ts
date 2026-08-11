@@ -6,6 +6,10 @@ import { User } from 'src/generated/prisma/client';
 @Injectable()
 export class UserProvider implements UserServiceContract {
   constructor(private readonly userRep: UserRepository) {}
+  userCount(): Promise<number> {
+    return this.userRep.count();
+  }
+
   userGetByMobile(mobile: string): Promise<UserWithPermissions | null> {
     return this.userRep.findUnique({
       where: { mobile },

@@ -143,12 +143,12 @@ export default function ResetPassword({ done }: Props) {
             control={formResetPassword.control}
             render={({ field, fieldState }) => (
               <Field className="" data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="">{"رمز عبور"} </FieldLabel>
+                <FieldLabel htmlFor="">{"رمز عبور جدید"} </FieldLabel>
 
                 <FormInput
                   {...field}
                   aria-invalid={fieldState.invalid}
-                  placeholder="رمز عبور"
+                  placeholder="رمز عبور جدید"
                   type="password"
                   autoComplete="new-password" // Browsers respect this to prevent autofill
                 />

@@ -35,50 +35,55 @@ export default function Navbar() {
       />
 
       <div className={cn("flex flex-col ")}>
-        <div className={cn("flex items-center justify-between py-3 px-6")}>
-          <div className={cn("flex text-sm items-end gap-4")}>
+        <div
+          className={cn(
+            "flex items-center justify-between gap-4 flex-wrap py-3 px-6",
+          )}
+        >
+          <div className={cn("flex flex-wrap text-sm items-end gap-4")}>
             <AtieLogo />
 
-            {isAuth ? (
-              <div className={cn("flex gap-1 items-center")}>
-                <Button
-                  size={"sm"}
-                  variant={"destructive"}
-                  onClick={() => {
-                    dis(authActions.logout());
-                    toast.success("حروج موفقیت آمیز");
-                  }}
-                >
-                  {"خروج"}
-                </Button>
+            {
+              isAuth ? (
+                <div className={cn("flex gap-1 items-center")}>
+                  <Button
+                    size={"sm"}
+                    variant={"destructive"}
+                    onClick={() => {
+                      dis(authActions.logout());
+                      toast.success("حروج موفقیت آمیز");
+                    }}
+                  >
+                    {"خروج"}
+                  </Button>
 
-                <AuthorizationComponent
-                  allowedRoles={[Role.SuperAdmin, Role.Admin]}
-                >
+                  <AuthorizationComponent
+                    allowedRoles={[Role.SuperAdmin, Role.Admin]}
+                  >
+                    <Button
+                      className={cn(" rounded-2xl")}
+                      size={"sm"}
+                      variant={"secondary"}
+                      onClick={() => nav("/Admin")}
+                    >
+                      {"پنل ادمین"}
+                    </Button>
+                  </AuthorizationComponent>
+
                   <Button
                     className={cn(" rounded-2xl")}
                     size={"sm"}
                     variant={"secondary"}
-                    onClick={() => nav("/Admin")}
+                    onClick={() => setIsOpenResetPassword(true)}
                   >
-                    {"پنل ادمین"}
+                    {"تغییر رمز عبور"}
                   </Button>
-                </AuthorizationComponent>
 
-                <Button
-                  className={cn(" rounded-2xl")}
-                  size={"sm"}
-                  variant={"secondary"}
-                  onClick={() => setIsOpenResetPassword(true)}
-                >
-                  {"تغییر رمز عبور"}
-                </Button>
-
-                <span className={cn("text-sm text-content-tertiary")}>
-                  {user?.firstName + " " + user?.lastName}
-                </span>
-              </div>
-            ) : (
+                  <span className={cn("text-sm text-content-tertiary")}>
+                    {user?.firstName + " " + user?.lastName}
+                  </span>
+                </div>
+              ) : null /* (
               <Button
                 className={cn(" rounded-2xl")}
                 size={"sm"}
@@ -87,9 +92,10 @@ export default function Navbar() {
                   dis(sharedActions.setIsOpenLogin({ isOpen: true }))
                 }
               >
-                {"ورود اعضا"}
+                {"ورود ادمین"}
               </Button>
-            )}
+            ) */
+            }
           </div>
 
           <InputSearch />

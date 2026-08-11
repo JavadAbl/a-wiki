@@ -19,6 +19,17 @@ export default function CoursesListCard({ course }: Props) {
       className={cn(
         "flex gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px]",
       )}
+      onClick={() => {
+        nav(`/Courses/${course.id}`);
+        /*  if (isAuth) nav(`/Courses/${course.id}`);
+                else
+                  dis(
+                    sharedActions.setIsOpenLogin({
+                      isOpen: true,
+                      redirect: `/Courses/${course.id}`,
+                    }),
+                  ); */
+      }}
     >
       <div className={cn("flex-1")}>
         <img
@@ -65,19 +76,7 @@ export default function CoursesListCard({ course }: Props) {
           </div>
 
           <div className={cn("flex items-center text-primary-300 ")}>
-            <span
-              className={cn("font-[16px] font-medium cursor-pointer")}
-              onClick={() => {
-                if (isAuth) nav(`/Courses/${course.id}`);
-                else
-                  dis(
-                    sharedActions.setIsOpenLogin({
-                      isOpen: true,
-                      redirect: `/Courses/${course.id}`,
-                    }),
-                  );
-              }}
-            >
+            <span className={cn("font-[16px] font-medium cursor-pointer")}>
               {"مشاهده آموزش"}
             </span>
             <ChevronLeftIcon />

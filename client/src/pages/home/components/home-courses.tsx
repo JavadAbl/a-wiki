@@ -7,12 +7,12 @@ export default function HomeCourses() {
   const nav = useNavigate();
 
   const { data: coursesRes } = useCoursesGetManyQuery();
-  const courses = coursesRes?.items;
+  const courses = coursesRes?.items?.slice(0, 3);
 
   if (!courses) return null;
 
   return (
-    <div className={cn("flex flex-col items-center gap-8 py-6 text-center")}>
+    <div className={cn("flex flex-col  items-center gap-8 py-6 text-center")}>
       <div className={cn("flex flex-col")}>
         <span className={cn("font-h1 mb-1.5 text-[#101828]")}>
           {"دوره‌های پرطرفدار"}

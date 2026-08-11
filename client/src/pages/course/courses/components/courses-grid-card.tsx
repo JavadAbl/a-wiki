@@ -17,8 +17,19 @@ export default function CoursesGridCard({ course }: Props) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px]",
+        "flex flex-col justify-between gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px]",
       )}
+      onClick={() => {
+        nav(`/Courses/${course.id}`);
+        /*  if (isAuth) nav(`/Courses/${course.id}`);
+              else
+                dis(
+                  sharedActions.setIsOpenLogin({
+                    isOpen: true,
+                    redirect: `/Courses/${course.id}`,
+                  }),
+                ); */
+      }}
     >
       <img
         className={cn("w-full aspect-4/3 object-cover rounded-[32px]")}
@@ -60,19 +71,7 @@ export default function CoursesGridCard({ course }: Props) {
         </div>
 
         <div className={cn("flex items-center text-primary-300 ")}>
-          <span
-            className={cn("font-[16px] font-medium cursor-pointer")}
-            onClick={() => {
-              if (isAuth) nav(`/Courses/${course.id}`);
-              else
-                dis(
-                  sharedActions.setIsOpenLogin({
-                    isOpen: true,
-                    redirect: `/Courses/${course.id}`,
-                  }),
-                );
-            }}
-          >
+          <span className={cn("font-[16px] font-medium cursor-pointer")}>
             {"مشاهده آموزش"}
           </span>
           <ChevronLeftIcon />

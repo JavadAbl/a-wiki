@@ -41,17 +41,20 @@ export default function CourseBrowserPlayer() {
   const title = selectedContent?.title;
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false); // ADDED: Buffering state
+  const [isBuffering, setIsBuffering] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
 
+  // ADDED: Autoplay state (default is true)
+  const [isAutoplay, setIsAutoplay] = useState(true);
+
   // Volume states
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
 
-  // ADDED: Controls visibility state and timer
+  // Controls visibility state and timer
   const [areControlsVisible, setAreControlsVisible] = useState(true);
   const hideControlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -73,8 +76,8 @@ export default function CourseBrowserPlayer() {
     setResumeTime(null);
     setCurrentTime(0);
     setDuration(0);
-    setPlaybackRate(1); // Reset speed on new lesson
-    setIsBuffering(true); // Set buffering true initially when lesson changes
+    setPlaybackRate(1);
+    setIsBuffering(true);
   }, [selectedContent?.id]);
 
   // Sync playback rate and volume with media element when they change or URL loads
@@ -95,15 +98,13 @@ export default function CourseBrowserPlayer() {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  // ADDED: useEffect to manage auto-hiding controls based on play state
+  // useEffect to manage auto-hiding controls based on play state
   useEffect(() => {
     if (isPlaying) {
-      // Start the timer to hide controls
       hideControlsTimer.current = setTimeout(() => {
         setAreControlsVisible(false);
-      }, 3000); // 3 seconds delay
+      }, 3000);
     } else {
-      // If paused, clear timer and ensure controls are visible
       if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
       setAreControlsVisible(true);
     }
@@ -113,7 +114,45 @@ export default function CourseBrowserPlayer() {
     };
   }, [isPlaying]);
 
-  // ADDED: Function to handle mouse movement
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // ADDED: Canvas drawing effect
+  useEffect(() => {
+    const video = mediaRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || mediaType !== "Video") return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Hide the actual video element off-screen
+    video.style.position = "absolute";
+    video.style.left = "-9999px";
+    video.style.top = "0";
+    video.style.width = "1px";
+    video.style.height = "1px";
+
+    const drawFrame = () => {
+      if (!video.paused && !video.ended) {
+        // Match canvas size to video size
+        if (canvas.width !== video.videoWidth) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(drawFrame);
+    };
+
+    // Start drawing loop
+    const animationId = requestAnimationFrame(drawFrame);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [url, mediaType]);
+
+  // Function to handle mouse movement
   const handleMouseMove = () => {
     setAreControlsVisible(true);
     if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
@@ -121,7 +160,7 @@ export default function CourseBrowserPlayer() {
     if (isPlaying) {
       hideControlsTimer.current = setTimeout(() => {
         setAreControlsVisible(false);
-      }, 3000); // Hide again after 3 seconds of inactivity
+      }, 3000);
     }
   };
 
@@ -201,7 +240,7 @@ export default function CourseBrowserPlayer() {
     }
   };
 
-  // Resume playback once the fresh URL is loaded
+  // Resume playback once the fresh URL is loaded, or auto-play if enabled
   const handleLoadedData = () => {
     if (resumeTime !== null && mediaRef.current) {
       mediaRef.current.currentTime = resumeTime;
@@ -209,6 +248,12 @@ export default function CourseBrowserPlayer() {
       setResumeTime(null);
       mediaRef.current.play();
       setIsPlaying(true);
+    } else if (isAutoplay && mediaRef.current) {
+      // ADDED: Trigger autoplay if the toggle is active
+      mediaRef.current.play().catch((err) => {
+        console.warn("Autoplay prevented by browser:", err);
+        setIsPlaying(false);
+      });
     }
   };
 
@@ -218,6 +263,9 @@ export default function CourseBrowserPlayer() {
 
   return (
     <div
+      onContextMenu={(e) => {
+        e.preventDefault();
+      }}
       ref={containerRef}
       onMouseMove={handleMouseMove}
       className={cn(
@@ -259,42 +307,51 @@ export default function CourseBrowserPlayer() {
 
           {/* Media Elements (Video / Audio) */}
           {mediaType === "Video" ? (
-            <video
-              ref={mediaRef as React.RefObject<HTMLVideoElement>}
-              src={url}
-              onClick={togglePlay}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={() => setIsPlaying(false)}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onError={handleMediaError}
-              onLoadedData={handleLoadedData}
-              // ADDED: Buffering events
-              onWaiting={() => setIsBuffering(true)}
-              onPlaying={() => setIsBuffering(false)}
-              onCanPlay={() => setIsBuffering(false)}
-              className="absolute inset-0 w-full h-full object-contain z-20 cursor-pointer"
-            />
+            <>
+              <video
+                ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                src={url}
+                onClick={togglePlay}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onError={handleMediaError}
+                onLoadedData={handleLoadedData}
+                onWaiting={() => setIsBuffering(true)}
+                onPlaying={() => setIsBuffering(false)}
+                onCanPlay={() => setIsBuffering(false)}
+                className="absolute inset-0 w-full h-full object-contain z-20 cursor-pointer"
+              />
+
+              {/* The visible Canvas element */}
+              <canvas
+                ref={canvasRef}
+                onClick={togglePlay}
+                className="absolute inset-0 w-full h-full object-contain z-20 cursor-pointer"
+              />
+            </>
           ) : (
-            <audio
-              ref={mediaRef as React.RefObject<HTMLAudioElement>}
-              src={url}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={() => setIsPlaying(false)}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onError={handleMediaError}
-              onLoadedData={handleLoadedData}
-              // ADDED: Buffering events
-              onWaiting={() => setIsBuffering(true)}
-              onPlaying={() => setIsBuffering(false)}
-              onCanPlay={() => setIsBuffering(false)}
-            />
+            <>
+              <audio
+                ref={mediaRef as React.RefObject<HTMLAudioElement>}
+                src={url}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onError={handleMediaError}
+                onLoadedData={handleLoadedData}
+                onWaiting={() => setIsBuffering(true)}
+                onPlaying={() => setIsBuffering(false)}
+                onCanPlay={() => setIsBuffering(false)}
+              />
+            </>
           )}
 
-          {/* ADDED: Center Buffering Spinner */}
+          {/* Center Buffering Spinner */}
           {isBuffering && (
             <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
               <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -376,6 +433,19 @@ export default function CourseBrowserPlayer() {
               </div>
 
               <div className="flex items-center gap-3">
+                {/* ADDED: Autoplay Toggle */}
+                {/*  <button
+                  onClick={() => setIsAutoplay((prev) => !prev)}
+                  className={cn(
+                    "flex items-center justify-center px-2 h-8 backdrop-blur-md rounded-md hover:bg-white/40 transition-all text-white text-xs font-bold min-w-[40px]",
+                    isAutoplay ? "bg-primary-500/80" : "bg-white/20",
+                  )}
+                  aria-label="Toggle Autoplay"
+                  title="Autoplay"
+                >
+                  {"پخش خودکار"}
+                </button> */}
+
                 {/* Playback Speed Toggle */}
                 <button
                   onClick={cyclePlaybackSpeed}
@@ -417,31 +487,6 @@ export default function CourseBrowserPlayer() {
                     />
                   )}
                 </button>
-
-                {/* Title and Media Type Badges */}
-                <div className="hidden sm:flex items-center gap-[4px] p-[4px] bg-surface-100 text-sm rounded-[6px]">
-                  <div
-                    className={cn(
-                      "flex items-center gap-[4px] p-[4px_8px] text-content-primary",
-                      selectedContent?.mediaType === "Video" &&
-                        "bg-primary-300 rounded-[6px] text-content-secondary",
-                    )}
-                  >
-                    <Video size={16} />
-                    <span>{"ویدیو"}</span>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "flex items-center gap-[4px] p-[4px_8px] text-content-primary",
-                      selectedContent?.mediaType === "Audio" &&
-                        "bg-primary-300 rounded-[6px] text-content-secondary",
-                    )}
-                  >
-                    <Volume2 size={16} />
-                    <span>{"صوتی"}</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

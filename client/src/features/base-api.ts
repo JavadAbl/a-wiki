@@ -11,8 +11,8 @@ import type { AppState } from "./store";
 import status from "http-status";
 import { refreshAccessToken } from "../utils/refresh-token";
 
-// export const BASE_ADDRESS = "http://192.168.1.89/api/";
-export const BASE_ADDRESS = "http://localhost:3000/api/";
+export const BASE_ADDRESS = "/api/";
+// export const BASE_ADDRESS = "http://localhost:3000/api/";
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: BASE_ADDRESS,
@@ -34,7 +34,20 @@ export const baseApi: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   let result = await rawBaseQuery(args, api, extraOptions);
   const meta = result.meta;
-  console.log(api.endpoint);
+
+  // 0. Handle Aborted Requests for ContentGetURLById
+  const isAborted =
+    api.signal.aborted ||
+    (result.error?.status === "FETCH_ERROR" &&
+      typeof result.error.error === "string" &&
+      result.error.error.toLowerCase().includes("abort"));
+
+  if (isAborted && api.endpoint === "ContentGetURLById") {
+    // Treat aborted request as a successful empty response (no error state, no toast)
+    // Note: If you still want the component to see an error state but just without the toast,
+    // you can simply `return result;` instead.
+    return { data: null };
+  }
 
   // 1. Success Toasts
   if (!result.error && meta) {
@@ -62,8 +75,6 @@ export const baseApi: BaseQueryFn<
     }
   }
 
-  /*   if (api.endpoint === "ContentGetURLById") {
-  } */
   // 3. Error Toasts (Non-401)
   if (
     (result.error && result.error.status !== 401) ||

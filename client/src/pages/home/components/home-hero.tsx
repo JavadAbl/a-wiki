@@ -3,15 +3,20 @@ import { Card, CardContent } from "#components/ui/card";
 import { cn } from "#lib/utils";
 import { useNavigate } from "react-router";
 import type { JSX } from "react/jsx-runtime";
+import { useDashboardHeroDataQuery } from "../../../features/shared/shared-api";
 
-const stats = [
-  { value: "۵۰۰۰", label: "کاربر فعال" },
-  { value: "۱۰۰۰", label: "ساعت ویدیو" },
-  { value: "۱۰۰", label: "دوره آموزشی" },
-];
-
-const HomeHero = (): JSX.Element => {
+export default function HomeHero() {
   const nav = useNavigate();
+
+  const { data } = useDashboardHeroDataQuery();
+
+  if (!data) return null;
+
+  const stats = [
+    { value: data.userCount, label: "کاربر فعال" },
+    { value: (data.courseDuration / 60 / 60).toFixed(), label: "ساعت ویدیو" },
+    { value: data.courseCount, label: "دوره آموزشی" },
+  ];
 
   const actions = [
     {
@@ -98,6 +103,4 @@ const HomeHero = (): JSX.Element => {
       </div>
     </section>
   );
-};
-
-export default HomeHero;
+}

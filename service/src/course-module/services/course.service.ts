@@ -153,6 +153,7 @@ export class CourseService {
     const { items, totalCount } = await this.courseRep.findMany({
       ...predicate,
       where: { ...predicate.where, categoryId, isPublished },
+      orderBy: { id: 'desc' },
     });
 
     if (items.length === 0) {

@@ -10,6 +10,7 @@ import { userReducer } from "./user/user-slice";
 import { sharedReducer } from "./shared/shared-slice";
 import { courseApi } from "./course/course-api";
 import { courseReducer } from "./course/course-slice";
+import { sharedApi } from "./shared/shared-api";
 
 // Configure the Redux store
 export const store = configureStore({
@@ -18,6 +19,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [courseApi.reducerPath]: courseApi.reducer,
+    [sharedApi.reducerPath]: sharedApi.reducer,
 
     shared: sharedReducer,
     auth: authReducer,
@@ -28,6 +30,7 @@ export const store = configureStore({
   // and other useful features of `rtk-query`.
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
+      .concat(sharedApi.middleware)
       .concat(authApi.middleware)
       .concat(userApi.middleware)
       .concat(courseApi.middleware)

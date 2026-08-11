@@ -23,7 +23,7 @@ export default function HomeCourses() {
         </span>
       </div>
 
-      <div className={cn("flex flex-wrap gap-14")}>
+      <div className={cn("flex items-center justify-center flex-wrap gap-14 ")}>
         {courses.map((course) => (
           <HomeCourseCard course={course} />
         ))}

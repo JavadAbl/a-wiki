@@ -11,6 +11,7 @@ import type { AppState } from "./store";
 import status from "http-status";
 import { refreshAccessToken } from "../utils/refresh-token";
 
+// export const BASE_ADDRESS = "http://192.168.1.89/api/";
 export const BASE_ADDRESS = "/api/";
 // export const BASE_ADDRESS = "http://localhost:3000/api/";
 

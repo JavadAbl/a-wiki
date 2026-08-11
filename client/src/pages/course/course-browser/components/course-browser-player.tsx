@@ -401,7 +401,9 @@ export default function CourseBrowserPlayer() {
               <div className="flex items-center gap-4">
                 {/* Volume Control */}
                 <div className="group/volume flex items-center gap-2">
-                  <span className="truncate grow shrink">{title}</span>
+                  <span className="truncate grow hidden sm:inline max-w-25 md:max-w-75 lg:max-w-60 xl:max-w-125 2xl:max-w-150  shrink">
+                    {title}
+                  </span>
 
                   <button
                     onClick={toggleMute}

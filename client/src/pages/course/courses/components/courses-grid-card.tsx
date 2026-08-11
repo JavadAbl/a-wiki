@@ -17,7 +17,7 @@ export default function CoursesGridCard({ course }: Props) {
   return (
     <div
       className={cn(
-        "flex flex-col justify-between gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px]",
+        "flex flex-col justify-between gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px] cursor-pointer",
       )}
       onClick={() => {
         nav(`/Courses/${course.id}`);

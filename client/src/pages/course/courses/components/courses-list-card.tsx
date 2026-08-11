@@ -17,7 +17,7 @@ export default function CoursesListCard({ course }: Props) {
   return (
     <div
       className={cn(
-        "flex gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px]",
+        "flex gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px] cursor-pointer",
       )}
       onClick={() => {
         nav(`/Courses/${course.id}`);

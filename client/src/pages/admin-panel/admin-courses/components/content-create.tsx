@@ -326,13 +326,16 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
       onOpenChange={handleOpenChange}
       title="ایجاد محتوای جدید"
       isLock={isLoading}
+      // Added overflow-x-hidden as a safety net
+      className="max-w-150! w-150! overflow-x-hidden"
     >
       <form
         onSubmit={handleFormSubmit}
-        className={cn("flex flex-col gap-0 py-4 px-[40px]")}
+        // Added w-full and min-w-0 to force the form to respect parent width
+        className={cn("flex flex-col gap-0 py-4 px-[40px] w-full min-w-0")}
       >
         {/* Mode Toggle */}
-        <div className="flex items-center gap-2 mb-6 bg-gray-50 p-3 rounded-[16px]">
+        <div className="flex items-center gap-2 mb-6 bg-gray-50 p-3 rounded-[16px] w-full">
           <input
             id="many-mode"
             type="checkbox"
@@ -356,7 +359,11 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
               name="title"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid} className="mb-4">
+                // Added w-full min-w-0
+                <Field
+                  data-invalid={fieldState.invalid}
+                  className="mb-4 w-full min-w-0"
+                >
                   <FieldLabel htmlFor="title">عنوان محتوا</FieldLabel>
                   <FormInput
                     {...field}
@@ -364,8 +371,12 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
                     aria-invalid={fieldState.invalid}
                     placeholder="عنوان محتوا را وارد کنید"
                     autoComplete="off"
+                    // Added w-full to ensure input respects parent width
+                    className="w-full"
                   />
-                  <InputMessage>{fieldState.error?.message}</InputMessage>
+                  <InputMessage className="break-words">
+                    {fieldState.error?.message}
+                  </InputMessage>
                 </Field>
               )}
             />
@@ -374,7 +385,11 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
               name="description"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid} className="mb-4">
+                // Added w-full min-w-0
+                <Field
+                  data-invalid={fieldState.invalid}
+                  className="mb-4 w-full min-w-0"
+                >
                   <FieldLabel htmlFor="description">توضیحات</FieldLabel>
                   <textarea
                     {...field}
@@ -387,10 +402,12 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
                       "flex w-full rounded-[16px] border border-gray px-4 py-3 text-sm",
                       "focus-visible:outline-none focus-visible:ring-2",
                       "disabled:cursor-not-allowed disabled:opacity-50",
-                      "resize-none",
+                      "resize-none min-w-0", // Added min-w-0
                     )}
                   />
-                  <InputMessage>{fieldState.error?.message}</InputMessage>
+                  <InputMessage className="break-words">
+                    {fieldState.error?.message}
+                  </InputMessage>
                 </Field>
               )}
             />
@@ -398,7 +415,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
         )}
 
         {/* File Upload Zone (Shared) */}
-        <Field className="mb-4">
+        <Field className="mb-4 w-full min-w-0">
           <FieldLabel>
             {isManyMode ? "فایل‌های محتوا" : "فایل محتوا"}
           </FieldLabel>
@@ -407,7 +424,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
           {(!isManyMode && !file) || isManyMode ? (
             <div
               className={cn(
-                "relative flex flex-col items-center justify-center w-full",
+                "relative flex flex-col items-center justify-center w-full min-w-0", // Added min-w-0
                 "border-2 border-dashed rounded-[16px] p-8",
                 "transition-colors duration-200",
                 isDragOver
@@ -429,14 +446,14 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
                 onChange={handleFileInputChange}
                 className="hidden"
               />
-              <Upload className="w-12 h-12 text-gray-400 mb-3" />
-              <p className="text-sm text-gray-600 text-center">
+              <Upload className="w-12 h-12 text-gray-400 mb-3 flex-shrink-0" />
+              <p className="text-sm text-gray-600 text-center break-words px-2">
                 <span className="font-semibold text-primary">
                   برای آپلود کلیک کنید
                 </span>{" "}
                 یا فایل را بکشید و رها کنید
               </p>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 mt-2 text-center break-words px-2">
                 {isManyMode
                   ? `حداکثر ${MAX_FILES} فایل همزمان - فقط ویدئویی و صوتی (تا 500MB)`
                   : "فقط فایل‌های ویدئویی و صوتی (حداکثر 500 مگابایت)"}
@@ -449,15 +466,15 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
             <div
               className={cn(
                 "flex items-center gap-4 p-4 border rounded-[16px]",
-                "bg-gray-50 mt-2",
+                "bg-gray-50 mt-2 w-full min-w-0", // Added w-full min-w-0
               )}
             >
               {getFileIcon(file)}
-              <div className="flex-1 min-w-0 overflow-hidden w-40">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <p className="text-sm font-medium truncate max-w-full">
                   {file.name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 truncate max-w-full">
                   {formatFileSize(file.size)}
                 </p>
               </div>
@@ -467,7 +484,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
                 size="sm"
                 onClick={removeFile}
                 disabled={isLoading}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -476,20 +493,20 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
 
           {/* Many Mode Files List */}
           {isManyMode && manyFiles.length > 0 && (
-            <div className="flex flex-col gap-3 mt-2 max-h-[300px] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-3 mt-2 max-h-[300px] overflow-y-auto pr-1 w-full min-w-0">
               {manyFiles.map((item) => (
                 <div
                   key={item.id}
-                  className="border border-gray-200 rounded-[16px] p-4 bg-white shadow-sm"
+                  className="border border-gray-200 rounded-[16px] p-4 bg-white shadow-sm w-full min-w-0"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3 gap-3">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       {getFileIcon(item.file)}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <p className="text-sm font-medium truncate max-w-full">
                           {item.file.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 truncate max-w-full">
                           {formatFileSize(item.file.size)}
                         </p>
                       </div>
@@ -514,7 +531,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
                       onChange={(e) =>
                         updateManyItem(item.id, "title", e.target.value)
                       }
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary min-w-0"
                       disabled={isLoading}
                     />
                     <textarea
@@ -524,7 +541,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
                         updateManyItem(item.id, "description", e.target.value)
                       }
                       rows={2}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none min-w-0"
                       disabled={isLoading}
                     />
                   </div>
@@ -534,7 +551,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
           )}
 
           {fileError && (
-            <InputMessage className="text-red-500 mt-2">
+            <InputMessage className="text-red-500 mt-2 break-words">
               {fileError}
             </InputMessage>
           )}
@@ -544,8 +561,8 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
         {isLoading && (
           <div className="mt-4 w-full animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex justify-between text-xs text-gray-600 mb-1.5 font-medium">
-              <span>در حال آپلود فایل...</span>
-              <span>{uploadProgress}%</span>
+              <span className="truncate">در حال آپلود فایل...</span>
+              <span className="flex-shrink-0 pl-2">{uploadProgress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
               <div
@@ -557,7 +574,7 @@ export default function ContentCreate({ isOpen, setIsOpen, partId }: Props) {
         )}
 
         {/* Footer Buttons */}
-        <div className="flex justify-end gap-2 pt-4 mt-2 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-4 mt-2 border-t border-gray-100 w-full">
           <Button
             type="button"
             variant={"secondary"}

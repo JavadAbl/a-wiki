@@ -63,7 +63,7 @@ export default function Courses() {
   const hasCourses = courses && courses.length > 0;
 
   return (
-    <div className={cn(" bg-surface-300 blur-in ")}>
+    <div className={cn(" bg-surface-300 blur-in  lg:p-4")}>
       <Separator />
 
       <CoursesHeader

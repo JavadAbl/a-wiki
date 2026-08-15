@@ -16,6 +16,7 @@ interface Props {
   description?: string;
   children: React.ReactNode;
   isLock?: boolean; // Added isLock prop
+  className?: string;
 }
 
 export function Modal({
@@ -25,6 +26,7 @@ export function Modal({
   description,
   children,
   isLock = false,
+  className,
 }: Props) {
   return (
     <Dialog
@@ -34,7 +36,7 @@ export function Modal({
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className={cn("p-0 rounded-[10px]")}>
+      <DialogContent className={cn("p-0 rounded-[10px]", className)}>
         <DialogHeader className="bg-surface-300 py-[10px] px-[16px] rounded-t-[10px] border-b border-neutral-200">
           <DialogTitle className={cn("flex justify-between items-center p-0")}>
             <span className={cn("text-primary-300 font-bold ")}>{title}</span>

@@ -9,5 +9,8 @@ export class CategoryDto {
   name: string;
 
   @Expose()
+  icon?: string | null;
+
+  @Expose()
   description?: string | null;
 }

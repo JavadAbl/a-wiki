@@ -9,6 +9,12 @@ export const CategoryCreateSchema = z.object({
     })
     .max(1000, "توضیحات نمی‌تواند بیشتر از ۱۰۰۰ کاراکتر باشد")
     .optional(),
+
+  icon: z
+    .string({
+      message: "آیکون باید رشته باشد",
+    })
+    .optional(),
 });
 
 export type CategoryCreateDto = z.infer<typeof CategoryCreateSchema>;

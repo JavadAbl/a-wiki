@@ -2,7 +2,10 @@ import { Separator } from "#components/ui/separator";
 import { useState, useMemo, useEffect } from "react";
 import CoursesHeader from "./components/courses-header";
 import type { CategoryDto } from "../../../features/course/dto/category.dto";
-import { useCoursesGetManyQuery } from "../../../features/course/course-api";
+import {
+  useCoursesGetManyQuery,
+  useCategoryGetManyQuery,
+} from "../../../features/course/course-api";
 import { cn } from "#lib/utils";
 import CoursesGridCard from "./components/courses-grid-card";
 import CoursesListCard from "./components/courses-list-card";
@@ -13,21 +16,29 @@ import { Show } from "#components/utils/show";
 import { CoursesEmptyState } from "./components/courses-empty-state";
 
 export default function Courses() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryDto | null>(
-    null,
-  );
-  const [selectedView, setSelectedView] = useState<"Grid" | "List">("Grid");
+  const categoryId = searchParams.get("categoryId");
 
+  const [selectedView, setSelectedView] = useState<"Grid" | "List">("Grid");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+
+  // Fetch categories at the parent level so we can resolve the selected CategoryDto from the ID in the URL
+  const { data: categoriesRes } = useCategoryGetManyQuery();
+  const categories = useMemo(() => categoriesRes?.items || [], [categoriesRes]);
+
+  // Resolve the selected category object based on the query string ID
+  const selectedCategory = useMemo<CategoryDto | null>(() => {
+    if (!categoryId || !categories.length) return null;
+    return categories.find((c) => c.id == categoryId) || null;
+  }, [categoryId, categories]);
 
   const { data: coursesRes, isFetching } = useCoursesGetManyQuery({
     pageSize,
     page: currentPage,
     search: search ? search : undefined,
-    categoryId: selectedCategory ? selectedCategory.id : undefined,
+    categoryId: categoryId ? Number(categoryId) : undefined, // Pass the ID directly to the API query
   });
 
   const courses = coursesRes?.items;
@@ -39,18 +50,24 @@ export default function Courses() {
   );
 
   const handleCategoryChange = (category: CategoryDto | null) => {
-    setSelectedCategory(category);
+    // Update the query string instead of local state
+    const nextParams = new URLSearchParams(searchParams);
+    if (category) {
+      nextParams.set("categoryId", category.id);
+    } else {
+      nextParams.delete("categoryId");
+    }
+    setSearchParams(nextParams, { replace: true });
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
-    // Clear search by navigating to the base path
-    if (search) {
-      window.location.href = window.location.pathname;
-    }
-    if (selectedCategory) {
-      handleCategoryChange(null);
-    }
+    // Clear all filters from the query string smoothly
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("search");
+    nextParams.delete("categoryId");
+    setSearchParams(nextParams, { replace: true });
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -63,18 +80,19 @@ export default function Courses() {
   const hasCourses = courses && courses.length > 0;
 
   return (
-    <div className={cn(" bg-surface-300 blur-in  lg:p-4")}>
+    <div className={cn(" bg-surface-300 blur-in  ")}>
       <Separator />
 
       <CoursesHeader
+        categories={categories}
         onCategoryChange={handleCategoryChange}
-        onViewChange={setSelectedView}
         selectedCategory={selectedCategory}
+        onViewChange={setSelectedView}
         selectedView={selectedView}
       />
 
       <LoadingContainer isLoading={isFetching} minHeight="min-h-screen">
-        <div className={cn(" container mx-auto p-[48px_8px] lg:p-[48px_0px] ")}>
+        <div className={cn(" container mx-auto p-[48px_8px] lg:p-[48px_4px]")}>
           <Show
             when={hasCourses}
             fallback={

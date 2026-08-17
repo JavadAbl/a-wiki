@@ -1,11 +1,11 @@
 import { cn } from "#lib/utils";
 import { GridIcon, ListIcon } from "lucide-react";
-import { useCategoryGetManyQuery } from "../../../../features/course/course-api";
 import { DragScrollContainer } from "#components/utils/drag-scroll-container";
 import { Button } from "#components/ui/button";
 import type { CategoryDto } from "../../../../features/course/dto/category.dto";
 
 interface Props {
+  categories: CategoryDto[];
   selectedCategory: CategoryDto | null;
   onCategoryChange: (category: CategoryDto | null) => void;
   selectedView: "Grid" | "List";
@@ -13,14 +13,12 @@ interface Props {
 }
 
 export default function CoursesHeader({
+  categories,
   onCategoryChange,
   selectedCategory,
   onViewChange,
   selectedView,
 }: Props) {
-  const { data: categoriesRes } = useCategoryGetManyQuery();
-  const categories = categoriesRes?.items;
-
   return (
     <div
       className={cn(
@@ -36,7 +34,7 @@ export default function CoursesHeader({
             <Button
               key={cat.id}
               variant={
-                selectedCategory?.name === cat.name
+                selectedCategory?.id === cat.id
                   ? "primaryGradient"
                   : "secondary"
               }
@@ -44,7 +42,8 @@ export default function CoursesHeader({
                 "whitespace-nowrap max-w-[160px] h-auto font-normal font-b2",
               )}
               onClick={() => {
-                if (selectedCategory?.name === cat.name) onCategoryChange(null);
+                // If the category is already selected, deselect it (pass null)
+                if (selectedCategory?.id === cat.id) onCategoryChange(null);
                 else onCategoryChange(cat);
               }}
             >

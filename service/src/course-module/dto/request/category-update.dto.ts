@@ -10,4 +10,8 @@ export class CategoryUpdateDto {
   @MaxLength(1000)
   @IsOptional()
   description: string;
+
+  @IsString()
+  @IsOptional()
+  icon: string;
 }

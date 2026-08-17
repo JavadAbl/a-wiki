@@ -37,12 +37,16 @@ const Footer = (): JSX.Element => {
 
   return (
     <footer className="w-full bg-[#222222] text-[#ebebeb]" dir="rtl">
-      <div className="mx-auto max-w-[1180px] px-6 py-12 md:px-10 md:py-16 lg:px-16 lg:py-20">
+      <div className="mx-auto  px-6 py-12 md:px-10 md:py-16 lg:px-16 lg:py-20">
         <div className="flex justify-between md:gap-10">
           <Card className="border-0 bg-transparent shadow-none flex-2">
             <CardContent className="flex flex-col items-start p-0 text-right">
-              <AtieLogoFooter className="" />
-
+              {/* <AtieLogoFooter className="" /> */}
+              <img
+                className="w-[275px]"
+                src="/images/atie-logo.webp"
+                alt="atie-sazan"
+              />
               <p className={`${bodyTextClassName}  text-right`}>
                 {companyDescription}
               </p>
@@ -120,7 +124,7 @@ const Footer = (): JSX.Element => {
           >
             <span> {copyright}</span>
             <span
-              className="cursor-pointer text-xs text-gray hover:underline hover:text-white"
+              className="cursor-pointer text-[8px] text-gray hover:underline hover:text-white"
               onClick={() =>
                 dis(sharedActions.setIsOpenLogin({ isOpen: true }))
               }

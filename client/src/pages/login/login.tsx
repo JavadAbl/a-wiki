@@ -106,12 +106,12 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
           </div>
 
           <div className={cn("flex justify-between")}>
-            <Button
+            {/* <Button
               variant={"link"}
               onClick={() => setIsOpenResetPassword(true)}
             >
               {"فراموشی رمز عبور"}
-            </Button>
+            </Button> */}
 
             <div className={cn("flex justify-end gap-1 ")}>
               <Button

@@ -17,7 +17,7 @@ export default function CoursesGridCard({ course }: Props) {
   return (
     <div
       className={cn(
-        "flex flex-col justify-between gap-[12px] bg-background rounded-[24px] px-[16px] pt-[16px] pb-[18px] cursor-pointer",
+        "flex flex-col justify-between gap-[12px] bg-background rounded-[28px] px-[16px] pt-[16px] pb-[18px] cursor-pointer",
       )}
       onClick={() => {
         nav(`/Courses/${course.id}`);
@@ -32,7 +32,7 @@ export default function CoursesGridCard({ course }: Props) {
       }}
     >
       <img
-        className={cn("w-full aspect-4/3 object-cover rounded-[32px]")}
+        className={cn("w-full aspect-4/3 object-cover rounded-[24px]")}
         src={course.thumbnailUrl ?? "/images/course-cover.webp"}
         alt={course.title}
       />

@@ -48,7 +48,7 @@ export default function CourseBrowserPlayer() {
   const [playbackRate, setPlaybackRate] = useState(1);
 
   // ADDED: Autoplay state (default is true)
-  const [isAutoplay, setIsAutoplay] = useState(false);
+  const [isAutoplay, setIsAutoplay] = useState(true);
 
   // Volume states
   const [volume, setVolume] = useState(1);

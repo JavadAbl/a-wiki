@@ -31,7 +31,7 @@ export default function Courses() {
   // Resolve the selected category object based on the query string ID
   const selectedCategory = useMemo<CategoryDto | null>(() => {
     if (!categoryId || !categories.length) return null;
-    return categories.find((c) => c.id == categoryId) || null;
+    return categories.find((c) => c.id === Number(categoryId)) || null;
   }, [categoryId, categories]);
 
   const { data: coursesRes, isFetching } = useCoursesGetManyQuery({

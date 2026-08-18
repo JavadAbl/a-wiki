@@ -17,12 +17,12 @@ export default function HomeCourseCard({ course }: Props) {
   return (
     <article
       dir="rtl"
-      className="w-[300px] overflow-hidden rounded-[36px] bg-white shadow-[0_14px_35px_rgba(0,0,0,0.14)]"
+      className="w-[300px] overflow-hidden rounded-[36px] bg-white shadow-[0_14px_35px_rgba(0,0,0,0.14)] p-[16px] "
     >
-      <Card className="border-0 bg-transparent shadow-none rounded-none">
+      <div className="border-0 bg-transparent shadow-none rounded-none">
         <CardContent className="p-0">
           <img
-            className="block h-auto  object-cover"
+            className="block h-auto  object-cover rounded-[28px]"
             alt="Header"
             src={course.thumbnailUrl ?? "/images/course-cover.webp"}
           />
@@ -69,7 +69,7 @@ export default function HomeCourseCard({ course }: Props) {
             </Button>
           </section>
         </CardContent>
-      </Card>
+      </div>
     </article>
   );
 }

@@ -2,7 +2,6 @@ import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import { cn } from "#lib/utils";
 import { useNavigate } from "react-router";
-import type { JSX } from "react/jsx-runtime";
 import { useDashboardHeroDataQuery } from "../../../features/shared/shared-api";
 
 export default function HomeHero() {
@@ -13,7 +12,7 @@ export default function HomeHero() {
   if (!data) return null;
 
   const stats = [
-    { value: data.userCount, label: "کاربر فعال" },
+    { value: 1000, label: "کاربر فعال" },
     { value: (data.courseDuration / 60 / 60).toFixed(), label: "ساعت ویدیو" },
     { value: data.courseCount, label: "دوره آموزشی" },
   ];
@@ -46,7 +45,7 @@ export default function HomeHero() {
       /> */}
 
       <div className="relative mx-auto flex min-h-180 w-full max-w-360 items-center justify-start px-6 py-12 sm:px-10 lg:px-14">
-        <Card className="w-full max-w-130 border-0 bg-transparent shadow-none">
+        <div className="w-full max-w-130 border-0! outline-0! bg-transparent shadow-none">
           <CardContent className="flex flex-col items-start gap-9 p-0 text-start">
             <header className="flex w-full flex-col items-start gap-3">
               <p className="-mt-px w-fit overflow-hidden text-ellipsis font-slogan text-surface-100 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:1]">
@@ -99,7 +98,7 @@ export default function HomeHero() {
               ))}
             </section>
           </CardContent>
-        </Card>
+        </div>
       </div>
     </section>
   );

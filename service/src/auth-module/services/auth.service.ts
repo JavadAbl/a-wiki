@@ -53,9 +53,9 @@ export class AuthService {
   ) {}
 
   async login(payload: LoginDto): Promise<AuthDto> {
-    const { password, mobile } = payload;
+    const { password, nationalCode } = payload;
 
-    const user = await this.userService.userGetByMobile(mobile);
+    const user = await this.userService.userGetByNationalCode(nationalCode);
 
     if (!user) throw new UnauthorizedException('نام کاربری یا رمز عبور اشتباه است');
 

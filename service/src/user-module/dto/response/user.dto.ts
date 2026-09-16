@@ -12,7 +12,10 @@ export class UserDto {
   lastName: string;
 
   @Expose()
-  mobile: string;
+  mobile: string | null;
+
+  @Expose()
+  nationalCode: string;
 
   @Expose()
   isActive: boolean;

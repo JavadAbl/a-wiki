@@ -123,14 +123,14 @@ const Footer = (): JSX.Element => {
             className={`flex gap-1 justify-center items-center font-normal text-[#ebebeb] text-center`}
           >
             <span> {copyright}</span>
-            <span
+            {/*  <span
               className="cursor-pointer text-[8px] text-gray hover:underline hover:text-white"
               onClick={() =>
                 dis(sharedActions.setIsOpenLogin({ isOpen: true }))
               }
             >
               {"ورود ادمین"}
-            </span>
+            </span> */}
           </p>
         </div>
       </div>

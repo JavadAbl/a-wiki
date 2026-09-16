@@ -6,6 +6,7 @@ export type UserWithPermissions = Prisma.UserGetPayload<{
 
 export abstract class UserServiceContract {
   abstract userGetByMobile(mobile: string): Promise<UserWithPermissions | null>;
+  abstract userGetByNationalCode(nationalCode: string): Promise<UserWithPermissions | null>;
   abstract userGetById(id: number): Promise<User | null>;
   abstract userCount(): Promise<number>;
 }

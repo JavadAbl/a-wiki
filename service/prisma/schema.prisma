@@ -16,13 +16,14 @@ datasource db {
 // =============================================================================
 
 model User {
-  id        Int     @id() @default(autoincrement())
-  mobile    String  @unique()
-  firstName String
-  lastName  String
-  password  String
-  isActive  Boolean @default(true)
-  role      String  @default("User")
+  id           Int     @id() @default(autoincrement())
+  mobile       String? @unique()
+  nationalCode String  @unique()
+  firstName    String
+  lastName     String
+  password     String
+  isActive     Boolean @default(true)
+  role         String  @default("User")
 
   userPermissions UserPermission[]
   userPartViews   PartView[]

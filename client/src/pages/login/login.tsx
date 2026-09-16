@@ -31,7 +31,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
   const form = useForm<LoginDto>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      mobile: "",
+      nationalCode: "",
       password: "",
     },
     mode: "onSubmit",
@@ -66,16 +66,16 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
         >
           <div>
             <Controller
-              name="mobile"
+              name="nationalCode"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field className="" data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="">{"شماره موبایل"} </FieldLabel>
+                  <FieldLabel htmlFor="">{"کدملی"} </FieldLabel>
 
                   <FormInput
                     {...field}
                     aria-invalid={fieldState.invalid}
-                    placeholder="شماره موبایل"
+                    placeholder="کدملی"
                     autoComplete="off"
                   />
 

@@ -20,15 +20,15 @@ export default function CoursesGridCard({ course }: Props) {
         "flex flex-col justify-between gap-[12px] bg-background rounded-[28px] px-[16px] pt-[16px] pb-[18px] cursor-pointer",
       )}
       onClick={() => {
-        nav(`/Courses/${course.id}`);
-        /*  if (isAuth) nav(`/Courses/${course.id}`);
-              else
-                dis(
-                  sharedActions.setIsOpenLogin({
-                    isOpen: true,
-                    redirect: `/Courses/${course.id}`,
-                  }),
-                ); */
+        //nav(`/Courses/${course.id}`);
+        if (isAuth) nav(`/Courses/${course.id}`);
+        else
+          dis(
+            sharedActions.setIsOpenLogin({
+              isOpen: true,
+              redirect: `/Courses/${course.id}`,
+            }),
+          );
       }}
     >
       <img

@@ -18,6 +18,7 @@ async function createSuperAdmin() {
     update: { role: Role.SuperAdmin, isActive: true },
     create: {
       mobile: SUPER_ADMIN_MOBILE,
+      nationalCode: '',
       firstName: 'Super',
       lastName: 'Admin',
       password: hashedPassword,

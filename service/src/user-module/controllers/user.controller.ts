@@ -66,6 +66,7 @@ export class UserController {
       password: string;
       firstName: string;
       lastName: string;
+      username: string;
     },
   ): Promise<void> {
     return this.userService.adminCreate(
@@ -74,6 +75,7 @@ export class UserController {
       payload.password,
       payload.firstName,
       payload.lastName,
+      payload.username,
     );
   }
 

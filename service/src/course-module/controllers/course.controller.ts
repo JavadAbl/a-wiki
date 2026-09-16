@@ -75,7 +75,6 @@ export class CourseController {
     return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, true, categoryId);
   }
 
-  @Public()
   @Get(':courseId')
   courseGetById(@Param('courseId', ParseIntPipe) id: number): Promise<CourseDetailsDto> {
     return this.courseService.courseGetById(id);

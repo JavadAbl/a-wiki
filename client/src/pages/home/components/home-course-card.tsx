@@ -1,5 +1,5 @@
 import { Button } from "#components/ui/button";
-import { Card, CardContent } from "#components/ui/card";
+import { CardContent } from "#components/ui/card";
 import { useNavigate } from "react-router";
 import type { CourseDto } from "../../../features/course/dto/course.dto";
 import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
@@ -54,15 +54,15 @@ export default function HomeCourseCard({ course }: Props) {
               type="button"
               className="h-auto rounded-[16px] bg-primary-300 px-[56px] py-[12px] font-h4 text-content-secondary hover:bg-primary-400 cursor-pointer"
               onClick={() => {
-                nav(`/Courses/${course.id}`);
-                /*  if (isAuth) nav(`/Courses/${course.id}`);
+                // nav(`/Courses/${course.id}`);
+                if (isAuth) nav(`/Courses/${course.id}`);
                 else
                   dis(
                     sharedActions.setIsOpenLogin({
                       isOpen: true,
                       redirect: `/Courses/${course.id}`,
                     }),
-                  ); */
+                  );
               }}
             >
               {"ورود به دوره"}

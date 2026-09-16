@@ -16,6 +16,11 @@ export class UserUpdateDto {
   @Length(11)
   mobile: string;
 
+  @IsString()
+  @IsOptional()
+  @Length(10)
+  nationalCode: string;
+
   @IsBoolean()
   @IsOptional()
   isActive: boolean;

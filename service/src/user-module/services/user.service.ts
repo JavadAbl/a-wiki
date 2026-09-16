@@ -43,7 +43,9 @@ export class UserService {
     if (userRole === Role.Admin)
       adminFilterPredicate = { NOT: { role: { in: [Role.Admin, Role.SuperAdmin] } } };
 
-    const predicate = buildFindManyArgs(query, { searchableFields: ['firstName', 'lastName', 'mobile'] });
+    const predicate = buildFindManyArgs(query, {
+      searchableFields: ['firstName', 'lastName', 'nationalCode', 'mobile'],
+    });
     const { items, totalCount } = await this.userRep.findMany({
       ...predicate,
       where: { ...predicate.where, ...adminFilterPredicate },
@@ -54,11 +56,11 @@ export class UserService {
   }
 
   async userCreate(payload: UserCreateDto): Promise<number> {
-    const { mobile } = payload;
+    const { nationalCode } = payload;
 
-    await this.userRep.checkDuplicateBy({ where: { mobile } }, 'mobile', mobile);
+    await this.userRep.checkDuplicateBy({ where: { nationalCode } }, 'mobile', nationalCode);
 
-    const defaultPassword = mobile;
+    const defaultPassword = nationalCode;
     const hashedPassword = await this.passwordService.hashPassword(defaultPassword);
 
     const user = await this.userRep.create({ data: { ...payload, password: hashedPassword } });
@@ -78,6 +80,7 @@ export class UserService {
     password: string,
     firstName: string,
     lastName: string,
+    username: string,
   ): Promise<void> {
     if (seedPass != this.configService.getOrThrow('SUPER_ADMIN_SEED_PASSWORD'))
       throw new UnauthorizedException();
@@ -87,7 +90,14 @@ export class UserService {
     const hashedPassword = await this.passwordService.hashPassword(password);
 
     await this.userRep.create({
-      data: { firstName, lastName, mobile, role: Role.Admin, password: hashedPassword },
+      data: {
+        firstName,
+        lastName,
+        mobile,
+        role: Role.Admin,
+        password: hashedPassword,
+        nationalCode: username,
+      },
     });
   }
 
@@ -103,7 +113,14 @@ export class UserService {
     const hashedPassword = await this.passwordService.hashPassword(defaultPassword);
 
     await this.userRep.create({
-      data: { firstName: 'sa', lastName: 'sa', mobile, role: Role.SuperAdmin, password: hashedPassword },
+      data: {
+        firstName: 'sa',
+        lastName: 'sa',
+        mobile,
+        role: Role.SuperAdmin,
+        password: hashedPassword,
+        nationalCode: 'admin',
+      },
     });
   }
 

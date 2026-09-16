@@ -13,6 +13,11 @@ export const UserUpdateSchema = z.object({
     .max(100, { message: "نام خانوادگی حداکثر ۱۰۰ کاراکتر می‌باشد" })
     .optional(),
 
+  nationalCode: z
+    .string()
+    .length(10, { message: " کدملی باید دقیقاً ۱0 کاراکتر باشد" })
+    .optional(),
+
   mobile: z
     .string()
     .length(11, { message: "شماره موبایل باید دقیقاً ۱۱ کاراکتر باشد" })

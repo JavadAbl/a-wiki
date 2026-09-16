@@ -23,6 +23,7 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
     defaultValues: {
       firstName: "",
       lastName: "",
+      nationalCode: "",
       mobile: "",
     },
     mode: "onSubmit",
@@ -31,7 +32,10 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
   const [mutateCreateUser] = useUserCreateMutation();
 
   async function handleSubmit(data: UserCreateDto) {
-    const res = await mutateCreateUser(data);
+    const res = await mutateCreateUser({
+      ...data,
+      mobile: data.mobile === "" ? undefined : data.mobile,
+    });
     if (!res.error) {
       setIsOpen(false);
       form.reset();
@@ -79,14 +83,31 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
         />
 
         <Controller
+          name="nationalCode"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="nationalCode">کدملی</FieldLabel>
+              <FormInput
+                {...field}
+                id="nationalCode"
+                aria-invalid={fieldState.invalid}
+                autoComplete="off"
+              />
+              <InputMessage>{fieldState.error?.message}</InputMessage>
+            </Field>
+          )}
+        />
+
+        <Controller
           name="mobile"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="description">موبایل </FieldLabel>
+              <FieldLabel htmlFor="mobile">موبایل </FieldLabel>
               <FormInput
                 {...field}
-                id="lastName"
+                id="mobile"
                 aria-invalid={fieldState.invalid}
                 autoComplete="off"
               />

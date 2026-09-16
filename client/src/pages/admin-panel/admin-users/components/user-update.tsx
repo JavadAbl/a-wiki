@@ -25,6 +25,7 @@ export default function UserUpdate({ close, user }: Props) {
     defaultValues: {
       firstName: "",
       lastName: "",
+      nationalCode: "",
       mobile: "",
     },
     mode: "onSubmit",
@@ -38,7 +39,8 @@ export default function UserUpdate({ close, user }: Props) {
         form.setValues({
           firstName: user?.firstName,
           lastName: user?.lastName,
-          mobile: user?.mobile,
+          nationalCode: user?.nationalCode,
+          mobile: user?.mobile ?? "",
         });
     };
 
@@ -48,7 +50,13 @@ export default function UserUpdate({ close, user }: Props) {
   if (!user) return null;
 
   const handleSubmit = async (data: UserUpdateDto) => {
-    const res = await mutateUpdateUser({ body: data, userId: user.id });
+    const res = await mutateUpdateUser({
+      body: {
+        ...data,
+        mobile: data.mobile === "" ? undefined : data.mobile,
+      },
+      userId: user.id,
+    });
     if (!res.error) {
       close();
       form.reset();
@@ -96,14 +104,31 @@ export default function UserUpdate({ close, user }: Props) {
         />
 
         <Controller
+          name="nationalCode"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="nationalCode">کدملی</FieldLabel>
+              <FormInput
+                {...field}
+                id="nationalCode"
+                aria-invalid={fieldState.invalid}
+                autoComplete="off"
+              />
+              <InputMessage>{fieldState.error?.message}</InputMessage>
+            </Field>
+          )}
+        />
+
+        <Controller
           name="mobile"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="description">مویابل </FieldLabel>
+              <FieldLabel htmlFor="mobile">موبایل </FieldLabel>
               <FormInput
                 {...field}
-                id="lastName"
+                id="mobile"
                 aria-invalid={fieldState.invalid}
                 autoComplete="off"
               />

@@ -85,7 +85,7 @@ export class UserService {
     if (seedPass != this.configService.getOrThrow('SUPER_ADMIN_SEED_PASSWORD'))
       throw new UnauthorizedException();
 
-    await this.userRep.checkDuplicateBy({ where: { mobile } }, 'mobile', mobile);
+    await this.userRep.checkDuplicateBy({ where: { nationalCode: username } }, 'username', username);
 
     const hashedPassword = await this.passwordService.hashPassword(password);
 

@@ -76,6 +76,11 @@ export default function AdminPanelUsers() {
         cell: ({ row }) => row.original.lastName,
       },
       {
+        id: "nationalCode",
+        header: "کدملی",
+        cell: ({ row }) => row.original.nationalCode,
+      },
+      {
         id: "mobile",
         header: "موبایل",
         cell: ({ row }) => row.original.mobile,

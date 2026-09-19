@@ -94,7 +94,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
                   <FormInput
                     {...field}
                     aria-invalid={fieldState.invalid}
-                    placeholder="رمز عبور"
+                    placeholder="رمز عبور پیش فرض کدملی است"
                     type="password"
                     autoComplete="off"
                   />

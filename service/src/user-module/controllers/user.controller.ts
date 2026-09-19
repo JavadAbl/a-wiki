@@ -27,6 +27,12 @@ import { UserUpdateDto } from '../dto/request/user-update.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  /*   @Public()
+  @Get('test')
+  test() {
+    return this.userService.insertData();
+  } */
+
   @Get()
   userGetMany(@Query() query: GetManyQuery, @User() context: TokenPayload): Promise<GetManyReply<UserDto>> {
     return this.userService.userGetMany(query as GetManyQueryType<'User'>, context);

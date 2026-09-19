@@ -69,14 +69,14 @@ export default function Navbar() {
                   </Button>
                 </AuthorizationComponent>
 
-                <Button
+                {/*  <Button
                   className={cn(" rounded-2xl")}
                   size={"sm"}
                   variant={"secondary"}
                   onClick={() => setIsOpenResetPassword(true)}
                 >
                   {"تغییر رمز عبور"}
-                </Button>
+                </Button> */}
 
                 <span className={cn("text-sm text-content-tertiary")}>
                   {user?.firstName + " " + user?.lastName}

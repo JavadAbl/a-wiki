@@ -236,7 +236,6 @@ export class CourseController {
   }
  */
 
-  @Public()
   @Get('Contents/:contentId/URL')
   async contentGetURL(@Param('contentId', ParseIntPipe) contentId: number): Promise<{ url: string }> {
     return this.contentService.generatePresignedUrl(contentId);

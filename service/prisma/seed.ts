@@ -1,35 +1,9 @@
 // seed.ts
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import * as bcrypt from 'bcryptjs';
 import { PrismaClient } from '../src/generated/prisma/client';
-import { Role } from 'src/auth-module/enums/role.enum';
 
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
-
-async function createSuperAdmin() {
-  const SUPER_ADMIN_MOBILE = process.env.SUPER_ADMIN_MOBILE!;
-  const SUPER_ADMIN_PASSWORD = process.env.SUPER_ADMIN_PASSWORD!;
-
-  const hashedPassword = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
-
-  const superAdmin = await prisma.user.upsert({
-    where: { mobile: SUPER_ADMIN_MOBILE },
-    update: { role: Role.SuperAdmin, isActive: true },
-    create: {
-      mobile: SUPER_ADMIN_MOBILE,
-      nationalCode: '',
-      firstName: 'Super',
-      lastName: 'Admin',
-      password: hashedPassword,
-      role: Role.SuperAdmin,
-      isActive: true,
-    },
-  });
-
-  console.log(`✅ SuperAdmin ensured: ${superAdmin.mobile} (ID: ${superAdmin.id})`);
-  return superAdmin;
-}
 
 async function createCategories() {
   const farsiCategories = [
@@ -277,7 +251,6 @@ async function createParts() {
 
 async function main() {
   try {
-    await createSuperAdmin();
     await createCategories();
     await createCourses();
     await createSections();

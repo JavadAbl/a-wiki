@@ -18,7 +18,7 @@ export class UserProvider implements UserServiceContract {
   }
 
   userGetByMobile(mobile: string): Promise<UserWithPermissions | null> {
-    return this.userRep.findUnique({
+    return this.userRep.findFirst({
       where: { mobile },
       include: { userPermissions: { select: { permission: { select: { name: true } } } } },
     });

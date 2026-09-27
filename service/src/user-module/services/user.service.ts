@@ -22,7 +22,6 @@ import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-ot
 import { UserUpdateDto } from '../dto/request/user-update.dto';
 import { TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 import { Role } from 'src/auth-module/enums/role.enum';
-import data from '../../../data setad.json';
 
 @Injectable()
 export class UserService {
@@ -33,7 +32,7 @@ export class UserService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async insertData() {
+  /* async insertData() {
     for (const item of data['واحد فنی']) {
       try {
         const password = await this.passwordService.hashPassword(String(item['کد ملی']));
@@ -51,7 +50,7 @@ export class UserService {
         console.error(error);
       }
     }
-  }
+  } */
 
   async userGetById(id: number): Promise<UserDto> {
     const user = await this.userRep.findAndCheckExistsBy({ where: { id } }, 'id', id);

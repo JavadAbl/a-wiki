@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength, Length } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, Length, IsOptional } from 'class-validator';
 
 export class UserCreateDto {
   @IsString()
@@ -13,6 +13,7 @@ export class UserCreateDto {
 
   @IsString()
   @Length(11)
+  @IsOptional()
   mobile?: string | null;
 
   @IsString()

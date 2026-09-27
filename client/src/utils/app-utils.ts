@@ -44,3 +44,11 @@ export const formatSeconds = (totalSeconds: number = 0) => {
 
   return `${hh}:${mm}:${ss}`;
 };
+
+// Converts Persian (۰-۹) and Arabic-Indic (٠-٩) digits to English
+export function toEnglishDigits(value: string): string {
+  if (!value) return value;
+  return value
+    .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+}

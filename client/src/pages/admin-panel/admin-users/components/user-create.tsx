@@ -11,6 +11,7 @@ import {
   UserCreateSchema,
   type UserCreateDto,
 } from "../../../../features/user/schemas/user-create.schema";
+import { toEnglishDigits } from "../../../../utils/app-utils";
 
 interface Props {
   isOpen: boolean;
@@ -90,7 +91,13 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
               <FieldLabel htmlFor="nationalCode">کدملی</FieldLabel>
               <FormInput
                 {...field}
+                onChange={(e) =>
+                  field.onChange(
+                    toEnglishDigits(e.target.value).replace(/\D/g, ""),
+                  )
+                }
                 id="nationalCode"
+                inputMode="numeric"
                 aria-invalid={fieldState.invalid}
                 autoComplete="off"
               />
@@ -104,10 +111,16 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="mobile">موبایل </FieldLabel>
+              <FieldLabel htmlFor="mobile">موبایل</FieldLabel>
               <FormInput
                 {...field}
+                onChange={(e) =>
+                  field.onChange(
+                    toEnglishDigits(e.target.value).replace(/\D/g, ""),
+                  )
+                }
                 id="mobile"
+                inputMode="numeric"
                 aria-invalid={fieldState.invalid}
                 autoComplete="off"
               />

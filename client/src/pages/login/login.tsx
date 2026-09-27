@@ -17,6 +17,7 @@ import { sharedActions } from "../../features/shared/shared-slice";
 import { InputMessage } from "#components/inputs/input-message";
 import { useState } from "react";
 import ResetPassword from "./reset-password";
+import { toEnglishDigits } from "../../utils/app-utils";
 
 interface Props {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
   async function handleLogin(data: LoginDto) {
     const res = await mutateLogin(data);
     if (!res.error) {
+      form.reset();
       const { accessToken, refreshToken, user } = res.data;
       dis(authActions.login({ accessToken, refreshToken, user }));
       dis(sharedActions.setIsOpenLogin({ isOpen: false }));
@@ -69,16 +71,23 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
               name="nationalCode"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field className="" data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="">{"کدملی"} </FieldLabel>
-
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="">کدملی</FieldLabel>
                   <FormInput
                     {...field}
+                    onChange={(e) =>
+                      field.onChange(toEnglishDigits(e.target.value))
+                    }
+                    name="nc_identifier"
+                    id="nc_identifier"
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    inputMode="numeric"
                     aria-invalid={fieldState.invalid}
                     placeholder="کدملی"
-                    autoComplete="off"
                   />
-
                   <InputMessage>{fieldState.error?.message}</InputMessage>
                 </Field>
               )}
@@ -89,16 +98,19 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="">{" رمز عبور"} </FieldLabel>
-
+                  <FieldLabel htmlFor="">رمز عبور</FieldLabel>
                   <FormInput
                     {...field}
+                    onChange={(e) =>
+                      field.onChange(toEnglishDigits(e.target.value))
+                    }
+                    name="sec_field"
+                    id="sec_field"
+                    type="password"
+                    autoComplete="new-password"
                     aria-invalid={fieldState.invalid}
                     placeholder="رمز عبور پیش فرض کدملی است"
-                    type="password"
-                    autoComplete="off"
                   />
-
                   <InputMessage>{fieldState.error?.message}</InputMessage>
                 </Field>
               )}

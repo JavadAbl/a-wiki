@@ -229,3 +229,7 @@
     font-weight: normal;
   }
 }
+
+.masked {
+  -webkit-text-security: disc;
+}

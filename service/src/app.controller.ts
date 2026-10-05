@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   HttpCode,
   HttpStatus,
   UseInterceptors,
@@ -58,5 +59,12 @@ export class AppController {
   )
   heroImageUpdate(@UploadedFile() file: Express.Multer.File): void {
     return this.appService.heroImageUpdate(file);
+  }
+
+  @Admin()
+  @Delete('/HeroImage')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  heroImageDelete(): void {
+    return this.appService.heroImageDelete();
   }
 }

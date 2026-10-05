@@ -43,6 +43,10 @@ export class AppService {
     writeFileSync(join(HERO_DIR, `${HERO_FILE_BASENAME}${ext}`), file.buffer);
   }
 
+  heroImageDelete(): void {
+    this.deleteExistingHeroFiles();
+  }
+
   private deleteExistingHeroFiles(): void {
     let files: string[];
     try {

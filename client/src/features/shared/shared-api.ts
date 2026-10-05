@@ -33,6 +33,13 @@ export const sharedApi = createApi({
       }),
       invalidatesTags: ["HeroImageURL"],
     }),
+    HeroImageDelete: builder.mutation<void, void>({
+      query: () => ({
+        url: "HeroImage",
+        method: "DELETE",
+      }),
+      invalidatesTags: ["HeroImageURL"],
+    }),
   }),
 });
 
@@ -40,4 +47,5 @@ export const {
   useDashboardHeroDataQuery,
   useHeroImageURLQuery,
   useHeroImageUpdateMutation,
+  useHeroImageDeleteMutation,
 } = sharedApi;

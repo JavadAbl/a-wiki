@@ -17,6 +17,7 @@ export default function HomeHero() {
   if (!data) return null;
 
   const heroUrl = toAbsoluteAssetUrl(heroImageData?.url) ?? "/images/hero.webp";
+  const isDefaultHero = !heroImageData?.url;
 
   const stats = [
     { value: 1000, label: "کاربر فعال" },
@@ -41,11 +42,10 @@ export default function HomeHero() {
     <section
       className="relative min-h-180 w-full overflow-hidden bg-center bg-cover"
       style={{
-        backgroundImage: `url('${heroUrl}')`,
+        backgroundImage: isDefaultHero
+          ? `linear-gradient(270deg, rgba(11,79,74,0.6) 16.81%, rgba(15,23,43,0.9) 73.25%), url('${heroUrl}')`
+          : `url('${heroUrl}')`,
       }}
-      /*  style={{
-        backgroundImage: `linear-gradient(270deg, rgba(11,79,74,0.6) 16.81%, rgba(15,23,43,0.9) 73.25%), url('${heroUrl}')`,
-      }} */
     >
       {/*    <div aria-hidden="true" className="absolute inset-0 " />
 

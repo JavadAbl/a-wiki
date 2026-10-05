@@ -19,6 +19,7 @@ import { GetManyReply } from 'src/common/dto/response/get-many-reply';
 import { CourseService } from '../services/course.service';
 import { CourseDto } from '../dto/response/course.dto';
 import { CourseSetPublishedDto } from '../dto/request/course-set-published.dto';
+import { CourseSetFavoriteDto } from '../dto/request/course-set-favorite.dto';
 import { CourseCreateDto } from '../dto/request/course-create.dto';
 import { CourseDetailsDto } from '../dto/response/course-details.dto';
 import { CourseSetDescriptionDto } from '../dto/request/course-set-description.dto';
@@ -73,6 +74,22 @@ export class CourseController {
     @Query('categoryId', new ParseIntPipe({ optional: true })) categoryId?: number,
   ): Promise<GetManyReply<CourseDto>> {
     return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, true, categoryId);
+  }
+
+  // Must stay declared before @Get(':courseId') so 'Favorites' is not captured as an id
+  @Public()
+  @Get('/Favorites')
+  courseGetManyFavorites(): Promise<CourseDto[]> {
+    return this.courseService.courseGetManyFavorites();
+  }
+
+  @Admin()
+  @Patch(':courseId/SetFavorite')
+  courseSetFavorite(
+    @Param('courseId', ParseIntPipe) id: number,
+    @Body() payload: CourseSetFavoriteDto,
+  ): Promise<void> {
+    return this.courseService.courseSetFavorite(id, payload);
   }
 
   @Get(':courseId')

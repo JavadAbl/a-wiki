@@ -19,7 +19,7 @@ import type { AppState } from "../store";
 export const courseApi = createApi({
   reducerPath: "courseApi",
   baseQuery: baseApi,
-  tagTypes: ["category", "course"],
+  tagTypes: ["category", "course", "favoriteCourse"],
 
   endpoints: (builder) => ({
     //Category-----------------------------------------------------
@@ -131,7 +131,27 @@ export const courseApi = createApi({
         url: `Courses/${courseId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["course"],
+      invalidatesTags: ["course", "favoriteCourse"],
+    }),
+
+    //FavoriteCourse------------------------------------------------
+    CoursesGetManyFavorites: builder.query<CourseDto[], void>({
+      query: () => ({
+        url: "Courses/Favorites",
+      }),
+      providesTags: ["favoriteCourse"],
+    }),
+
+    CourseSetFavorite: builder.mutation<
+      void,
+      { body: { isFavorite: boolean }; courseId: number }
+    >({
+      query: ({ body, courseId }) => ({
+        url: `Courses/${courseId}/SetFavorite`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["course", "favoriteCourse"],
     }),
 
     //Section-------------------------------------------------------
@@ -503,6 +523,8 @@ export const {
   useThumbnailDeleteMutation,
   useCourseDeleteMutation,
   useContentCreateManyMutation,
+  useCoursesGetManyFavoritesQuery,
+  useCourseSetFavoriteMutation,
 } = courseApi;
 
 const executeUploadRequest = (

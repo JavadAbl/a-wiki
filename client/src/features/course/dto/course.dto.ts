@@ -9,4 +9,5 @@ export interface CourseDto {
   lecturerProfession?: string | null;
   totalContents: number;
   totalContentsLength: number;
+  isFavorite?: boolean;
 }

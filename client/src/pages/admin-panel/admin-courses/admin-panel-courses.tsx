@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   useCategoryGetManyQuery,
   useCourseDeleteMutation,
+  useCourseSetFavoriteMutation,
   useCoursesGetManyAdminQuery,
 } from "../../../features/course/course-api";
 import { Button } from "#components/ui/button";
@@ -20,6 +21,8 @@ import {
   Pencil,
   PlusIcon,
   SearchIcon,
+  Star,
+  StarOff,
   Trash2,
   XIcon,
 } from "lucide-react";
@@ -34,6 +37,7 @@ import { DataGrid } from "#components/grids/data-grid";
 import { useDebounce } from "#hooks/use-debounce";
 import CourseSetCategory from "./components/course-set-category";
 import { ConfirmModal } from "#components/modals/confirm-modal";
+import { toast } from "sonner";
 
 export default function AdminPanelCourses() {
   const nav = useNavigate();
@@ -73,6 +77,25 @@ export default function AdminPanelCourses() {
 
   const [mutateCourseDelete, { isLoading: isLoadingCourseDelete }] =
     useCourseDeleteMutation();
+
+  const [mutateCourseSetFavorite] = useCourseSetFavoriteMutation();
+
+  const handleCourseSetFavorite = useCallback(
+    async (course: CourseDto) => {
+      const res = await mutateCourseSetFavorite({
+        body: { isFavorite: !course.isFavorite },
+        courseId: course.id,
+      });
+      if (!res.error) {
+        toast.success(
+          course.isFavorite
+            ? `دوره «${course.title}» از پرطرفدارها حذف شد`
+            : `دوره «${course.title}» به پرطرفدارها اضافه شد`,
+        );
+      }
+    },
+    [mutateCourseSetFavorite],
+  );
 
   useEffect(() => {
     const run = () => setPageIndex(1);
@@ -124,12 +147,21 @@ export default function AdminPanelCourses() {
         id: "status",
         header: "وضعیت",
         cell: ({ row }) => (
-          <Badge
-            className={cn("font-normal ")}
-            variant={row.original.isPublished ? "default" : "secondary"}
-          >
-            {row.original.isPublished ? "انتشار یافته" : "پیش‌نویس"}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge
+              className={cn("font-normal ")}
+              variant={row.original.isPublished ? "default" : "secondary"}
+            >
+              {row.original.isPublished ? "انتشار یافته" : "پیش‌نویس"}
+            </Badge>
+
+            {row.original.isFavorite && (
+              <Badge variant="secondary" className="font-normal gap-1">
+                <Star className="h-3 w-3 fill-current" />
+                پرطرفدار
+              </Badge>
+            )}
+          </div>
         ),
       },
       {
@@ -190,6 +222,22 @@ export default function AdminPanelCourses() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
+                  className="cursor-pointer text-xs"
+                  onClick={() => handleCourseSetFavorite(course)}
+                >
+                  {course.isFavorite ? (
+                    <StarOff className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Star className="mr-2 h-4 w-4" />
+                  )}
+                  {course.isFavorite
+                    ? "حذف از پرطرفدارها"
+                    : "افزودن به پرطرفدارها"}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
                   className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
                   onClick={() => setSelectedCourseForDelete(course)}
                 >
@@ -202,7 +250,7 @@ export default function AdminPanelCourses() {
         },
       },
     ],
-    [nav],
+    [nav, categories, handleCourseSetFavorite],
   );
 
   return (

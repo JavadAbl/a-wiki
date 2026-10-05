@@ -31,4 +31,7 @@ export class CourseDto {
 
   @Expose()
   totalContentsLength: number;
+
+  @Expose()
+  isFavorite?: boolean;
 }

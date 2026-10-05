@@ -3,6 +3,8 @@ import { CourseRepository } from '../repositories/course.repository';
 import { CourseCreateDto } from '../dto/request/course-create.dto';
 import { CategoryRepository } from '../repositories/category.repository';
 import { CourseSetPublishedDto } from '../dto/request/course-set-published.dto';
+import { CourseSetFavoriteDto } from '../dto/request/course-set-favorite.dto';
+import { FavoriteCourseRepository } from '../repositories/favorite-course.repository';
 import { CourseDto } from '../dto/response/course.dto';
 import { GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -25,6 +27,7 @@ export class CourseService {
   constructor(
     private readonly courseRep: CourseRepository,
     private readonly categoryRep: CategoryRepository,
+    private readonly favoriteCourseRep: FavoriteCourseRepository,
     private readonly s3Provider: S3Provider,
   ) {}
 
@@ -154,6 +157,7 @@ export class CourseService {
       ...predicate,
       where: { ...predicate.where, categoryId, isPublished },
       orderBy: { id: 'desc' },
+      include: { favorite: true },
     });
 
     if (items.length === 0) {
@@ -191,34 +195,109 @@ export class CourseService {
 
     // 4. Merge and transform
     const mappedItems = await Promise.all(
-      items.map((course) =>
-        limit(async () => {
-          let publicThumbnailUrl;
-          if (course.thumbnailUrl) {
-            publicThumbnailUrl = await this.s3Provider.getSignedUrlByKey(course.thumbnailUrl, 86400);
-          }
-
-          const stats = aggregateMap.get(course.id) || { totalContents: 0, totalContentsLength: 0 };
-
-          return plainToInstance(CourseDto, {
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            categoryId: course.categoryId,
-            isPublished: course.isPublished,
-            thumbnailUrl: publicThumbnailUrl,
-            lecturer: course.lecturer,
-            lecturerProfession: course.lecturerProfession,
-            totalContents: stats.totalContents,
-            totalContentsLength: stats.totalContentsLength,
-          });
-        }),
-      ),
+      items.map((course) => limit(() => this.courseToDto(course, aggregateMap.get(course.id), true))),
     );
 
     // Note: For accurate pagination, consider using a separate COUNT query
     // instead of items.length when using LIMIT/OFFSET
     return { items: mappedItems, totalCount };
+  }
+
+  private async courseToDto(
+    course: { id: number; title: string; description: string | null; categoryId: number | null; isPublished: boolean; thumbnailUrl: string | null; lecturer: string | null; lecturerProfession: string | null; favorite?: { order: number } | null },
+    stats?: { totalContents: number; totalContentsLength: number },
+    withFavorite = false,
+  ): Promise<CourseDto> {
+    let publicThumbnailUrl;
+    if (course.thumbnailUrl) {
+      publicThumbnailUrl = await this.s3Provider.getSignedUrlByKey(course.thumbnailUrl, 86400);
+    }
+
+    return plainToInstance(
+      CourseDto,
+      {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        categoryId: course.categoryId,
+        isPublished: course.isPublished,
+        thumbnailUrl: publicThumbnailUrl,
+        lecturer: course.lecturer,
+        lecturerProfession: course.lecturerProfession,
+        totalContents: stats?.totalContents ?? 0,
+        totalContentsLength: stats?.totalContentsLength ?? 0,
+        isFavorite: withFavorite ? !!course.favorite : undefined,
+      },
+      { excludeExtraneousValues: true },
+    );
+  }
+
+  async courseGetManyFavorites(limit = 12): Promise<CourseDto[]> {
+    const { items: favorites } = await this.favoriteCourseRep.findMany({
+      where: { course: { isPublished: true } },
+      orderBy: [{ order: 'asc' }, { id: 'asc' }],
+      take: limit,
+      include: { course: true },
+    });
+
+    if (favorites.length === 0) {
+      return [];
+    }
+
+    const courseIds = favorites.map((f) => f.courseId);
+
+    const aggregates = await this.courseRep.prismaClient.$queryRaw<
+      Array<{ courseId: number; totalContents: bigint; totalContentsLength: bigint }>
+    >`
+    SELECT
+      c."id" as "courseId",
+      COUNT(ct."id") as "totalContents",
+      COALESCE(SUM(ct."durationSeconds"), 0) as "totalContentsLength"
+    FROM "Course" c
+    LEFT JOIN "Section" s ON s."courseId" = c."id"
+    LEFT JOIN "Part" p ON p."sectionId" = s."id"
+    LEFT JOIN "Content" ct ON ct."partId" = p."id"
+    WHERE c."id" IN (${Prisma.join(courseIds)})
+    GROUP BY c."id"
+  `;
+
+    const aggregateMap = new Map(
+      aggregates.map((a) => [
+        a.courseId,
+        { totalContents: Number(a.totalContents), totalContentsLength: Number(a.totalContentsLength) },
+      ]),
+    );
+
+    const limitFn = pLimit(10);
+
+    return Promise.all(
+      favorites.map((favorite) =>
+        limitFn(() => this.courseToDto(favorite.course, aggregateMap.get(favorite.courseId))),
+      ),
+    );
+  }
+
+  async courseSetFavorite(courseId: number, payload: CourseSetFavoriteDto): Promise<void> {
+    const { isFavorite } = payload;
+    await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'id', courseId);
+
+    const existing = await this.favoriteCourseRep.findBy({ where: { courseId } });
+
+    if (isFavorite && existing) {
+      throw new BadRequestException('Course is already marked as favorite');
+    }
+    if (!isFavorite && !existing) {
+      throw new BadRequestException('Course is not marked as favorite');
+    }
+
+    if (isFavorite) {
+      const last = await this.favoriteCourseRep.findFirst({ orderBy: { order: 'desc' } });
+      await this.favoriteCourseRep.create({
+        data: { courseId, order: (last?.order ?? -1) + 1 },
+      });
+    } else {
+      await this.favoriteCourseRep.remove({ where: { courseId } });
+    }
   }
 
   async courseCreate(payload: CourseCreateDto): Promise<number> {

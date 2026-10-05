@@ -1,15 +1,19 @@
 import { cn } from "#lib/utils";
 import { useNavigate } from "react-router";
 import HomeCourseCard from "./home-course-card";
-import { useCoursesGetManyQuery } from "../../../features/course/course-api";
+import { useCoursesGetManyFavoritesQuery } from "../../../features/course/course-api";
 
 export default function HomeCourses() {
   const nav = useNavigate();
 
-  const { data: coursesRes } = useCoursesGetManyQuery();
-  const courses = coursesRes?.items?.slice(0, 3);
+  const { data: favoriteCourses } = useCoursesGetManyFavoritesQuery();
 
-  if (!courses) return null;
+  // Show admin-set favorites when available, otherwise fall back to the first published courses
+  const courses = (
+    favoriteCourses && favoriteCourses.length > 0 ? favoriteCourses : []
+  ).slice(0, 3);
+
+  if (courses.length === 0) return null;
 
   return (
     <div className={cn("flex flex-col  items-center gap-8 py-6 text-center")}>

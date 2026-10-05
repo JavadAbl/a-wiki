@@ -107,9 +107,21 @@ model Course {
   isPublished        Boolean   @default(false)
   lecturer           String?
   lecturerProfession String?
+  favorite           FavoriteCourse?
 
   sections  Section[]
   documents Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Courses marked as popular ("دوره‌های پرطرفدار") by admins, shown on the home page
+model FavoriteCourse {
+  id       Int    @id() @default(autoincrement())
+  courseId Int    @unique()
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order    Int    @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

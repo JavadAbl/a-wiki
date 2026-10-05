@@ -143,13 +143,13 @@ export default function AdminCourse() {
     (a, b) => a.order - b.order,
   );
 
-  // Separate state for Title editing
-  const [titleValue, setTitleValue] = useState<string | undefined>(
-    course?.title,
+  // --- Inline editing state (title / lecturer / lecturerProfession) ---
+  type EditableCourseField = "title" | "lecturer" | "lecturerProfession";
+  const [editingField, setEditingField] = useState<EditableCourseField | null>(
+    null,
   );
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isLoadingCourseTitleUpdate, setIsLoadingCourseTitleUpdate] =
-    useState(false);
+  const [editValue, setEditValue] = useState("");
+  const [isLoadingCourseUpdate, setIsLoadingCourseUpdate] = useState(false);
 
   if (isLoading) {
     return (
@@ -250,28 +250,84 @@ export default function AdminCourse() {
     }
   };
 
-  // --- Title Handlers ---
-  const handleUpdateTitle = async () => {
-    setIsLoadingCourseTitleUpdate(true);
+  // --- Inline edit handlers (title / lecturer / lecturerProfession) ---
+  const handleUpdateCourseField = async (field: EditableCourseField) => {
+    setIsLoadingCourseUpdate(true);
     try {
       await muatateCourseUpdate({
         courseId: course.id,
-        body: { title: titleValue },
+        body: { [field]: editValue },
       }).unwrap();
 
-      console.log("Updating content title:", titleValue); // Placeholder
-      setIsEditingTitle(false);
+      setEditingField(null);
     } catch (error) {
-      console.error("Failed to update content title", error);
-      setTitleValue(course.title); // Revert to original on failure
+      console.error(`Failed to update course ${field}`, error);
     } finally {
-      setIsLoadingCourseTitleUpdate(false);
+      setIsLoadingCourseUpdate(false);
     }
   };
 
-  const handleRejectTitle = () => {
-    setTitleValue(course.title);
-    setIsEditingTitle(false);
+  const handleStartEdit = (field: EditableCourseField) => {
+    setEditValue(String(course[field] ?? ""));
+    setEditingField(field);
+  };
+
+  const handleRejectEdit = () => {
+    setEditingField(null);
+  };
+
+  const renderEditableField = (
+    field: EditableCourseField,
+    children: React.ReactNode,
+    editAriaLabel: string,
+    editTitle: string,
+  ) => {
+    if (editingField === field) {
+      return (
+        <div className="flex items-center gap-1 flex-1">
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="flex-1 h-7 text-xs bg-background border border-gray-300 rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+            autoFocus
+          />
+          <button
+            onClick={() => handleUpdateCourseField(field)}
+            className="text-green-600 hover:text-white hover:bg-green-600 transition-colors cursor-pointer rounded-md p-1 shrink-0"
+            aria-label={editAriaLabel}
+            title="تایید"
+            disabled={isLoadingCourseUpdate}
+          >
+            <Check size={14} />
+          </button>
+          <button
+            onClick={handleRejectEdit}
+            className="text-yellow-600 hover:text-white hover:bg-yellow-600 transition-colors cursor-pointer rounded-md p-1 shrink-0"
+            aria-label="Reject Changes"
+            title="رد تغییرات"
+            disabled={isLoadingCourseUpdate}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {children}
+        <button
+          onClick={() => handleStartEdit(field)}
+          className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer rounded-full p-1"
+          aria-label={editAriaLabel}
+          title={editTitle}
+          disabled={editingField !== null}
+        >
+          <Pencil size={14} />
+        </button>
+      </>
+    );
   };
 
   return (
@@ -394,52 +450,14 @@ export default function AdminCourse() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                {isEditingTitle ? (
-                  <div className="flex items-center gap-1 flex-1">
-                    <input
-                      type="text"
-                      value={titleValue}
-                      onChange={(e) => setTitleValue(e.target.value)}
-                      className="flex-1 h-7 text-xs bg-background border border-gray-300 rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleUpdateTitle}
-                      className="text-green-600 hover:text-white hover:bg-green-600 transition-colors cursor-pointer rounded-md p-1 shrink-0"
-                      aria-label="Accept Title"
-                      title="تایید"
-                      disabled={isLoading}
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      onClick={handleRejectTitle}
-                      className="text-yellow-600 hover:text-white hover:bg-yellow-600 transition-colors cursor-pointer rounded-md p-1 shrink-0"
-                      aria-label="Reject Title"
-                      title="رد تغییرات"
-                      disabled={isLoading}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ) : (
+                {renderEditableField(
+                  "title",
                   <h1 className="text-xl font-bold tracking-tight">
                     {course.title}
-                  </h1>
+                  </h1>,
+                  "Edit Title",
+                  "ویرایش عنوان",
                 )}
-
-                <button
-                  onClick={() => {
-                    setTitleValue(course.title);
-                    setIsEditingTitle(true);
-                  }}
-                  className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer rounded-full p-1"
-                  aria-label="Edit Title"
-                  title="ویرایش عنوان"
-                  disabled={isEditingTitle || isLoadingCourseTitleUpdate}
-                >
-                  <Pencil size={14} />
-                </button>
 
                 {course.isPublished ? (
                   <Badge
@@ -475,20 +493,28 @@ export default function AdminCourse() {
           </div>
 
           <div className="mt-0 flex items-center gap-4">
-            {course.lecturer && (
-              <div className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-sm font-medium">{course.lecturer}</span>
-              </div>
-            )}
-            {course.lecturerProfession && (
-              <div className="flex items-center gap-1.5">
-                <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
+              {renderEditableField(
+                "lecturer",
+                <span className="text-sm font-medium">
+                  {course.lecturer || "—"}
+                </span>,
+                "Edit Lecturer",
+                "ویرایش نام مدرس",
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+              {renderEditableField(
+                "lecturerProfession",
                 <span className="text-xs text-muted-foreground">
-                  {course.lecturerProfession}
-                </span>
-              </div>
-            )}
+                  {course.lecturerProfession || "—"}
+                </span>,
+                "Edit Lecturer Profession",
+                "ویرایش حرفه مدرس",
+              )}
+            </div>
           </div>
         </Card>
 

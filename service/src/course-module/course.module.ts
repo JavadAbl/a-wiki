@@ -6,6 +6,7 @@ import { ContentRepository } from './repositories/content.repository';
 import { DocumentRepository } from './repositories/document.repository';
 import { CategoryRepository } from './repositories/category.repository';
 import { FavoriteCourseRepository } from './repositories/favorite-course.repository';
+import { CourseRelatedCourseRepository } from './repositories/course-related-course.repository';
 import { CourseController } from './controllers/course.controller';
 import { CourseService } from './services/course.service';
 import { SectionService } from './services/section.service';
@@ -29,6 +30,7 @@ import { CourseServiceContract } from './contracts/course-service.contract';
     DocumentRepository,
     CategoryRepository,
     FavoriteCourseRepository,
+    CourseRelatedCourseRepository,
     PartViewRepository,
 
     CourseService,

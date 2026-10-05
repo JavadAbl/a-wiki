@@ -64,6 +64,8 @@ import type { SectionDto } from "../../../../features/course/dto/section.dto";
 import AdminCourseSectionItem from "./admin-course-section-item";
 import type { DocumentDto } from "../../../../features/course/dto/document.dto";
 import ThumbnailCreate from "./thumbnail-create";
+import CourseSetRelatedCourses from "./course-set-related-courses";
+import { Link2 } from "lucide-react";
 
 export default function AdminCourse() {
   const nav = useNavigate();
@@ -88,6 +90,7 @@ export default function AdminCourse() {
   const [isOpenContentCreate, setIsOpenContentCreate] = useState(false);
   const [isOpenDocumentCreate, setIsOpenDocumentCreate] = useState(false);
   const [isOpenThumbnailCreate, setIsOpenThumbnailCreate] = useState(false);
+  const [isOpenRelatedCourses, setIsOpenRelatedCourses] = useState(false);
 
   const [isOpenSectionDeleteConfirm, setIsOpenSectionDeleteConfirm] =
     useState(false);
@@ -378,6 +381,15 @@ export default function AdminCourse() {
         isOpen={isOpenThumbnailCreate}
         setIsOpen={(open: boolean) => {
           setIsOpenThumbnailCreate(open);
+          increaseModalsKey();
+        }}
+      />
+
+      <CourseSetRelatedCourses
+        key={`SetRelatedCourses_${modalKeys}`}
+        course={isOpenRelatedCourses ? course : null}
+        setIsOpen={(open: boolean) => {
+          setIsOpenRelatedCourses(open);
           increaseModalsKey();
         }}
       />
@@ -788,6 +800,54 @@ export default function AdminCourse() {
                   آپلود سند
                 </Button>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* بخش دوره‌های مرتبط */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                  <Link2 className="h-[18px] w-[18px] text-violet-600 dark:text-violet-400" />
+                </div>
+
+                <div>
+                  <CardTitle className="text-lg">دوره‌های مرتبط</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    دوره‌هایی که در صفحه این دوره به کاربر نشان داده می‌شوند
+                  </p>
+                </div>
+              </div>
+
+              <Button size="sm" onClick={() => setIsOpenRelatedCourses(true)} className="h-9">
+                <Plus className="h-4 w-4 mr-1.5" />
+                مدیریت
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {course?.relatedCourses?.length ? (
+              <div className="flex flex-wrap gap-2">
+                {course.relatedCourses.map((related) => (
+                  <div
+                    key={related.id}
+                    className="flex items-center gap-2 rounded-full border bg-muted/40 py-1 pl-1 pr-3"
+                  >
+                    <img
+                      src={related.thumbnailUrl ?? "/images/course-cover.webp"}
+                      alt={related.title}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                    <span className="text-sm max-w-60 truncate">{related.title}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                هنوز دوره مرتبطی ثبت نشده است
+              </p>
             )}
           </CardContent>
         </Card>

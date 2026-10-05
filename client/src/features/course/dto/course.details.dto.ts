@@ -1,5 +1,6 @@
 import type { DocumentDto } from "./document.dto";
 import type { SectionDto } from "./section.dto";
+import type { CourseDto } from "./course.dto";
 
 export interface CourseDetailsDto {
   id: number;
@@ -9,6 +10,7 @@ export interface CourseDetailsDto {
   isPublished: boolean;
   thumbnailUrl?: string | null;
   documents: DocumentDto[];
+  relatedCourses: CourseDto[];
   sections: SectionDto[];
   lecturer?: string | null;
   lecturerProfession?: string | null;

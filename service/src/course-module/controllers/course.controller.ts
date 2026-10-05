@@ -20,6 +20,7 @@ import { CourseService } from '../services/course.service';
 import { CourseDto } from '../dto/response/course.dto';
 import { CourseSetPublishedDto } from '../dto/request/course-set-published.dto';
 import { CourseSetFavoriteDto } from '../dto/request/course-set-favorite.dto';
+import { CourseSetRelatedCoursesDto } from '../dto/request/course-set-related-courses.dto';
 import { CourseCreateDto } from '../dto/request/course-create.dto';
 import { CourseDetailsDto } from '../dto/response/course-details.dto';
 import { CourseSetDescriptionDto } from '../dto/request/course-set-description.dto';
@@ -90,6 +91,15 @@ export class CourseController {
     @Body() payload: CourseSetFavoriteDto,
   ): Promise<void> {
     return this.courseService.courseSetFavorite(id, payload);
+  }
+
+  @Admin()
+  @Patch(':courseId/SetRelatedCourses')
+  courseSetRelatedCourses(
+    @Param('courseId', ParseIntPipe) id: number,
+    @Body() payload: CourseSetRelatedCoursesDto,
+  ): Promise<void> {
+    return this.courseService.courseSetRelatedCourses(id, payload);
   }
 
   @Get(':courseId')

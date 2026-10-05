@@ -3,7 +3,7 @@ import { useCourseGetByIdQuery } from "../../../features/course/course-api";
 import { useParams } from "react-router";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { BookOpen } from "lucide-react";
-import CourseBrowserSectionList from "./components/course-browser-section-list";
+import CourseBrowserRelatedCourses from "./components/course-browser-related-courses";
 import CourseBrowserDocuments from "./components/course-browser-documents.tsx";
 import CourseBrowserPlayer from "./components/course-browser-player.tsx";
 import CourseBrowserParts from "./components/course-browser-parts.tsx";
@@ -34,13 +34,6 @@ export default function CourseBrowser() {
       const run = () => {
         document.title = course.title;
         dis(courseActions.setCourseBrowserSelectedCourse({ course }));
-        if (course?.sections.length) {
-          dis(
-            courseActions.setCourseBrowserSelectedSection({
-              section: course.sections[0],
-            }),
-          );
-        }
       };
       run();
     }
@@ -113,7 +106,7 @@ export default function CourseBrowser() {
           </div>
 
           <div className={cn("w-full lg:w-[300px] lg:flex-shrink-0")}>
-            <CourseBrowserSectionList course={course} />
+            <CourseBrowserRelatedCourses />
           </div>
         </div>
 

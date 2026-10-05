@@ -154,6 +154,18 @@ export const courseApi = createApi({
       invalidatesTags: ["course", "favoriteCourse"],
     }),
 
+    CourseSetRelatedCourses: builder.mutation<
+      void,
+      { body: { relatedCourseIds: number[] }; courseId: number }
+    >({
+      query: ({ body, courseId }) => ({
+        url: `Courses/${courseId}/SetRelatedCourses`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["course"],
+    }),
+
     //Section-------------------------------------------------------
     SectionCreate: builder.mutation<
       number,
@@ -525,6 +537,7 @@ export const {
   useContentCreateManyMutation,
   useCoursesGetManyFavoritesQuery,
   useCourseSetFavoriteMutation,
+  useCourseSetRelatedCoursesMutation,
 } = courseApi;
 
 const executeUploadRequest = (

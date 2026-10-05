@@ -2,26 +2,33 @@ import { Separator } from "#components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#components/ui/tabs";
 import { cn } from "#lib/utils";
 import {
-  ChevronLeftIcon,
   Clock,
   FileMusicIcon,
   FileVideo2Icon,
   SquarePlayIcon,
   VideoIcon,
-  Volume1Icon,
   Volume2Icon,
 } from "lucide-react";
-import { useEffect, useState, Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { courseActions } from "../../../../features/course/course-slice";
 import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
 import { formatSeconds } from "../../../../utils/app-utils";
+import type { ContentDto } from "../../../../features/course/dto/content.dto";
+import type { PartDto } from "../../../../features/course/dto/part.dto";
+import type { SectionDto } from "../../../../features/course/dto/section.dto";
 
 // --- Content Item Component ---
 // Extracted to keep the main component clean and reusable
-function ContentItem({ content, part, selectedContent, dis }: any) {
-  const isSelected = selectedContent === content;
-  // Preserve the original syllabus numbering regardless of the active tab
-  const originalIndex = part.contents.indexOf(content);
+function ContentItem({
+  content,
+  selectedContent,
+  dis,
+}: {
+  content: ContentDto;
+  selectedContent: ContentDto | null;
+  dis: ReturnType<typeof useAppDispatch>;
+}) {
+  const isSelected = selectedContent?.id === content.id;
 
   return (
     <Fragment key={content.id || content.title}>
@@ -37,17 +44,6 @@ function ContentItem({ content, part, selectedContent, dis }: any) {
           setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
         }}
       >
-        {/*   <span
-          className={cn(
-            "w-6 h-6 flex items-center justify-center rounded-full text-xs transition-colors shrink-0",
-            isSelected
-              ? "bg-blue-100 text-blue-700"
-              : "bg-gray-100 text-gray-600",
-          )}
-        >
-          {originalIndex + 1}
-        </span> */}
-
         <div className="flex items-center gap-1 text-sm grow">
           {content.mediaType === "Video" && <VideoIcon size={16} />}
           {content.mediaType === "Audio" && <Volume2Icon size={16} />}
@@ -69,113 +65,113 @@ function ContentItem({ content, part, selectedContent, dis }: any) {
   );
 }
 
-// --- Part Accordion Component ---
-function PartAccordion({
+// --- Part Contents (video/audio split inside one part) ---
+function PartContents({
   part,
-  index,
-  isOpen,
-  handleToggle,
   selectedContent,
   dis,
-}: any) {
-  // Categorize contents by mediaType
+}: {
+  part: PartDto;
+  selectedContent: ContentDto | null;
+  dis: ReturnType<typeof useAppDispatch>;
+}) {
   const videoContents =
-    part.contents?.filter((c: any) => c.mediaType === "Video") || [];
+    part.contents?.filter((c) => c.mediaType === "Video") || [];
   const audioContents =
-    part.contents?.filter((c: any) => c.mediaType === "Audio") || [];
+    part.contents?.filter((c) => c.mediaType === "Audio") || [];
 
   const hasVideos = videoContents.length > 0;
   const hasAudios = audioContents.length > 0;
 
-  // Default active tab based on available content
   const [activeTab, setActiveTab] = useState<"video" | "audio">(
     hasVideos ? "video" : "audio",
   );
 
-  // Fallback to an available tab if the current one becomes empty dynamically
   useEffect(() => {
     if (!hasVideos && activeTab === "video" && hasAudios) setActiveTab("audio");
     if (!hasAudios && activeTab === "audio" && hasVideos) setActiveTab("video");
   }, [hasVideos, hasAudios, activeTab]);
 
   return (
-    <div className="border border-gray-100 bg-primary-500/5 text-content-primary mb-2 rounded-lg overflow-hidden">
-      {/* Header */}
-      <div
-        onClick={() => handleToggle(index)}
-        className={cn(
-          "flex justify-between items-center p-[12px_12px] cursor-pointer hover:bg-primary-500/25 transition-colors",
-        )}
-      >
-        <span className="flex items-center gap-2 font-medium">
-          <ChevronLeftIcon
-            className={cn(
-              "w-5 h-5 transition-transform duration-300",
-              isOpen && "-rotate-90",
-            )}
-          />
-          {part.title}
-        </span>
-        <span className="text-sm text-gray-500">
-          {`${part.contents.length} قسمت`}
-        </span>
-      </div>
+    <div className="p-2">
+      {hasVideos && hasAudios && (
+        <Tabs
+          value={activeTab}
+          onValueChange={(val) => setActiveTab(val as "video" | "audio")}
+          className="mb-2"
+        >
+          <TabsList variant="line" className="w-full">
+            <TabsTrigger value="video" className="flex-1 gap-2">
+              <FileVideo2Icon size={16} /> ویدیوها ({videoContents.length})
+            </TabsTrigger>
+            <TabsTrigger value="audio" className="flex-1 gap-2">
+              <FileMusicIcon size={16} /> صوتی‌ها ({audioContents.length})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
-      {/* Content */}
-      {isOpen && (
-        <div className="bg-white border-t border-gray-100 p-2">
-          {/* Nested Tabs (Only rendered if BOTH Video and Audio exist) */}
-          {hasVideos && hasAudios && (
-            <Tabs
-              value={activeTab}
-              onValueChange={(val) => setActiveTab(val as "video" | "audio")}
-              className="mb-2"
-            >
-              <TabsList variant="line" className="w-full">
-                <TabsTrigger value="video" className="flex-1 gap-2">
-                  <FileVideo2Icon size={16} /> ویدیوها ({videoContents.length})
-                </TabsTrigger>
-                <TabsTrigger value="audio" className="flex-1 gap-2">
-                  <FileMusicIcon size={16} /> صوتی‌ها ({audioContents.length})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
+      {((hasVideos && hasAudios && activeTab === "video") ||
+        (hasVideos && !hasAudios)) && (
+        <div>
+          {videoContents.map((content) => (
+            <ContentItem
+              key={content.id || content.title}
+              content={content}
+              selectedContent={selectedContent}
+              dis={dis}
+            />
+          ))}
+        </div>
+      )}
 
-          {/* Video List */}
-          {((hasVideos && hasAudios && activeTab === "video") ||
-            (hasVideos && !hasAudios)) && (
-            <div>
-              {videoContents.map((content: any) => (
-                <ContentItem
-                  key={content.id || content.title}
-                  content={content}
-                  part={part}
-                  selectedContent={selectedContent}
-                  dis={dis}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Audio List */}
-          {((hasVideos && hasAudios && activeTab === "audio") ||
-            (!hasVideos && hasAudios)) && (
-            <div>
-              {audioContents.map((content: any) => (
-                <ContentItem
-                  key={content.id || content.title}
-                  content={content}
-                  part={part}
-                  selectedContent={selectedContent}
-                  dis={dis}
-                />
-              ))}
-            </div>
-          )}
+      {((hasVideos && hasAudios && activeTab === "audio") ||
+        (!hasVideos && hasAudios)) && (
+        <div>
+          {audioContents.map((content) => (
+            <ContentItem
+              key={content.id || content.title}
+              content={content}
+              selectedContent={selectedContent}
+              dis={dis}
+            />
+          ))}
         </div>
       )}
     </div>
+  );
+}
+
+// --- Pill button used for the section/part tab levels ---
+function PillButton({
+  active,
+  onClick,
+  children,
+  level,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  level: "section" | "part";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "cursor-pointer rounded-full border transition-colors whitespace-nowrap",
+        level === "section"
+          ? "px-4 py-1.5 text-sm font-medium"
+          : "px-3 py-1 text-xs",
+        active
+          ? level === "section"
+            ? "border-transparent bg-primary-500 text-white"
+            : "border-primary-500/40 bg-primary-500/10 text-primary-600"
+          : "border-neutral-200 bg-white text-content-secondary hover:border-primary-500/40 hover:text-primary-600",
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -183,29 +179,46 @@ function PartAccordion({
 export default function CourseBrowserParts() {
   const dis = useAppDispatch();
   const {
-    courseBrowserSelectedSection: selectedSection,
     courseBrowserSelectedCourse: selectedCourse,
     courseBrowserSelectedContent: selectedContent,
   } = useAppSelector((s) => s.course);
 
-  const [openParts, setOpenParts] = useState<number[]>([]);
+  const sections: SectionDto[] = selectedCourse?.sections ?? [];
+
+  const [activeSectionId, setActiveSectionId] = useState<number | null>(null);
+  const [activePartId, setActivePartId] = useState<number | null>(null);
+
+  // Keep selection valid when course data changes
+  useEffect(() => {
+    if (sections.length === 0) {
+      setActiveSectionId(null);
+      setActivePartId(null);
+      return;
+    }
+    if (!sections.some((s) => s.id === activeSectionId)) {
+      setActiveSectionId(sections[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sections]);
+
+  const activeSection: SectionDto | null =
+    sections.find((s) => s.id === activeSectionId) ?? sections[0] ?? null;
+
+  const parts: PartDto[] = activeSection?.parts ?? [];
 
   useEffect(() => {
-    if (selectedSection?.parts?.length) {
-      setOpenParts(selectedSection.parts.map((_, index) => index));
-    } else {
-      setOpenParts([]);
+    if (parts.length === 0) {
+      setActivePartId(null);
+      return;
     }
-  }, [selectedSection]);
+    if (!parts.some((p) => p.id === activePartId)) {
+      setActivePartId(parts[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parts]);
 
-  const handleToggle = (index: number) => {
-    const isOpen = openParts.includes(index);
-    if (isOpen) {
-      setOpenParts((prev) => prev.filter((i) => i !== index));
-    } else {
-      setOpenParts((prev) => [...prev, index]);
-    }
-  };
+  const activePart: PartDto | null =
+    parts.find((p) => p.id === activePartId) ?? parts[0] ?? null;
 
   return (
     <div
@@ -214,11 +227,11 @@ export default function CourseBrowserParts() {
         "bg-surface-100 rounded-[20px] px-[8px] pt-[8px] pb-[12px]",
       )}
     >
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue="syllabus">
         <TabsList variant="line">
-          <TabsTrigger value="parts">
+          <TabsTrigger value="syllabus">
             <SquarePlayIcon />
-            {"انتخاب بخش ها"}
+            {"سرفصل های دوره"}
           </TabsTrigger>
 
           <TabsTrigger value="about">
@@ -243,23 +256,62 @@ export default function CourseBrowserParts() {
 
         <Separator />
 
-        <TabsContent value="parts">
-          <div className="p-4">
-            {selectedSection?.parts?.map((part, index) => {
-              const isOpen = openParts.includes(index);
-              return (
-                <PartAccordion
-                  key={index}
-                  part={part}
-                  index={index}
-                  isOpen={isOpen}
-                  handleToggle={handleToggle}
-                  selectedContent={selectedContent}
-                  dis={dis}
-                />
-              );
-            })}
-          </div>
+        <TabsContent value="syllabus">
+          {sections.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center text-content-tertiary">
+              <SquarePlayIcon className="size-10 mb-2 opacity-50" />
+              <span className="text-sm">
+                هیچ سرفصلی برای این دوره ثبت نشده است.
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 p-2">
+              {/* Level 1: Sections */}
+              <div className="flex flex-wrap items-center gap-2">
+                {sections.map((section) => (
+                  <PillButton
+                    key={section.id}
+                    level="section"
+                    active={section.id === activeSection?.id}
+                    onClick={() => setActiveSectionId(section.id)}
+                  >
+                    {section.title}
+                  </PillButton>
+                ))}
+              </div>
+
+              {/* Level 2: Parts of the active section */}
+              {parts.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-xl bg-neutral-50 border border-neutral-100 p-2">
+                  {parts.map((part) => (
+                    <PillButton
+                      key={part.id}
+                      level="part"
+                      active={part.id === activePart?.id}
+                      onClick={() => setActivePartId(part.id)}
+                    >
+                      {part.title}
+                    </PillButton>
+                  ))}
+                </div>
+              )}
+
+              {/* Level 3: Contents of the active part */}
+              <div className="rounded-xl border border-neutral-100 bg-white">
+                {activePart ? (
+                  <PartContents
+                    part={activePart}
+                    selectedContent={selectedContent}
+                    dis={dis}
+                  />
+                ) : (
+                  <div className="py-8 text-center text-sm text-content-tertiary">
+                    هیچ بخشی برای این فصل ثبت نشده است.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="about">

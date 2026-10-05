@@ -5,6 +5,8 @@ import { CategoryRepository } from '../repositories/category.repository';
 import { CourseSetPublishedDto } from '../dto/request/course-set-published.dto';
 import { CourseSetFavoriteDto } from '../dto/request/course-set-favorite.dto';
 import { FavoriteCourseRepository } from '../repositories/favorite-course.repository';
+import { CourseRelatedCourseRepository } from '../repositories/course-related-course.repository';
+import { CourseSetRelatedCoursesDto } from '../dto/request/course-set-related-courses.dto';
 import { CourseDto } from '../dto/response/course.dto';
 import { GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -28,6 +30,7 @@ export class CourseService {
     private readonly courseRep: CourseRepository,
     private readonly categoryRep: CategoryRepository,
     private readonly favoriteCourseRep: FavoriteCourseRepository,
+    private readonly courseRelatedCourseRep: CourseRelatedCourseRepository,
     private readonly s3Provider: S3Provider,
   ) {}
 
@@ -54,6 +57,13 @@ export class CourseService {
       'id',
       id,
     );
+
+    // The generic Repository typing can't represent the include payload; fetch relations via the delegate directly
+    const relatedCourseRows = await prisma.courseRelatedCourse.findMany({
+      where: { courseId: id },
+      orderBy: { relatedCourseId: 'asc' },
+      include: { relatedCourse: true },
+    });
 
     // 2. Course-level aggregates
     const courseAgg = await prisma.content.aggregate({
@@ -100,6 +110,58 @@ export class CourseService {
       documents.push({ ...doc, fileUrl: publicDocumentUrl });
     }
 
+    // 4.1 Related courses: sign thumbnails + compute content totals
+    const relatedCourses = relatedCourseRows.map((r) => r.relatedCourse);
+
+    let relatedAggregates: Array<{ courseId: number; totalContents: bigint; totalContentsLength: bigint }> = [];
+    if (relatedCourses.length > 0) {
+      relatedAggregates = await prisma.$queryRaw<
+        Array<{ courseId: number; totalContents: bigint; totalContentsLength: bigint }>
+      >`
+      SELECT
+        c."id" as "courseId",
+        COUNT(ct."id") as "totalContents",
+        COALESCE(SUM(ct."durationSeconds"), 0) as "totalContentsLength"
+      FROM "Course" c
+      LEFT JOIN "Section" s ON s."courseId" = c."id"
+      LEFT JOIN "Part" p ON p."sectionId" = s."id"
+      LEFT JOIN "Content" ct ON ct."partId" = p."id"
+      WHERE c."id" IN (${Prisma.join(relatedCourses.map((c) => c.id))})
+      GROUP BY c."id"
+    `;
+    }
+
+    const relatedAggregateMap = new Map(
+      relatedAggregates.map((a) => [
+        a.courseId,
+        { totalContents: Number(a.totalContents), totalContentsLength: Number(a.totalContentsLength) },
+      ]),
+    );
+
+    const relatedCourseDtos: CourseDto[] = [];
+    for (const related of relatedCourses) {
+      const publicRelatedThumbnailUrl = related.thumbnailUrl
+        ? await this.s3Provider.getSignedUrlByKey(related.thumbnailUrl, 86400)
+        : null;
+      relatedCourseDtos.push(
+        plainToInstance(
+          CourseDto,
+          {
+            id: related.id,
+            title: related.title,
+            description: related.description,
+            categoryId: related.categoryId,
+            isPublished: related.isPublished,
+            thumbnailUrl: publicRelatedThumbnailUrl,
+            lecturer: related.lecturer,
+            lecturerProfession: related.lecturerProfession,
+            ...(relatedAggregateMap.get(related.id) ?? { totalContents: 0, totalContentsLength: 0 }),
+          },
+          { excludeExtraneousValues: true },
+        ),
+      );
+    }
+
     // 5. Build DTO
     const dto: CourseDetailsDto = {
       id: course.id,
@@ -111,6 +173,7 @@ export class CourseService {
       lecturer: course.lecturer,
       lecturerProfession: course.lecturerProfession,
       documents,
+      relatedCourses: relatedCourseDtos,
       totalContents: courseAgg._count._all,
       totalContentsLength: courseAgg._sum.durationSeconds ?? 0,
       sections: course.sections.map((s) => {
@@ -275,6 +338,32 @@ export class CourseService {
         limitFn(() => this.courseToDto(favorite.course, aggregateMap.get(favorite.courseId))),
       ),
     );
+  }
+
+  async courseSetRelatedCourses(courseId: number, payload: CourseSetRelatedCoursesDto): Promise<void> {
+    const { relatedCourseIds } = payload;
+
+    await this.courseRep.findAndCheckExistsBy({ where: { id: courseId } }, 'id', courseId);
+
+    if (relatedCourseIds.includes(courseId)) {
+      throw new BadRequestException('Course cannot be related to itself');
+    }
+
+    const uniqueIds = [...new Set(relatedCourseIds)];
+    if (uniqueIds.length > 0) {
+      const found = await this.courseRep.count({ where: { id: { in: uniqueIds } } });
+      if (found !== uniqueIds.length) {
+        throw new BadRequestException('One or more related courses not found');
+      }
+    }
+
+    const prisma = this.courseRep.prismaClient;
+    await prisma.$transaction([
+      prisma.courseRelatedCourse.deleteMany({ where: { courseId } }),
+      ...uniqueIds.map((relatedCourseId) =>
+        prisma.courseRelatedCourse.create({ data: { courseId, relatedCourseId } }),
+      ),
+    ]);
   }
 
   async courseSetFavorite(courseId: number, payload: CourseSetFavoriteDto): Promise<void> {

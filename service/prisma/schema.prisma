@@ -109,11 +109,27 @@ model Course {
   lecturerProfession String?
   favorite           FavoriteCourse?
 
+  relatedCourses    CourseRelatedCourse[] @relation("courseRelatedCourses")
+  relatedToCourses  CourseRelatedCourse[] @relation("relatedToCourses")
+
   sections  Section[]
   documents Document[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Join table: related courses ("دوره‌های مرتبط") set by admins, shown on the course page
+model CourseRelatedCourse {
+  courseId        Int
+  relatedCourseId Int
+  course          Course @relation("courseRelatedCourses", fields: [courseId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  relatedCourse   Course @relation("relatedToCourses", fields: [relatedCourseId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([courseId, relatedCourseId])
 }
 
 /// Courses marked as popular ("دوره‌های پرطرفدار") by admins, shown on the home page

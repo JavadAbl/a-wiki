@@ -1,6 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
 import { DocumentDto } from './document.dto';
 import { SectionDto } from './section.dto';
+import { CourseDto } from './course.dto';
 
 @Exclude()
 export class CourseDetailsDto {
@@ -24,6 +25,9 @@ export class CourseDetailsDto {
 
   @Expose()
   documents: DocumentDto[];
+
+  @Expose()
+  relatedCourses: CourseDto[];
 
   @Expose()
   sections: SectionDto[];

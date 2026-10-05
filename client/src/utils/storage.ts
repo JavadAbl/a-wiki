@@ -2,6 +2,46 @@ class Storage {
   private themeKey = "theme";
   private accessTokenKey = "accessToken";
   private refreshTokenKey = "refreshToken";
+  private sidebarStateKey = "sidebarCollapsed";
+
+  // --- persistent preferences: localStorage ---
+  getTheme() {
+    return localStorage.getItem(this.themeKey);
+  }
+  setTheme(theme: string) {
+    localStorage.setItem(this.themeKey, theme);
+  }
+  getSidebarCollapsed(): boolean {
+    const value = localStorage.getItem(this.sidebarStateKey);
+    return value ? JSON.parse(value) : false;
+  }
+  setSidebarCollapsed(isCollapsed: boolean) {
+    localStorage.setItem(this.sidebarStateKey, JSON.stringify(isCollapsed));
+  }
+
+  // --- session-scoped tokens: sessionStorage ---
+  setTokens(accessToken: string, refreshToken: string) {
+    sessionStorage.setItem(this.accessTokenKey, accessToken);
+    sessionStorage.setItem(this.refreshTokenKey, refreshToken);
+  }
+  clearTokens() {
+    sessionStorage.removeItem(this.accessTokenKey);
+    sessionStorage.removeItem(this.refreshTokenKey);
+  }
+  getAccessToken() {
+    return sessionStorage.getItem(this.accessTokenKey);
+  }
+  getRefreshToken() {
+    return sessionStorage.getItem(this.refreshTokenKey);
+  }
+}
+
+export const storage = new Storage();
+
+/* class Storage {
+  private themeKey = "theme";
+  private accessTokenKey = "accessToken";
+  private refreshTokenKey = "refreshToken";
   private sidebarStateKey = "sidebarCollapsed"; // New key
 
   getTheme() {
@@ -41,3 +81,4 @@ class Storage {
 }
 
 export const storage = new Storage();
+ */

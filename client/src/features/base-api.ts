@@ -15,6 +15,14 @@ import { refreshAccessToken } from "../utils/refresh-token";
 // export const BASE_ADDRESS = "/api/";
 export const BASE_ADDRESS = "http://localhost:3000/api/";
 
+export const apiOrigin = BASE_ADDRESS.replace(/api\/?$/, "").replace(/\/+$/, "");
+
+export const toAbsoluteAssetUrl = (path: string | null | undefined) => {
+  if (!path) return null;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${apiOrigin}${cleanPath}`;
+};
+
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: BASE_ADDRESS,
   prepareHeaders: (headers, { getState }) => {

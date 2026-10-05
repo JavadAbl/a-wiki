@@ -13,10 +13,18 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AdminGuard } from './common/guards/admin.guard';
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({ rootPath: join(process.cwd(), 'client') }),
+    // The /static mount must be registered before the SPA client root:
+    // the client config registers a catch-all GET route that serves index.html,
+    // which would otherwise intercept /static/* requests and return HTML
+    // for image files (blocked by browsers via ORB).
+    ServeStaticModule.forRoot(
+      { rootPath: join(process.cwd(), 'static'), serveRoot: '/static' },
+      { rootPath: join(process.cwd(), 'client') },
+    ),
 
     ConfigModule.forRoot({
       isGlobal: true,
@@ -38,6 +46,7 @@ import { AppController } from './app.controller';
   ],
   controllers: [AppController],
   providers: [
+    AppService,
     { provide: APP_GUARD, useClass: AuthenticationGuard },
     { provide: APP_GUARD, useClass: AdminGuard },
     /*   { provide: APP_GUARD, useClass: AuthorizationGuard }, */

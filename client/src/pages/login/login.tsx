@@ -72,7 +72,7 @@ export default function Login({ isOpen, setIsOpen, redirect }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="">کدملی</FieldLabel>
+                  <FieldLabel htmlFor="">نام کاربری</FieldLabel>
                   <FormInput
                     {...field}
                     onChange={(e) =>

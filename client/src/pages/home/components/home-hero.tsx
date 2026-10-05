@@ -1,15 +1,22 @@
 import { Button } from "#components/ui/button";
-import { Card, CardContent } from "#components/ui/card";
+import { CardContent } from "#components/ui/card";
 import { cn } from "#lib/utils";
 import { useNavigate } from "react-router";
-import { useDashboardHeroDataQuery } from "../../../features/shared/shared-api";
+import {
+  useDashboardHeroDataQuery,
+  useHeroImageURLQuery,
+} from "../../../features/shared/shared-api";
+import { toAbsoluteAssetUrl } from "../../../features/base-api";
 
 export default function HomeHero() {
   const nav = useNavigate();
 
   const { data } = useDashboardHeroDataQuery();
+  const { data: heroImageData } = useHeroImageURLQuery();
 
   if (!data) return null;
+
+  const heroUrl = toAbsoluteAssetUrl(heroImageData?.url) ?? "/images/hero.webp";
 
   const stats = [
     { value: 1000, label: "کاربر فعال" },
@@ -19,19 +26,27 @@ export default function HomeHero() {
 
   const actions = [
     {
-      label: "شروع یادگیری",
+      label: "مشاهده دوره‌ها",
       variant: "primary",
       onClick: () => nav("/Courses"),
     },
-    {
+    /*  {
       label: "مشاهده دوره‌ها",
       variant: "glass",
       onClick: () => nav("/Courses"),
-    },
+    }, */
   ] as const;
 
   return (
-    <section className="relative min-h-180 w-full overflow-hidden bg-[linear-gradient(270deg,rgba(11,79,74,0.6)_16.81%,rgba(15,23,43,0.9)_73.25%),url('/images/hero.webp')] bg-center bg-cover ">
+    <section
+      className="relative min-h-180 w-full overflow-hidden bg-center bg-cover"
+      style={{
+        backgroundImage: `url('${heroUrl}')`,
+      }}
+      /*  style={{
+        backgroundImage: `linear-gradient(270deg, rgba(11,79,74,0.6) 16.81%, rgba(15,23,43,0.9) 73.25%), url('${heroUrl}')`,
+      }} */
+    >
       {/*    <div aria-hidden="true" className="absolute inset-0 " />
 
       <div

@@ -5,6 +5,7 @@ import {
   BookOpen,
   ChartBarIncreasingIcon,
   LogOut, // Changed from ChevronRightIcon for better UX
+  Settings,
   Users,
 } from "lucide-react";
 import { cn } from "#lib/utils";
@@ -72,6 +73,21 @@ export function AdminSidebar() {
             >
               <Users size={18} />
               <span>کاربران</span>{" "}
+            </Button>
+          )}
+        </NavLink>
+
+        <NavLink to="/Admin/Settings" className={getNavLinkClass}>
+          {({ isActive }) => (
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2",
+                isActive && "bg-transparent hover:bg-transparent",
+              )}
+            >
+              <Settings size={18} />
+              <span>تنظیمات</span>{" "}
             </Button>
           )}
         </NavLink>

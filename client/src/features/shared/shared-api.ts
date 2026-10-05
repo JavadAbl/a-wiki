@@ -4,7 +4,7 @@ import { baseApi } from "../base-api";
 export const sharedApi = createApi({
   reducerPath: "sharedApi",
   baseQuery: baseApi,
-  tagTypes: [],
+  tagTypes: ["HeroImageURL"],
 
   endpoints: (builder) => ({
     DashboardHeroData: builder.query<
@@ -19,7 +19,25 @@ export const sharedApi = createApi({
         url: "DashboardHeroData",
       }),
     }),
+    HeroImageURL: builder.query<{ url: string | null }, void>({
+      query: () => ({
+        url: "HeroImageURL",
+      }),
+      providesTags: ["HeroImageURL"],
+    }),
+    HeroImageUpdate: builder.mutation<void, { body: FormData }>({
+      query: ({ body }) => ({
+        url: "HeroImage",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["HeroImageURL"],
+    }),
   }),
 });
 
-export const { useDashboardHeroDataQuery } = sharedApi;
+export const {
+  useDashboardHeroDataQuery,
+  useHeroImageURLQuery,
+  useHeroImageUpdateMutation,
+} = sharedApi;

@@ -5,6 +5,8 @@
 /client
 
 /files
+/static/images/*
+!/static/images/.gitkeep
 *.db
 *.zip
 

@@ -16,6 +16,12 @@ import { formatSeconds } from "../../../../utils/app-utils";
 import type { ContentDto } from "../../../../features/course/dto/content.dto";
 import type { PartDto } from "../../../../features/course/dto/part.dto";
 import type { SectionDto } from "../../../../features/course/dto/section.dto";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "#components/ui/accordion";
 
 // --- Content Item Component ---
 // Extracted to keep the main component clean and reusable
@@ -178,6 +184,7 @@ function PillButton({
 // --- Main Component ---
 export default function CourseBrowserParts() {
   const dis = useAppDispatch();
+
   const {
     courseBrowserSelectedCourse: selectedCourse,
     courseBrowserSelectedContent: selectedContent,
@@ -185,53 +192,16 @@ export default function CourseBrowserParts() {
 
   const sections: SectionDto[] = selectedCourse?.sections ?? [];
 
-  const [activeSectionId, setActiveSectionId] = useState<number | null>(null);
-  const [activePartId, setActivePartId] = useState<number | null>(null);
-
-  // Keep selection valid when course data changes
-  useEffect(() => {
-    if (sections.length === 0) {
-      setActiveSectionId(null);
-      setActivePartId(null);
-      return;
-    }
-    if (!sections.some((s) => s.id === activeSectionId)) {
-      setActiveSectionId(sections[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sections]);
-
-  const activeSection: SectionDto | null =
-    sections.find((s) => s.id === activeSectionId) ?? sections[0] ?? null;
-
-  const parts: PartDto[] = activeSection?.parts ?? [];
-
-  useEffect(() => {
-    if (parts.length === 0) {
-      setActivePartId(null);
-      return;
-    }
-    if (!parts.some((p) => p.id === activePartId)) {
-      setActivePartId(parts[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parts]);
-
-  const activePart: PartDto | null =
-    parts.find((p) => p.id === activePartId) ?? parts[0] ?? null;
-
   return (
     <div
       id="parts"
-      className={cn(
-        "bg-surface-100 rounded-[20px] px-[8px] pt-[8px] pb-[12px]",
-      )}
+      className="bg-surface-100 rounded-[20px] px-[8px] pt-[8px] pb-[12px]"
     >
       <Tabs defaultValue="syllabus">
         <TabsList variant="line">
           <TabsTrigger value="syllabus">
             <SquarePlayIcon />
-            {"سرفصل های دوره"}
+            سرفصل‌های دوره
           </TabsTrigger>
 
           <TabsTrigger value="about">
@@ -245,12 +215,12 @@ export default function CourseBrowserParts() {
               <path
                 d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
                 stroke="#4A5565"
-                strokeWidth="2" // Fixed React camelCase warning
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
-            {"درباره دوره"}
+            درباره دوره
           </TabsTrigger>
         </TabsList>
 
@@ -260,56 +230,71 @@ export default function CourseBrowserParts() {
           {sections.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center text-content-tertiary">
               <SquarePlayIcon className="size-10 mb-2 opacity-50" />
+
               <span className="text-sm">
                 هیچ سرفصلی برای این دوره ثبت نشده است.
               </span>
             </div>
           ) : (
-            <div className="flex flex-col gap-3 p-2">
-              {/* Level 1: Sections */}
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="p-2">
+              <Accordion type="multiple" className="w-full">
                 {sections.map((section) => (
-                  <PillButton
+                  <AccordionItem
                     key={section.id}
-                    level="section"
-                    active={section.id === activeSection?.id}
-                    onClick={() => setActiveSectionId(section.id)}
+                    value={`section-${section.id}`}
+                    className="border-b border-neutral-200 last:border-0"
                   >
-                    {section.title}
-                  </PillButton>
+                    <AccordionTrigger className="px-3 hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <SquarePlayIcon className="size-4 text-primary-500" />
+
+                        <span className="font-medium">{section.title}</span>
+                      </div>
+                    </AccordionTrigger>
+
+                    <AccordionContent className="px-2 pb-3">
+                      {section.parts?.length ? (
+                        <Accordion
+                          type="multiple"
+                          className="rounded-xl border border-neutral-200 bg-neutral-50"
+                        >
+                          {section.parts.map((part) => (
+                            <AccordionItem
+                              key={part.id}
+                              value={`part-${part.id}`}
+                              className="px-2 border-neutral-200 last:border-0"
+                            >
+                              <AccordionTrigger className="px-2 hover:no-underline">
+                                <div className="flex items-center gap-2">
+                                  <VideoIcon className="size-4 text-content-secondary" />
+
+                                  <span className="text-sm font-medium">
+                                    {part.title}
+                                  </span>
+                                </div>
+                              </AccordionTrigger>
+
+                              <AccordionContent className="px-0 pb-2">
+                                <div className="rounded-lg border border-neutral-100 bg-white">
+                                  <PartContents
+                                    part={part}
+                                    selectedContent={selectedContent}
+                                    dis={dis}
+                                  />
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      ) : (
+                        <div className="py-4 text-center text-sm text-content-tertiary">
+                          هیچ بخشی برای این سرفصل ثبت نشده است.
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
-
-              {/* Level 2: Parts of the active section */}
-              {parts.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 rounded-xl bg-neutral-50 border border-neutral-100 p-2">
-                  {parts.map((part) => (
-                    <PillButton
-                      key={part.id}
-                      level="part"
-                      active={part.id === activePart?.id}
-                      onClick={() => setActivePartId(part.id)}
-                    >
-                      {part.title}
-                    </PillButton>
-                  ))}
-                </div>
-              )}
-
-              {/* Level 3: Contents of the active part */}
-              <div className="rounded-xl border border-neutral-100 bg-white">
-                {activePart ? (
-                  <PartContents
-                    part={activePart}
-                    selectedContent={selectedContent}
-                    dis={dis}
-                  />
-                ) : (
-                  <div className="py-8 text-center text-sm text-content-tertiary">
-                    هیچ بخشی برای این فصل ثبت نشده است.
-                  </div>
-                )}
-              </div>
+              </Accordion>
             </div>
           )}
         </TabsContent>
@@ -319,10 +304,12 @@ export default function CourseBrowserParts() {
             <span className="text-gray-600 leading-relaxed">
               {selectedCourse?.description}
             </span>
+
             <div className="flex flex-col gap-1 mt-2">
               <span className="font-semibold text-gray-900">
                 {selectedCourse?.lecturer}
               </span>
+
               <span className="text-sm text-gray-500 italic">
                 {selectedCourse?.lecturerProfession}
               </span>

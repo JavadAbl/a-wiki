@@ -1,8 +1,10 @@
-import { useAppSelector } from "#hooks/redux-hooks";
+import { useAppDispatch, useAppSelector } from "#hooks/redux-hooks";
 import { cn } from "#lib/utils";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useContentGetURLByIdQuery } from "../../../../features/course/course-api";
-import { useEffect, useRef, useState } from "react";
+import { courseActions } from "../../../../features/course/course-slice";
+import type { ContentDto } from "../../../../features/course/dto/content.dto";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Play,
   Pause,
@@ -12,16 +14,41 @@ import {
   Volume2,
   Volume1,
   VolumeX,
+  SkipBack,
+  SkipForward,
 } from "lucide-react";
 import { formatSeconds } from "../../../../utils/app-utils";
 
 const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 2];
 
 export default function CourseBrowserPlayer() {
+  const dis = useAppDispatch();
   const {
     courseBrowserSelectedContent: selectedContent,
     courseBrowserSelectedCourse: selectedCourse,
   } = useAppSelector((s) => s.course);
+
+  // Flatten the course tree (sections -> parts -> contents) into one ordered playlist
+  const playlist = useMemo(() => {
+    const items: ContentDto[] = [];
+    selectedCourse?.sections?.forEach((section) =>
+      section.parts?.forEach((part) =>
+        part.contents?.forEach((content) => items.push(content)),
+      ),
+    );
+    return items;
+  }, [selectedCourse]);
+
+  const currentIndex = selectedContent
+    ? playlist.findIndex((item) => item.id === selectedContent.id)
+    : -1;
+
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < playlist.length - 1;
+
+  const goToContent = (content: ContentDto) => {
+    dis(courseActions.setCourseBrowserSelectedContent({ content }));
+  };
 
   const {
     data: urlRes,
@@ -435,18 +462,40 @@ export default function CourseBrowserPlayer() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* ADDED: Autoplay Toggle */}
-                {/*  <button
-                  onClick={() => setIsAutoplay((prev) => !prev)}
+                {/* Previous / Next Lesson */}
+                <button
+                  onClick={() =>
+                    hasNext && goToContent(playlist[currentIndex + 1])
+                  }
+                  disabled={!hasNext}
                   className={cn(
-                    "flex items-center justify-center px-2 h-8 backdrop-blur-md rounded-md hover:bg-white/40 transition-all text-white text-xs font-bold min-w-[40px]",
-                    isAutoplay ? "bg-primary-500/80" : "bg-white/20",
+                    "flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-md rounded-full transition-all",
+                    hasNext
+                      ? "hover:bg-white/40"
+                      : "opacity-40 cursor-not-allowed",
                   )}
-                  aria-label="Toggle Autoplay"
-                  title="Autoplay"
+                  aria-label="Next lesson"
+                  title="درس بعدی"
                 >
-                  {"پخش خودکار"}
-                </button> */}
+                  <SkipForward size={20} className="text-white" fill="white" />
+                </button>
+
+                <button
+                  onClick={() =>
+                    hasPrev && goToContent(playlist[currentIndex - 1])
+                  }
+                  disabled={!hasPrev}
+                  className={cn(
+                    "flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-md rounded-full transition-all",
+                    hasPrev
+                      ? "hover:bg-white/40"
+                      : "opacity-40 cursor-not-allowed",
+                  )}
+                  aria-label="Previous lesson"
+                  title="درس قبلی"
+                >
+                  <SkipBack size={20} className="text-white" fill="white" />
+                </button>
 
                 {/* Playback Speed Toggle */}
                 <button

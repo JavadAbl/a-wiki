@@ -3,8 +3,7 @@ import { cn } from "#lib/utils";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useContentGetURLByIdQuery } from "../../../../features/course/course-api";
 import { courseActions } from "../../../../features/course/course-slice";
-import type { ContentDto } from "../../../../features/course/dto/content.dto";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Play,
   Pause,
@@ -26,28 +25,31 @@ export default function CourseBrowserPlayer() {
   const {
     courseBrowserSelectedContent: selectedContent,
     courseBrowserSelectedCourse: selectedCourse,
+    courseBrowserPlaylist: playlist,
+    courseBrowserOpenAccordionItems: openAccordionItems,
   } = useAppSelector((s) => s.course);
 
-  // Flatten the course tree (sections -> parts -> contents) into one ordered playlist
-  const playlist = useMemo(() => {
-    const items: ContentDto[] = [];
-    selectedCourse?.sections?.forEach((section) =>
-      section.parts?.forEach((part) =>
-        part.contents?.forEach((content) => items.push(content)),
-      ),
-    );
-    return items;
-  }, [selectedCourse]);
-
   const currentIndex = selectedContent
-    ? playlist.findIndex((item) => item.id === selectedContent.id)
+    ? playlist.findIndex((item) => item.content.id === selectedContent.id)
     : -1;
 
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex >= 0 && currentIndex < playlist.length - 1;
 
-  const goToContent = (content: ContentDto) => {
-    dis(courseActions.setCourseBrowserSelectedContent({ content }));
+  const goToContent = (item: (typeof playlist)[number] | undefined) => {
+    if (!item) return;
+
+    // Expand the target content's section/part accordion so it stays visible in the part view
+    const sectionKey = `section-${item.sectionId}`;
+    const partKey = `part-${item.partId}`;
+    const nextItems = openAccordionItems.includes(sectionKey)
+      ? openAccordionItems.includes(partKey)
+        ? openAccordionItems
+        : [...openAccordionItems, partKey]
+      : [...openAccordionItems, sectionKey, partKey];
+    dis(courseActions.setCourseBrowserOpenAccordionItems({ items: nextItems }));
+
+    dis(courseActions.setCourseBrowserSelectedContent({ content: item.content }));
   };
 
   const {

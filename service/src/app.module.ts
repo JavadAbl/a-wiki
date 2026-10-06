@@ -7,6 +7,7 @@ import { AuthModule } from './auth-module/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationGuard } from './common/guards/authentication.guard';
 import { CourseModule } from './course-module/course.module';
+import { LinkModule } from './link-module/link.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { S3Module } from './infrastructure-modules/s3-module/s3.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -43,6 +44,7 @@ import { AppService } from './app.service';
     AuthModule,
     UserModule,
     CourseModule,
+    LinkModule,
   ],
   controllers: [AppController],
   providers: [

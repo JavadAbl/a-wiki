@@ -97,6 +97,18 @@ model Category {
   updatedAt DateTime @updatedAt
 }
 
+/// Related links ("لینک‌های مرتبط") managed by admins, shown in the navbar modal
+model Link {
+  id          Int      @id() @default(autoincrement())
+  title       String?
+  url         String
+  description String?
+  order       Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Course {
   id                 Int       @id() @default(autoincrement())
   categoryId         Int?

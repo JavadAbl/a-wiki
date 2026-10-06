@@ -4,6 +4,7 @@ import { Button } from "#components/ui/button";
 import {
   BookOpen,
   ChartBarIncreasingIcon,
+  Link2,
   LogOut, // Changed from ChevronRightIcon for better UX
   Settings,
   Users,
@@ -58,6 +59,21 @@ export function AdminSidebar() {
             >
               <ChartBarIncreasingIcon size={18} />
               <span>دسته بندی ها</span>{" "}
+            </Button>
+          )}
+        </NavLink>
+
+        <NavLink to="/Admin/Links" className={getNavLinkClass}>
+          {({ isActive }) => (
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2",
+                isActive && "bg-transparent hover:bg-transparent",
+              )}
+            >
+              <Link2 size={18} />
+              <span>لینک ها</span>{" "}
             </Button>
           )}
         </NavLink>

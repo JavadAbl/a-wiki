@@ -5,6 +5,7 @@ import AdminCourse from "./admin-courses/components/admin-course";
 import AdminPanelCategories from "./admin-categories/admin-panel-categories";
 import AdminPanelUsers from "./admin-users/admin-panel-users";
 import AdminPanelSettings from "./admin-settings/admin-panel-settings";
+import AdminPanelLinks from "./admin-links/admin-panel-links";
 
 export default function AdminPanelRoutes() {
   return (
@@ -14,6 +15,7 @@ export default function AdminPanelRoutes() {
         <Route path="Courses" element={<AdminPanelCourses />} />
         <Route path="Users" element={<AdminPanelUsers />} />
         <Route path="Categories" element={<AdminPanelCategories />} />
+        <Route path="Links" element={<AdminPanelLinks />} />
         <Route path="Courses/:id" element={<AdminCourse />} />
         <Route path="Settings" element={<AdminPanelSettings />} />
       </Route>

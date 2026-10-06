@@ -1,63 +1,58 @@
-# Related Courses (دوره‌های مرتبط) Feature
+# Related Links (لینک‌های مرتبط) Feature
 
 ## Design (confirmed with user)
-- **New join table** `CourseRelatedCourse` — many-to-many: each course can have zero or more related courses, set by admin.
-- **User-side layout change** (the bigger part): the 300px "سر فصل های دوره" sidebar is **completely replaced** by a "دوره‌های مرتبط" column. The parts view (`course-browser-parts.tsx`) is **renamed to "سرفصل های دوره"**, becomes **always visible without selecting a section**, and holds **all sections → parts → contents as nested tabs** (sections tabs at the top level, parts tabs as their children, and video/audio content tabs inside each part).
-- **Admin-side**: a new "دوره‌های مرتبط" card on the `/Admin/Courses/:id` page with a multi-select course picker modal.
+- **New `Link` entity**: `id`, `title` (optional), `url` (required), `description` (optional), `order` (display order), timestamps.
+- **Public** `GET /api/Links` for the navbar modal; **admin-only** create/update/delete (with `@Admin()`, unlike Category which lacks it).
+- **Navbar**: new item "لینک‌های مرتبط" placed between "دوره‌های آموزشی" and "درباره ما" — a button styled like `NavbarLink` that opens a modal listing the links.
+- **Admin**: new "لینک‌ها" page at `/Admin/Links` (sidebar entry) with a table + create/edit/delete modals, following the categories page layout.
 
 ## Backend (`service/`)
 
-1. **`prisma/schema.prisma`** — explicit join model (SQL Server can't do implicit self-M2M):
+1. **`prisma/schema.prisma`** — add model:
    ```prisma
-   model CourseRelatedCourse {
-     courseId        Int
-     relatedCourseId Int
-     course        Course @relation("courseRelatedCourses", fields: [courseId], references: [id], onDelete: Cascade)
-     relatedCourse Course @relation("relatedToCourses",      fields: [relatedCourseId], references: [id], onDelete: Cascade)
-     @@id([courseId, relatedCourseId])
+   model Link {
+     id          Int      @id() @default(autoincrement())
+     title       String?
+     url         String
+     description String?
+     order       Int      @default(0)
+     createdAt DateTime @default(now())
+     updatedAt DateTime @updatedAt
    }
    ```
-   plus `relatedCourses CourseRelatedCourse[] @relation("courseRelatedCourses")` and `relatedToCourses ... @relation("relatedToCourses")` on `Course`. Cascade both directions so deleting any course cleans up its relation rows.
 
-2. **Migration** — same prod-safe workflow as the FavoriteCourse migration: `prisma migrate dev --create-only` fails on the prod server (no shadow-DB permission, error P3014), so generate SQL via read-only `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script`, write it as migration folder `2026xxxx_add_related_courses` (same `BEGIN TRY/BEGIN TRAN` style), review output, then `npx prisma migrate deploy` + `npx prisma generate`.
+2. **Migration** — same prod-safe workflow as the previous two: `migrate diff --from-config-datasource --to-schema --script` (read-only against prod; `migrate dev` can't run — no shadow-DB permission), write migration folder `2026xxxx_add_links` in the `BEGIN TRY/BEGIN TRAN` style, then `npx prisma migrate deploy` + `npx prisma generate`.
 
-3. **`course-related-course.repository.ts`** — one-liner repository extending `Repository<'courseRelatedCourse'>`, registered in `course.module.ts`.
-
-4. **`dto/request/course-set-related-courses.dto.ts`** — `{ relatedCourseIds: number[] }` with `@IsArray() @IsInt({ each: true })`.
-
-5. **`course.service.ts`**:
-   - `courseSetRelatedCourses(courseId, dto)` — course must exist; each id must exist and differ from `courseId`; replace-all in one `prisma.$transaction` (`deleteMany` where courseId + `createMany` of the new set) so the modal's save is idempotent.
-   - `courseGetById` — add `include: { courseRelatedCourse: { include: { relatedCourse: true } } }`; map to `relatedCourses: CourseDto[]` reusing the existing `courseToDto` helper (with signed thumbnails; also run the existing totals `$queryRaw` over the related ids so counts are correct). Rows ordered by `relatedCourseId`.
-
-6. **`dto/response/course-details.dto.ts`** — add `@Expose() relatedCourses: CourseDto[]`.
-
-7. **`course.controller.ts`** — `@Admin() @Patch(':courseId/SetRelatedCourses')` next to `SetFavorite` (no GET-route collision; PATCH param routes are distinct).
+3. **New `link-module/`** (self-contained like the course-module's category set — plain service, no contract pattern):
+   - `repositories/link.repository.ts` — `extends Repository<'link'>`.
+   - `services/link.service.ts` — `linkGetMany()` (ordered by `order`, then id), `linkCreate`, `linkUpdate`, `linkDelete` — following `CategoryService` exactly.
+   - `controllers/link.controller.ts` — `@Controller('Links')`:
+     - `@Public() @Get()` → `GetManyReply<LinkDto>`
+     - `@Admin() @Post()` → 201, id
+     - `@Admin() @Patch(':linkId')` → void
+     - `@Admin() @Delete(':linkId')` → 204
+   - `dto/request/link-create.dto.ts` — `@IsString() @IsUrl() url` (requires protocol; frontend sends `https://...`), `@IsString() @IsOptional() @MaxLength(100) title`, `@IsString() @IsOptional() @MaxLength(1000) description`, `@IsInt() @IsOptional() order`.
+   - `dto/request/link-update.dto.ts` — same fields all `@IsOptional()`.
+   - `dto/response/link.dto.ts` — `@Exclude()` + `@Expose()` id/title/url/description/order.
+   - `link.module.ts` — registers controller/service/repository, plain module added to `AppModule` imports.
 
 ## Frontend (`client/`)
 
-8. **Types/API**: add `relatedCourses?: CourseDto[]` to `course.details.dto.ts`; add `CourseSetRelatedCourses: mutation<void, { body: { relatedCourseIds: number[] }; courseId: number }>` → `PATCH Courses/{id}/SetRelatedCourses`, `invalidatesTags: ["course"]`.
+4. **New `features/link/`**:
+   - `dto/link.dto.ts` — `LinkDto { id, title?, url, description?, order }`.
+   - `link-api.ts` — `createApi({ reducerPath: "linkApi", tagTypes: ["link"] })` with `LinksGetMany` (query `Links`, providesTags), `LinkCreate`, `LinkUpdate`, `LinkDelete` (all invalidating `["link"]`), modeled on the category endpoints in `course-api.ts`. Register reducer + middleware in `features/store.ts`.
 
-9. **User side — course-browser.tsx**:
-   - Replace `<CourseBrowserSectionList course={course} />` with a new `CourseBrowserRelatedCourses` component in the 300px column.
-   - Remove the auto-select-first-section `useEffect` (no longer needed — parts view shows everything). Keep the redux selections for content/player.
-   - New `course-browser-related-courses.tsx`: same card style as the old section list (header + icon "دوره‌های مرتبط"), body = compact course cards (thumbnail, title, lecturer) reusing `courses-list-card.tsx` styling compacted for 300px; clicking navigates to `/Courses/{id}` (with the existing login-modal fallback pattern from other course cards). Empty state message when no related courses are set.
+5. **Navbar modal**:
+   - New `components/navbar/navbar-related-links.tsx` — `Modal` (title "لینک‌های مرتبط") listing links: each row shows the optional title (falls back to the URL) as an `<a href target="_blank" rel="noopener noreferrer">` with the description underneath, styled after the documents list card. Empty state "لینکی ثبت نشده است".
+   - In `navbar.tsx`: local `isOpenRelatedLinks` state (same pattern as `NavbarResetPassword`); insert a button between "دوره‌های آموزشی" and "درباره ما" — not part of the `links` array (those are `<Link>`s), a separate `<button>` using `NavbarLink`'s classes that calls `setIsOpenRelatedLinks(true)`.
 
-10. **User side — course-browser-parts.tsx** (the nested-tabs rework):
-    - Rename trigger "انتخاب بخش ها" → "سرفصل های دوره".
-    - The `parts` TabsContent becomes three nested tab levels driven by `selectedCourse.sections` (no redux section selection needed, so it renders immediately):
-      - **Level 1 — sections tabs** (`TabsList variant="line"`), default = first section; local `useState` for active section id.
-      - **Level 2 — parts tabs** for the active section (same tab style), default = first part; local state for active part.
-      - **Level 3 — contents** inside the active part: keep the existing video/audio split (nested "ویدیوها"/"صوتی‌ها" tabs when both exist) and the existing `ContentItem` rows that dispatch `setCourseBrowserSelectedContent` (player behavior unchanged).
-    - The existing `PartAccordion` accordion is retired in favor of the tabs; `openParts` state is removed.
-    - Keep "درباره دوره" tab as-is.
-
-11. **Admin side**:
-    - New modal `components/course-set-related-courses.tsx` modeled on `course-set-category.tsx`: `Modal` + react-select with `isMulti`, options from `useCoursesGetManyAdminQuery({ pageSize: 1000 })` **excluding the current course**, initial values from `course.relatedCourses`, portal/fixed-position settings copied, save via the new mutation + close.
-    - `admin-course.tsx`: new "دوره‌های مرتبط" `<Card>` (5th card, `Link2` icon) listing current related courses as removable chips, plus a "مدیریت" button opening the modal (wired with the page's existing `modalKeys` remount pattern).
-    - `CourseDetailsDto` prop flows the current relations into the modal.
+6. **Admin page `pages/admin-panel/admin-links/`**:
+   - `admin-panel-links.tsx` — DataGrid (client-side is fine given small counts, but follow the users page server pattern: `page`/`pageSize`/`search` via `useLinksGetManyQuery`) with columns: عنوان/آدرس (title + truncated url), توضیحات, actions dropdown (ویرایش/حذف via `ConfirmModal`).
+   - `components/link-create.tsx` and `components/link-update.tsx` — `Modal` + react-hook-form + zod (`features/link/schemas/link-create-schema.ts`: `url: z.string().url("آدرس معتبر وارد کنید")`, optional title/description) with `Field`/`FieldLabel`/`InputMessage`, following `category-create.tsx` conventions; update modal prefilled from the selected link.
+   - Wire into `admin-panel-routes.tsx` (`<Route path="Links" ...>`) and `admin-sidebar.tsx` (`/Admin/Links` with `Link2` lucide icon, label "لینک‌ها" — placed after دسته بندی ها).
 
 ## Verification
-- Migration SQL reviewed (single CREATE TABLE + two cascade FKs + composite PK), `migrate deploy` output confirms application.
-- `nest build` + client `vite build`; `tsc -b` shows no new errors in changed files.
-- API: `GET /api/Courses/:id` returns `relatedCourses` (empty array initially); unauthenticated `PATCH SetRelatedCourses` → 401; with admin token, set two related courses → visible in details response → home→ open course page.
-- Manual: admin sets related courses on a course → user course page shows them in the right column with no section pre-selection needed; nested tabs: section tab → part tab → content click plays in the player as before.
+- Migration SQL reviewed; `migrate deploy` confirms application; `prisma generate` refreshes client.
+- `nest build` + `vite build` clean; no new tsc errors in changed files.
+- Live: `GET /api/Links` → 200 `[]` public; unauthenticated `POST /api/Links` → 401; startup log shows mapped routes.
+- Manual: admin adds a link at `/Admin/Links` → navbar modal shows it; clicking opens the URL in a new tab; edit/delete reflect after tag invalidation.

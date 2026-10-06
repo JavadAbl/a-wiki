@@ -12,6 +12,7 @@ import AuthorizationComponent from "#components/auth/role-authorization-componen
 import { Role } from "../../features/auth/enums/role";
 import { toast } from "sonner";
 import NavbarResetPassword from "./navbar-reset-password";
+import NavbarRelatedLinks from "./navbar-related-links";
 import { useState } from "react";
 
 const links = [
@@ -26,12 +27,18 @@ export default function Navbar() {
   const { isAuth, user } = useAppSelector((s) => s.auth);
   const dis = useAppDispatch();
   const [isOpenResetPassword, setIsOpenResetPassword] = useState(false);
+  const [isOpenRelatedLinks, setIsOpenRelatedLinks] = useState(false);
 
   return (
     <>
       <NavbarResetPassword
         isOpen={isOpenResetPassword}
         setIsOpen={setIsOpenResetPassword}
+      />
+
+      <NavbarRelatedLinks
+        isOpen={isOpenRelatedLinks}
+        setIsOpen={setIsOpenRelatedLinks}
       />
 
       <div className={cn("flex flex-col ")}>
@@ -102,8 +109,27 @@ export default function Navbar() {
         <Separator />
 
         <div className={cn("flex items-center gap-1.5 py-2 px-6")}>
-          {links.map((link) => (
-            <NavbarLink to={link.to}>{link.text}</NavbarLink>
+          {links.slice(0, 2).map((link) => (
+            <NavbarLink key={link.text} to={link.to}>
+              {link.text}
+            </NavbarLink>
+          ))}
+
+          {/* Related-links modal trigger, between دوره‌های آموزشی and درباره ما */}
+          <button
+            type="button"
+            onClick={() => setIsOpenRelatedLinks(true)}
+            className={cn(
+              "font-b2 text-content-primary px-3 py-2 hover:text-primary cursor-pointer",
+            )}
+          >
+            {"لینک‌های مرتبط"}
+          </button>
+
+          {links.slice(2).map((link) => (
+            <NavbarLink key={link.text} to={link.to}>
+              {link.text}
+            </NavbarLink>
           ))}
         </div>
       </div>

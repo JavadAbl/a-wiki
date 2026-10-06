@@ -18,6 +18,8 @@ import { CategoryService } from '../services/category.service';
 import { Public } from 'src/common/decorators/public.decorator';
 import { CategoryDto } from '../dto/response/category.dto';
 import { CategoryUpdateDto } from '../dto/request/category-update.dto';
+import { CategorySetOrdersDto } from '../dto/request/category-set-orders.dto';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @Controller('Categories')
 export class CategoryController {
@@ -27,6 +29,13 @@ export class CategoryController {
   @Get()
   categoryGetMany(@Query() query: GetManyQuery): Promise<GetManyReply<CategoryDto>> {
     return this.categoryService.categoryGetMany(query as GetManyQueryType<'Category'>);
+  }
+
+  // Must stay declared before @Patch(':categoryId') so 'SetOrders' is not captured as an id
+  @Admin()
+  @Patch('SetOrders')
+  categorySetOrders(@Body() payload: CategorySetOrdersDto): Promise<void> {
+    return this.categoryService.categorySetOrders(payload);
   }
 
   @Post()

@@ -3,4 +3,5 @@ export interface CategoryDto {
   name: string;
   description?: string | null;
   icon?: string | null;
+  order: number;
 }

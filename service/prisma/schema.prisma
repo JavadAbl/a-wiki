@@ -91,6 +91,7 @@ model Category {
   name        String   @unique()
   description String?
   icon        String?  @db.NVarChar(MAX)
+  order       Int      @default(0)
   courses     Course[]
 
   createdAt DateTime @default(now())

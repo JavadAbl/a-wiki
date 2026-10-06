@@ -63,6 +63,39 @@ export const courseApi = createApi({
       providesTags: ["category"],
     }),
 
+    CategorySetOrders: builder.mutation<
+      void,
+      { orders: { id: number; order: number }[] }
+    >({
+      query: (body) => ({
+        url: "Categories/SetOrders",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["category"],
+      // Optimistic update: reorder the cached list immediately, undo on failure
+      async onQueryStarted({ orders }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          courseApi.util.updateQueryData(
+            "CategoryGetMany",
+            { pageSize: 1000 },
+            (draft) => {
+              const orderById = new Map(orders.map((o) => [o.id, o.order]));
+              draft.items = draft.items
+                .map((c) => ({ ...c, order: orderById.get(c.id) ?? c.order }))
+                .sort((a, b) => a.order - b.order || a.id - b.id);
+            },
+          ),
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+    }),
+
     //Course-----------------------------------------------------
     CoursesGetMany: builder.query<
       GetManyReply<CourseDto>,
@@ -511,6 +544,7 @@ export const courseApi = createApi({
 export const {
   useCategoryGetManyQuery,
   useCategoryCreateMutation,
+  useCategorySetOrdersMutation,
   useCoursesGetManyQuery,
   useCourseCreateMutation,
   useCourseUpdateMutation,

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "#components/ui/button";
 import { Input } from "#components/ui/input";
 import {
@@ -9,6 +9,25 @@ import {
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  GripVertical,
   MoreVertical,
   Pencil,
   PlusIcon,
@@ -20,12 +39,13 @@ import CategoryCreate from "./components/category-create";
 import {
   useCategoryDeleteByIdMutation,
   useCategoryGetManyQuery,
+  useCategorySetOrdersMutation,
 } from "../../../features/course/course-api";
 import CategoryUpdate from "./components/category-update";
 import type { CategoryDto } from "../../../features/course/dto/category.dto";
 import { ConfirmModal } from "#components/modals/confirm-modal";
-import { type ColumnDef } from "@tanstack/react-table";
-import { DataGrid } from "#components/grids/data-grid";
+import { toast } from "sonner";
+import { cn } from "#lib/utils";
 import { useDebounce } from "#hooks/use-debounce";
 
 export default function AdminPanelCategories() {
@@ -36,10 +56,6 @@ export default function AdminPanelCategories() {
     useState<CategoryDto | null>(null);
   const [modalKeys, setModalsKey] = useState(0);
 
-  // Server pagination state
-  const [pageIndex, setPageIndex] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
   // Search state
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 500);
@@ -48,15 +64,27 @@ export default function AdminPanelCategories() {
     setModalsKey((val) => val + 1);
   };
 
-  // Data Hooks
+  // Data Hooks — fetch all categories (pagination removed for drag-and-drop ordering)
   const { data: categoriesRes, isFetching } = useCategoryGetManyQuery({
-    pageSize,
-    page: pageIndex,
-    search: debouncedSearch ? debouncedSearch : undefined,
+    pageSize: 1000,
   });
 
   const [mutateDelete, { isLoading: isLoadingDelete }] =
     useCategoryDeleteByIdMutation();
+  const [mutateSetOrders] = useCategorySetOrdersMutation();
+
+  const categories = useMemo(
+    () => categoriesRes?.items || [],
+    [categoriesRes],
+  );
+
+  const visibleCategories = useMemo(
+    () =>
+      debouncedSearch
+        ? categories.filter((c) => c.name.includes(debouncedSearch))
+        : categories,
+    [categories, debouncedSearch],
+  );
 
   const handleDelete = async () => {
     if (!selectedCategoryForDelete) return;
@@ -64,67 +92,44 @@ export default function AdminPanelCategories() {
     if (!res.error) setSelectedCategoryForDelete(null);
   };
 
-  const categories = categoriesRes?.items || [];
-  const totalCount = categoriesRes?.totalCount || 0;
-
-  useEffect(() => {
-    const run = () => setPageIndex(1);
-    run();
-  }, [debouncedSearch]);
-
-  // Column definitions
-  const columns = useMemo<ColumnDef<CategoryDto>[]>(
-    () => [
-      {
-        id: "name",
-        header: "نام",
-        cell: ({ row }) => (
-          <div className="font-medium">{row.original.name}</div>
-        ),
-      },
-      {
-        id: "description",
-        header: "توضیحات",
-        cell: ({ row }) => row.original.description,
-      },
-      {
-        id: "actions",
-        header: "عملیات",
-        size: 100,
-        cell: ({ row }) => {
-          const category = row.original;
-          return (
-            <DropdownMenu modal={true}>
-              <DropdownMenuTrigger>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">باز کردن منو</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  className="cursor-pointer text-xs"
-                  onClick={() => setSelectedCategoryForUpdate(category)}
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  ویرایش
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
-                  onClick={() => setSelectedCategoryForDelete(category)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  حذف
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-      },
-    ],
-    [],
+  // ---------- Drag-and-drop reorder ----------
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = visibleCategories.findIndex(
+      (c) => String(c.id) === String(active.id),
+    );
+    const newIndex = visibleCategories.findIndex(
+      (c) => String(c.id) === String(over.id),
+    );
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(visibleCategories, oldIndex, newIndex);
+
+    // Optimistic cache update + persistence happen inside the mutation hook
+    const res = await mutateSetOrders({
+      orders: reordered.map((c, index) => ({ id: c.id, order: index + 1 })),
+    });
+
+    if (res.error) {
+      toast.error("ذخیره ترتیب ناموفق بود");
+    }
+  };
+
+  // Column definitions (kept for the drag-list header)
+  const headerCells = [
+    { id: "order", label: "ترتیب", className: "w-16" },
+    { id: "name", label: "نام", className: "" },
+    { id: "description", label: "توضیحات", className: "hidden md:table-cell" },
+    { id: "actions", label: "عملیات", className: "w-24 text-end" },
+  ];
 
   return (
     <>
@@ -194,25 +199,161 @@ export default function AdminPanelCategories() {
           </Button>
         </div>
 
-        {/* DataGrid in Server Mode */}
-        <DataGrid
-          mode="server"
-          data={categories}
-          columns={columns}
-          isLoading={isFetching}
-          totalCount={totalCount}
-          // Convert 1-based API page to 0-based TanStack Table page
-          page={pageIndex - 1}
-          pageSize={pageSize}
-          // Convert 0-based TanStack Table page back to 1-based API page
-          onPaginationChange={({ page, pageSize }) => {
-            if (page !== undefined) setPageIndex(page + 1);
-            if (pageSize !== undefined) setPageSize(pageSize);
-          }}
-          className="flex-1 min-h-0"
-          alignLastEnd
-        />
+        {/* Hint */}
+        <p className="text-xs text-muted-foreground shrink-0">
+          برای تغییر ترتیب نمایش، ردیف‌ها را با کشیدن دستگیره جابجا کنید.
+        </p>
+
+        {/* Reorderable table */}
+        <div className="flex-1 min-h-0 overflow-auto rounded-xl border border-gray-100 bg-white shadow-md">
+          <table className="min-w-full table-fixed border-collapse text-left">
+            <thead className="border-b border-gray-200">
+              <tr className="bg-gray-50/80">
+                {headerCells.map((cell, index) => (
+                  <th
+                    key={cell.id}
+                    className={cn(
+                      "sticky top-0 z-10 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 whitespace-nowrap",
+                      index === headerCells.length - 1
+                        ? "text-end"
+                        : "text-start",
+                      cell.className,
+                    )}
+                  >
+                    {cell.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={visibleCategories.map((c) => String(c.id))}
+                strategy={verticalListSortingStrategy}
+              >
+                <tbody className="divide-y divide-gray-100">
+                  {isFetching && categories.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={headerCells.length}
+                        className="px-4 py-12 text-center text-sm font-medium text-gray-500"
+                      >
+                        در حال بارگذاری...
+                      </td>
+                    </tr>
+                  ) : visibleCategories.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={headerCells.length}
+                        className="px-4 py-12 text-center text-sm font-medium text-gray-500"
+                      >
+                        {"داده ای یافت نشد!"}
+                      </td>
+                    </tr>
+                  ) : (
+                    visibleCategories.map((category) => (
+                      <SortableRow
+                        key={category.id}
+                        category={category}
+                        onEdit={() => setSelectedCategoryForUpdate(category)}
+                        onDelete={() => setSelectedCategoryForDelete(category)}
+                      />
+                    ))
+                  )}
+                </tbody>
+              </SortableContext>
+            </DndContext>
+          </table>
+        </div>
       </div>
     </>
+  );
+}
+
+// ---------- Sortable row ----------
+function SortableRow({
+  category,
+  onEdit,
+  onDelete,
+}: {
+  category: CategoryDto;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: String(category.id) });
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={cn(
+        "transition-colors hover:bg-gray-50",
+        isDragging && "opacity-50 bg-blue-50 z-50 relative",
+      )}
+    >
+      <td className="px-4 py-3 text-sm text-gray-700">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label="جابجایی ردیف"
+          className="cursor-grab touch-none text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-700">
+        <div className="font-medium">{category.name}</div>
+      </td>
+
+      <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-700">
+        <span className="line-clamp-2 max-w-80">
+          {category.description || "—"}
+        </span>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-700 text-end">
+        <DropdownMenu modal={true}>
+          <DropdownMenuTrigger>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">باز کردن منو</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              className="cursor-pointer text-xs"
+              onClick={onEdit}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              ویرایش
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
+              onClick={onDelete}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              حذف
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </td>
+    </tr>
   );
 }

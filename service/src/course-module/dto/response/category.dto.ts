@@ -13,4 +13,7 @@ export class CategoryDto {
 
   @Expose()
   description?: string | null;
+
+  @Expose()
+  order: number;
 }

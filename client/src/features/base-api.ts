@@ -12,10 +12,13 @@ import status from "http-status";
 import { refreshAccessToken } from "../utils/refresh-token";
 
 // export const BASE_ADDRESS = "http://192.168.100.16/api/";
-// export const BASE_ADDRESS = "/api/";
-export const BASE_ADDRESS = "http://localhost:3000/api/";
+export const BASE_ADDRESS = "/api/";
+// export const BASE_ADDRESS = "http://localhost:3000/api/";
 
-export const apiOrigin = BASE_ADDRESS.replace(/api\/?$/, "").replace(/\/+$/, "");
+export const apiOrigin = BASE_ADDRESS.replace(/api\/?$/, "").replace(
+  /\/+$/,
+  "",
+);
 
 export const toAbsoluteAssetUrl = (path: string | null | undefined) => {
   if (!path) return null;

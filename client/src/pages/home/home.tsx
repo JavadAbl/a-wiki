@@ -9,9 +9,8 @@ export default function Home() {
     <div className={cn("fade-in")}>
       <HomeHero />
       <HomeCategories />
-      <HeroFeatures />
-
       <HomeCourses />
+      <HeroFeatures />
     </div>
   );
 }

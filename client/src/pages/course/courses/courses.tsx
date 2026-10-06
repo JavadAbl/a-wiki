@@ -132,11 +132,8 @@ export default function Courses() {
 
               {/* Pagination */}
               <Show when={totalPages > 1}>
-                <div
-                  className="flex items-center justify-center gap-3 mt-16"
-                  dir="ltr"
-                >
-                  {/* Previous Button */}
+                <div className="flex items-center justify-center gap-3 mt-16">
+                  {/* Previous Button (appears on the right in RTL) */}
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1 || isFetching}
@@ -189,7 +186,7 @@ export default function Courses() {
                     )}
                   </div>
 
-                  {/* Next Button */}
+                  {/* Next Button (appears on the left in RTL) */}
                   <button
                     onClick={() =>
                       setCurrentPage((p) => Math.min(totalPages, p + 1))

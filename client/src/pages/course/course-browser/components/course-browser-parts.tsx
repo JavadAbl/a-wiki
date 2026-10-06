@@ -148,39 +148,6 @@ function PartContents({
   );
 }
 
-// --- Pill button used for the section/part tab levels ---
-function PillButton({
-  active,
-  onClick,
-  children,
-  level,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  level: "section" | "part";
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "cursor-pointer rounded-full border transition-colors whitespace-nowrap",
-        level === "section"
-          ? "px-4 py-1.5 text-sm font-medium"
-          : "px-3 py-1 text-xs",
-        active
-          ? level === "section"
-            ? "border-transparent bg-primary-500 text-white"
-            : "border-primary-500/40 bg-primary-500/10 text-primary-600"
-          : "border-neutral-200 bg-white text-content-secondary hover:border-primary-500/40 hover:text-primary-600",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
 // --- Main Component ---
 export default function CourseBrowserParts() {
   const dis = useAppDispatch();
@@ -188,9 +155,17 @@ export default function CourseBrowserParts() {
   const {
     courseBrowserSelectedCourse: selectedCourse,
     courseBrowserSelectedContent: selectedContent,
+    courseBrowserOpenAccordionItems: openAccordionItems,
   } = useAppSelector((s) => s.course);
 
   const sections: SectionDto[] = selectedCourse?.sections ?? [];
+
+  // Accordion open-state lives in the shared course slice: the parts view is
+  // rendered twice (top view + player slide-down), and both instances must
+  // show the same open accordions when they swap.
+  const handleAccordionValueChange = (items: string[]) => {
+    dis(courseActions.setCourseBrowserOpenAccordionItems({ items }));
+  };
 
   return (
     <div
@@ -237,7 +212,13 @@ export default function CourseBrowserParts() {
             </div>
           ) : (
             <div className="p-2">
-              <Accordion type="multiple" className="w-full">
+              <Accordion
+                dir="rtl"
+                multiple
+                value={openAccordionItems}
+                onValueChange={handleAccordionValueChange}
+                className="w-full"
+              >
                 {sections.map((section) => (
                   <AccordionItem
                     key={section.id}
@@ -255,7 +236,10 @@ export default function CourseBrowserParts() {
                     <AccordionContent className="px-2 pb-3">
                       {section.parts?.length ? (
                         <Accordion
-                          type="multiple"
+                          dir="rtl"
+                          multiple
+                          value={openAccordionItems}
+                          onValueChange={handleAccordionValueChange}
                           className="rounded-xl border border-neutral-200 bg-neutral-50"
                         >
                           {section.parts.map((part) => (

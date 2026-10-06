@@ -10,6 +10,9 @@ export type CourseState = {
   courseBrowserSelectedSection: SectionDto | null;
   courseBrowserSelectedPart: PartDto | null;
   courseBrowserSelectedContent: ContentDto | null;
+  // Open accordion items ("section-{id}" / "part-{id}") shared by all
+  // CourseBrowserParts instances so their state survives instance swaps
+  courseBrowserOpenAccordionItems: string[];
 };
 
 const initialState: CourseState = {
@@ -17,6 +20,7 @@ const initialState: CourseState = {
   courseBrowserSelectedSection: null,
   courseBrowserSelectedPart: null,
   courseBrowserSelectedContent: null,
+  courseBrowserOpenAccordionItems: [],
 };
 
 const courseSlice = createSlice({

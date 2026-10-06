@@ -45,4 +45,13 @@ export const courseReducers = {
     const { content } = action.payload;
     state.courseBrowserSelectedContent = content;
   },
+
+  setCourseBrowserOpenAccordionItems: (
+    state: WritableDraft<CourseState>,
+    action: PayloadAction<{
+      items: string[];
+    }>,
+  ) => {
+    state.courseBrowserOpenAccordionItems = action.payload.items;
+  },
 };

@@ -1,9 +1,10 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   useCategoryGetManyQuery,
   useCourseDeleteMutation,
   useCourseSetFavoriteMutation,
   useCoursesGetManyAdminQuery,
+  useCourseSetOrdersMutation,
 } from "../../../features/course/course-api";
 import { Button } from "#components/ui/button";
 import { Input } from "#components/ui/input";
@@ -15,6 +16,25 @@ import {
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  GripVertical,
   ListEndIcon,
   MonitorUpIcon,
   MoreVertical,
@@ -30,10 +50,8 @@ import { useNavigate } from "react-router";
 import CourseCreate from "./components/course-create";
 import CourseSetPublished from "./components/course-set-published";
 import type { CourseDto } from "../../../features/course/dto/course.dto";
-import { type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "#components/ui/badge";
 import { cn } from "#lib/utils";
-import { DataGrid } from "#components/grids/data-grid";
 import { useDebounce } from "#hooks/use-debounce";
 import CourseSetCategory from "./components/course-set-category";
 import { ConfirmModal } from "#components/modals/confirm-modal";
@@ -50,35 +68,41 @@ export default function AdminPanelCourses() {
   const [selectedCourseForDelete, setSelectedCourseForDelete] =
     useState<CourseDto | null>(null);
 
-  // Server pagination state
-  const [pageIndex, setPageIndex] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
   // Search state
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 500);
 
   const increaseModalsKey = () => setModalsKey((v) => v + 1);
 
-  //Data Hooks
+  //Data Hooks — fetch all courses (pagination removed for drag-and-drop ordering)
   const { data: coursesRes, isFetching } = useCoursesGetManyAdminQuery({
-    pageSize,
-    page: pageIndex,
-    search: debouncedSearch,
+    pageSize: 1000,
   });
-  const courses = coursesRes?.items || [];
-  const totalCount = coursesRes?.totalCount || 0;
+  const courses = useMemo(() => coursesRes?.items || [], [coursesRes]);
 
-  const { data: categoriesRes, isLoading: isLoadingCategories } =
-    useCategoryGetManyQuery({
-      pageSize: 1000,
-    });
+  // Courses are sorted by order (then id) on the backend; filter only locally
+  const visibleCourses = useMemo(
+    () =>
+      debouncedSearch
+        ? courses.filter(
+            (c) =>
+              c.title.includes(debouncedSearch) ||
+              (c.lecturer && c.lecturer.includes(debouncedSearch)),
+          )
+        : courses,
+    [courses, debouncedSearch],
+  );
+
+  const { data: categoriesRes } = useCategoryGetManyQuery({
+    pageSize: 1000,
+  });
   const categories = categoriesRes?.items || [];
 
   const [mutateCourseDelete, { isLoading: isLoadingCourseDelete }] =
     useCourseDeleteMutation();
 
   const [mutateCourseSetFavorite] = useCourseSetFavoriteMutation();
+  const [mutateSetOrders] = useCourseSetOrdersMutation();
 
   const handleCourseSetFavorite = useCallback(
     async (course: CourseDto) => {
@@ -97,161 +121,65 @@ export default function AdminPanelCourses() {
     [mutateCourseSetFavorite],
   );
 
-  useEffect(() => {
-    const run = () => setPageIndex(1);
-    run();
-  }, [debouncedSearch]);
-
   const handleCourseDelete = async () => {
     if (!selectedCourseForDelete) return;
     const res = await mutateCourseDelete(selectedCourseForDelete.id);
     if (!res.error) setSelectedCourseForDelete(null);
   };
 
-  // Column definitions
-  const columns = useMemo<ColumnDef<CourseDto>[]>(
-    () => [
-      {
-        id: "titleAndLecturer",
-        header: "عنوان و مدرس",
-        cell: ({ row }) => (
-          <div>
-            <div className="font-medium">{row.original.title}</div>
-            <div className="text-sm text-muted-foreground">
-              {row.original.lecturer}
-              {row.original.lecturerProfession
-                ? ` • ${row.original.lecturerProfession}`
-                : ""}
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: "totalContents",
-        header: "تعداد دروس",
-        cell: ({ row }) => row.original.totalContents + " عدد",
-      },
-      {
-        id: "totalContentsLength",
-        header: "مدت زمان",
-        cell: ({ row }) => {
-          const seconds = row.original.totalContentsLength;
-          const hrs = Math.floor(seconds / 3600);
-          const mins = Math.floor((seconds % 3600) / 60);
-          const text =
-            hrs > 0 ? `${hrs} ساعت و ${mins} دقیقه` : `${mins} دقیقه`;
-          return text;
-        },
-      },
-      {
-        id: "status",
-        header: "وضعیت",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1">
-            <Badge
-              className={cn("font-normal ")}
-              variant={row.original.isPublished ? "default" : "secondary"}
-            >
-              {row.original.isPublished ? "انتشار یافته" : "پیش‌نویس"}
-            </Badge>
-
-            {row.original.isFavorite && (
-              <Badge variant="secondary" className="font-normal gap-1">
-                <Star className="h-3 w-3 fill-current" />
-                پرطرفدار
-              </Badge>
-            )}
-          </div>
-        ),
-      },
-      {
-        id: "category",
-        header: "دسته بندی",
-        cell: ({ row }) => {
-          const category = categories.find(
-            (cat) => cat.id == row.original.categoryId,
-          );
-
-          if (!category) return null;
-          return <span>{category.name}</span>;
-        },
-      },
-      {
-        id: "actions",
-        header: "عملیات",
-        size: 100,
-        cell: ({ row }) => {
-          const course = row.original;
-          return (
-            <DropdownMenu modal={true}>
-              <DropdownMenuTrigger>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">باز کردن منو</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  className="cursor-pointer text-xs"
-                  onClick={() => nav(`/Admin/Courses/${course.id}`)}
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  نمایش
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  className="cursor-pointer text-xs"
-                  onClick={() => setSelectedCourseForPublish(course)}
-                >
-                  <MonitorUpIcon className="mr-2 h-4 w-4" />
-                  تغییر وضعیت انتشار
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  className="cursor-pointer text-xs"
-                  onClick={() => setSelectedCourseForCategory(course)}
-                >
-                  <ListEndIcon className="mr-2 h-4 w-4" />
-                  تغییر دسته بندی
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  className="cursor-pointer text-xs"
-                  onClick={() => handleCourseSetFavorite(course)}
-                >
-                  {course.isFavorite ? (
-                    <StarOff className="mr-2 h-4 w-4" />
-                  ) : (
-                    <Star className="mr-2 h-4 w-4" />
-                  )}
-                  {course.isFavorite
-                    ? "حذف از پرطرفدارها"
-                    : "افزودن به پرطرفدارها"}
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
-                  onClick={() => setSelectedCourseForDelete(course)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  حذف
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-      },
-    ],
-    [nav, categories, handleCourseSetFavorite],
+  // ---------- Drag-and-drop reorder ----------
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = visibleCourses.findIndex(
+      (c) => String(c.id) === String(active.id),
+    );
+    const newIndex = visibleCourses.findIndex(
+      (c) => String(c.id) === String(over.id),
+    );
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(visibleCourses, oldIndex, newIndex);
+
+    // Optimistic cache update + persistence happen inside the mutation hook
+    const res = await mutateSetOrders({
+      orders: reordered.map((c, index) => ({ id: c.id, order: index + 1 })),
+    });
+
+    if (res.error) {
+      toast.error("ذخیره ترتیب ناموفق بود");
+    }
+  };
+
+  // Columns kept for the drag-list header
+  const headerCells = [
+    { id: "order", label: "ترتیب", className: "w-16" },
+    { id: "titleAndLecturer", label: "عنوان و مدرس", className: "" },
+    {
+      id: "totalContents",
+      label: "تعداد دروس",
+      className: "hidden lg:table-cell w-28",
+    },
+    {
+      id: "totalContentsLength",
+      label: "مدت زمان",
+      className: "hidden lg:table-cell w-40",
+    },
+    { id: "status", label: "وضعیت", className: "hidden md:table-cell w-44" },
+    {
+      id: "category",
+      label: "دسته بندی",
+      className: "hidden md:table-cell w-32",
+    },
+    { id: "actions", label: "عملیات", className: "w-24 text-end" },
+  ];
 
   return (
     <>
@@ -330,25 +258,251 @@ export default function AdminPanelCourses() {
           </Button>
         </div>
 
-        {/* DataGrid in Server Mode */}
-        <DataGrid
-          mode="server"
-          data={courses}
-          columns={columns}
-          isLoading={isFetching || isLoadingCategories}
-          totalCount={totalCount}
-          // Convert 1-based API page to 0-based TanStack Table page
-          page={pageIndex - 1}
-          pageSize={pageSize}
-          // Convert 0-based TanStack Table page back to 1-based API page
-          onPaginationChange={({ page, pageSize }) => {
-            if (page !== undefined) setPageIndex(page + 1);
-            if (pageSize !== undefined) setPageSize(pageSize);
-          }}
-          className="flex-1 min-h-0"
-          alignLastEnd
-        />
+        {/* Hint */}
+        <p className="text-xs text-muted-foreground shrink-0">
+          برای تغییر ترتیب نمایش، ردیف‌ها را با کشیدن دستگیره جابجا کنید.
+        </p>
+
+        {/* Reorderable table */}
+        <div className="flex-1 min-h-0 overflow-auto rounded-xl border border-gray-100 bg-white shadow-md">
+          <table className="min-w-full table-fixed border-collapse text-left">
+            <thead className="border-b border-gray-200">
+              <tr className="bg-gray-50/80">
+                {headerCells.map((cell, index) => (
+                  <th
+                    key={cell.id}
+                    className={cn(
+                      "sticky top-0 z-10 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 whitespace-nowrap",
+                      index === headerCells.length - 1
+                        ? "text-end"
+                        : "text-start",
+                      cell.className,
+                    )}
+                  >
+                    {cell.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={visibleCourses.map((c) => String(c.id))}
+                strategy={verticalListSortingStrategy}
+              >
+                <tbody className="divide-y divide-gray-100">
+                  {isFetching && courses.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={headerCells.length}
+                        className="px-4 py-12 text-center text-sm font-medium text-gray-500"
+                      >
+                        در حال بارگذاری...
+                      </td>
+                    </tr>
+                  ) : visibleCourses.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={headerCells.length}
+                        className="px-4 py-12 text-center text-sm font-medium text-gray-500"
+                      >
+                        {"داده ای یافت نشد!"}
+                      </td>
+                    </tr>
+                  ) : (
+                    visibleCourses.map((course) => (
+                      <SortableRow
+                        key={course.id}
+                        course={course}
+                        categories={categories}
+                        onView={() => nav(`/Admin/Courses/${course.id}`)}
+                        onSetPublished={() =>
+                          setSelectedCourseForPublish(course)
+                        }
+                        onSetCategory={() =>
+                          setSelectedCourseForCategory(course)
+                        }
+                        onSetFavorite={() => handleCourseSetFavorite(course)}
+                        onDelete={() => setSelectedCourseForDelete(course)}
+                      />
+                    ))
+                  )}
+                </tbody>
+              </SortableContext>
+            </DndContext>
+          </table>
+        </div>
       </div>
     </>
+  );
+}
+
+// ---------- Sortable row ----------
+function SortableRow({
+  course,
+  categories,
+  onView,
+  onSetPublished,
+  onSetCategory,
+  onSetFavorite,
+  onDelete,
+}: {
+  course: CourseDto;
+  categories: { id: number; name: string }[];
+  onView: () => void;
+  onSetPublished: () => void;
+  onSetCategory: () => void;
+  onSetFavorite: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: String(course.id) });
+
+  const seconds = course.totalContentsLength;
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const durationText =
+    hrs > 0 ? `${hrs} ساعت و ${mins} دقیقه` : `${mins} دقیقه`;
+
+  const category = categories.find((cat) => cat.id == course.categoryId);
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={cn(
+        "transition-colors hover:bg-gray-50",
+        isDragging && "opacity-50 bg-blue-50 z-50 relative",
+      )}
+    >
+      <td className="px-4 py-3 text-sm text-gray-700">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label="جابجایی ردیف"
+          className="cursor-grab touch-none text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-700">
+        <div className="font-medium">{course.title}</div>
+        <div className="text-sm text-muted-foreground">
+          {course.lecturer}
+          {course.lecturerProfession ? ` • ${course.lecturerProfession}` : ""}
+        </div>
+      </td>
+
+      <td className="hidden lg:table-cell px-4 py-3 text-sm text-gray-700">
+        {course.totalContents + " عدد"}
+      </td>
+
+      <td className="hidden lg:table-cell px-4 py-3 text-sm text-gray-700">
+        {durationText}
+      </td>
+
+      <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-700">
+        <div className="flex items-center gap-1">
+          <Badge
+            className={cn("font-normal ")}
+            variant={course.isPublished ? "default" : "secondary"}
+          >
+            {course.isPublished ? "انتشار یافته" : "پیش‌نویس"}
+          </Badge>
+
+          {course.isFavorite && (
+            <Badge variant="secondary" className="font-normal gap-1">
+              <Star className="h-3 w-3 fill-current" />
+              پرطرفدار
+            </Badge>
+          )}
+        </div>
+      </td>
+
+      <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-700">
+        {category ? <span>{category.name}</span> : null}
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-700 text-end">
+        <DropdownMenu modal={true}>
+          <DropdownMenuTrigger>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">باز کردن منو</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              className="cursor-pointer text-xs"
+              onClick={onView}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              نمایش
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="cursor-pointer text-xs"
+              onClick={onSetPublished}
+            >
+              <MonitorUpIcon className="mr-2 h-4 w-4" />
+              تغییر وضعیت انتشار
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="cursor-pointer text-xs"
+              onClick={onSetCategory}
+            >
+              <ListEndIcon className="mr-2 h-4 w-4" />
+              تغییر دسته بندی
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="cursor-pointer text-xs"
+              onClick={onSetFavorite}
+            >
+              {course.isFavorite ? (
+                <StarOff className="mr-2 h-4 w-4" />
+              ) : (
+                <Star className="mr-2 h-4 w-4" />
+              )}
+              {course.isFavorite
+                ? "حذف از پرطرفدارها"
+                : "افزودن به پرطرفدارها"}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
+              onClick={onDelete}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              حذف
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </td>
+    </tr>
   );
 }

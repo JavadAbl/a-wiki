@@ -5,6 +5,7 @@ export interface CourseDto {
   thumbnailUrl?: string | null;
   categoryId?: number | null;
   isPublished?: boolean;
+  order: number;
   lecturer?: string | null;
   lecturerProfession?: string | null;
   totalContents: number;

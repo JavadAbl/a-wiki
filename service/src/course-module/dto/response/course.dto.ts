@@ -18,6 +18,9 @@ export class CourseDto {
   isPublished: boolean;
 
   @Expose()
+  order: number;
+
+  @Expose()
   thumbnailUrl?: string | null;
 
   @Expose()

@@ -21,6 +21,7 @@ import { CourseDto } from '../dto/response/course.dto';
 import { CourseSetPublishedDto } from '../dto/request/course-set-published.dto';
 import { CourseSetFavoriteDto } from '../dto/request/course-set-favorite.dto';
 import { CourseSetRelatedCoursesDto } from '../dto/request/course-set-related-courses.dto';
+import { CourseSetOrdersDto } from '../dto/request/course-set-orders.dto';
 import { CourseCreateDto } from '../dto/request/course-create.dto';
 import { CourseDetailsDto } from '../dto/response/course-details.dto';
 import { CourseSetDescriptionDto } from '../dto/request/course-set-description.dto';
@@ -82,6 +83,13 @@ export class CourseController {
   @Get('/Favorites')
   courseGetManyFavorites(): Promise<CourseDto[]> {
     return this.courseService.courseGetManyFavorites();
+  }
+
+  // Must stay declared before @Get(':courseId')/@Patch(':courseId') so 'SetOrders' is not captured as an id
+  @Admin()
+  @Patch('SetOrders')
+  courseSetOrders(@Body() payload: CourseSetOrdersDto): Promise<void> {
+    return this.courseService.courseSetOrders(payload);
   }
 
   @Admin()

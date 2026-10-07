@@ -118,6 +118,7 @@ model Course {
   description        String?
   thumbnailUrl       String?
   isPublished        Boolean   @default(false)
+  order              Int       @default(0)
   lecturer           String?
   lecturerProfession String?
   favorite           FavoriteCourse?

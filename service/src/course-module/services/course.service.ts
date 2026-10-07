@@ -7,6 +7,7 @@ import { CourseSetFavoriteDto } from '../dto/request/course-set-favorite.dto';
 import { FavoriteCourseRepository } from '../repositories/favorite-course.repository';
 import { CourseRelatedCourseRepository } from '../repositories/course-related-course.repository';
 import { CourseSetRelatedCoursesDto } from '../dto/request/course-set-related-courses.dto';
+import { CourseSetOrdersDto } from '../dto/request/course-set-orders.dto';
 import { CourseDto } from '../dto/response/course.dto';
 import { GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -16,6 +17,7 @@ import { CourseSetDescriptionDto } from '../dto/request/course-set-description.d
 import { extname } from 'path';
 import { plainToInstance } from 'class-transformer';
 import { Prisma } from 'src/generated/prisma/client';
+import type { CourseOrderByWithRelationInput } from 'src/generated/prisma/models/Course';
 import { CourseUpdateDto } from '../dto/request/course-update.dto';
 import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 import pLimit from 'p-limit';
@@ -212,6 +214,13 @@ export class CourseService {
   ): Promise<GetManyReply<CourseDto>> {
     const predicate = buildFindManyArgs(query, { searchableFields: ['title'] });
 
+    // Default sort by order (then id) unless the query asked for a specific sort
+    const defaultOrderBy: CourseOrderByWithRelationInput[] = [
+      { order: 'asc' },
+      { id: 'asc' },
+    ];
+    const orderBy = predicate.orderBy ?? defaultOrderBy;
+
     let isPublished: boolean | undefined;
     if (adminCourses) isPublished = undefined;
     else isPublished = true;
@@ -219,7 +228,7 @@ export class CourseService {
     const { items, totalCount } = await this.courseRep.findMany({
       ...predicate,
       where: { ...predicate.where, categoryId, isPublished },
-      orderBy: { id: 'desc' },
+      orderBy,
       include: { favorite: true },
     });
 
@@ -266,8 +275,25 @@ export class CourseService {
     return { items: mappedItems, totalCount };
   }
 
+  async courseSetOrders(payload: CourseSetOrdersDto): Promise<void> {
+    const { orders } = payload;
+
+    const ids = orders.map((o) => o.id);
+    const found = await this.courseRep.count({ where: { id: { in: ids } } });
+    if (found !== ids.length) {
+      throw new BadRequestException('One or more courses not found');
+    }
+
+    const prisma = this.courseRep.prismaClient;
+    await prisma.$transaction(
+      orders.map((o) =>
+        prisma.course.update({ where: { id: o.id }, data: { order: o.order } }),
+      ),
+    );
+  }
+
   private async courseToDto(
-    course: { id: number; title: string; description: string | null; categoryId: number | null; isPublished: boolean; thumbnailUrl: string | null; lecturer: string | null; lecturerProfession: string | null; favorite?: { order: number } | null },
+    course: { id: number; title: string; description: string | null; categoryId: number | null; isPublished: boolean; order: number; thumbnailUrl: string | null; lecturer: string | null; lecturerProfession: string | null; favorite?: { order: number } | null },
     stats?: { totalContents: number; totalContentsLength: number },
     withFavorite = false,
   ): Promise<CourseDto> {
@@ -284,6 +310,7 @@ export class CourseService {
         description: course.description,
         categoryId: course.categoryId,
         isPublished: course.isPublished,
+        order: course.order,
         thumbnailUrl: publicThumbnailUrl,
         lecturer: course.lecturer,
         lecturerProfession: course.lecturerProfession,

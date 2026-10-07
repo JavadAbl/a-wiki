@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { LinkRepository } from '../repositories/link.repository';
 import { LinkCreateDto } from '../dto/request/link-create.dto';
 import { LinkUpdateDto } from '../dto/request/link-update.dto';
+import { LinkSetOrdersDto } from '../dto/request/link-set-orders.dto';
 import { LinkDto } from '../dto/response/link.dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -15,6 +17,23 @@ export class LinkService {
     });
 
     return plainToInstance(LinkDto, links.items, { excludeExtraneousValues: true });
+  }
+
+  async linkSetOrders(payload: LinkSetOrdersDto): Promise<void> {
+    const { orders } = payload;
+
+    const ids = orders.map((o) => o.id);
+    const found = await this.linkRep.count({ where: { id: { in: ids } } });
+    if (found !== ids.length) {
+      throw new BadRequestException('One or more links not found');
+    }
+
+    const prisma = this.linkRep.prismaClient;
+    await prisma.$transaction(
+      orders.map((o) =>
+        prisma.link.update({ where: { id: o.id }, data: { order: o.order } }),
+      ),
+    );
   }
 
   async linkCreate(payload: LinkCreateDto): Promise<number> {

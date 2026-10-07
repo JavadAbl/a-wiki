@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "#components/ui/button";
 import {
   DropdownMenu,
@@ -7,18 +7,43 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#components/ui/dropdown-menu";
-import { Link2, MoreVertical, Pencil, PlusIcon, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  GripVertical,
+  Link2,
+  MoreVertical,
+  Pencil,
+  PlusIcon,
+  Trash2,
+} from "lucide-react";
 import LinkCreate from "./components/link-create";
 import LinkUpdate from "./components/link-update";
 import type { LinkDto } from "../../../features/link/dto/link.dto";
-import { type ColumnDef } from "@tanstack/react-table";
-import { DataGrid } from "#components/grids/data-grid";
 import { ConfirmModal } from "#components/modals/confirm-modal";
 import {
   useLinkDeleteMutation,
   useLinksGetManyQuery,
+  useLinkSetOrdersMutation,
 } from "../../../features/link/link-api";
 import { toast } from "sonner";
+import { cn } from "#lib/utils";
 
 export default function AdminPanelLinks() {
   const [isOpenLinkCreate, setIsOpenLinkCreate] = useState(false);
@@ -34,6 +59,7 @@ export default function AdminPanelLinks() {
 
   const [mutateLinkDelete, { isLoading: isLoadingLinkDelete }] =
     useLinkDeleteMutation();
+  const [mutateSetOrders] = useLinkSetOrdersMutation();
 
   const handleLinkDelete = async () => {
     if (!selectedLinkForDelete) return;
@@ -44,82 +70,43 @@ export default function AdminPanelLinks() {
     }
   };
 
-  const columns = useMemo<ColumnDef<LinkDto>[]>(
-    () => [
-      {
-        id: "title",
-        header: "عنوان و آدرس",
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <div className="font-medium truncate max-w-60">
-              {row.original.title || "—"}
-            </div>
-            <a
-              href={row.original.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              dir="ltr"
-              className="text-sm text-muted-foreground hover:text-primary truncate block max-w-60 text-start"
-            >
-              {row.original.url}
-            </a>
-          </div>
-        ),
-      },
-      {
-        id: "description",
-        header: "توضیحات",
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground line-clamp-2 max-w-80">
-            {row.original.description || "—"}
-          </span>
-        ),
-      },
-      {
-        id: "order",
-        header: "ترتیب",
-        cell: ({ row }) => row.original.order,
-      },
-      {
-        id: "actions",
-        header: "عملیات",
-        size: 100,
-        cell: ({ row }) => {
-          const link = row.original;
-          return (
-            <DropdownMenu modal={true}>
-              <DropdownMenuTrigger>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">باز کردن منو</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  className="cursor-pointer text-xs"
-                  onClick={() => setSelectedLinkForUpdate(link)}
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  ویرایش
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
-                  onClick={() => setSelectedLinkForDelete(link)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  حذف
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-      },
-    ],
-    [],
+  // ---------- Drag-and-drop reorder ----------
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !links) return;
+
+    const oldIndex = links.findIndex((l) => String(l.id) === String(active.id));
+    const newIndex = links.findIndex((l) => String(l.id) === String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(links, oldIndex, newIndex);
+
+    // Optimistic cache update + persistence happen inside the mutation hook
+    const res = await mutateSetOrders({
+      orders: reordered.map((l, index) => ({ id: l.id, order: index + 1 })),
+    });
+
+    if (res.error) {
+      toast.error("ذخیره ترتیب ناموفق بود");
+    }
+  };
+
+  const headerCells = [
+    { id: "order", label: "ترتیب", className: "w-16" },
+    { id: "title", label: "عنوان و آدرس", className: "" },
+    {
+      id: "description",
+      label: "توضیحات",
+      className: "hidden md:table-cell",
+    },
+    { id: "actions", label: "عملیات", className: "w-24 text-end" },
+  ];
 
   return (
     <>
@@ -168,22 +155,177 @@ export default function AdminPanelLinks() {
           </Button>
         </div>
 
-        <DataGrid
-          mode="client"
-          data={links ?? []}
-          columns={columns}
-          isLoading={isFetching}
-          className="flex-1 min-h-0"
-          alignLastEnd
-        />
+        {/* Hint */}
+        <p className="text-xs text-muted-foreground shrink-0">
+          برای تغییر ترتیب نمایش، ردیف‌ها را با کشیدن دستگیره جابجا کنید.
+        </p>
 
-        {links && links.length === 0 && !isFetching && (
-          <div className="flex flex-col items-center justify-center py-10 text-center text-content-tertiary">
-            <Link2 className="size-10 mb-2 opacity-50" />
-            <span className="text-sm">هیچ لینکی ثبت نشده است.</span>
-          </div>
-        )}
+        {/* Reorderable table */}
+        <div className="flex-1 min-h-0 overflow-auto rounded-xl border border-gray-100 bg-white shadow-md">
+          <table className="min-w-full table-fixed border-collapse text-left">
+            <thead className="border-b border-gray-200">
+              <tr className="bg-gray-50/80">
+                {headerCells.map((cell, index) => (
+                  <th
+                    key={cell.id}
+                    className={cn(
+                      "sticky top-0 z-10 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 whitespace-nowrap",
+                      index === headerCells.length - 1
+                        ? "text-end"
+                        : "text-start",
+                      cell.className,
+                    )}
+                  >
+                    {cell.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={(links ?? []).map((l) => String(l.id))}
+                strategy={verticalListSortingStrategy}
+              >
+                <tbody className="divide-y divide-gray-100">
+                  {isFetching && (!links || links.length === 0) ? (
+                    <tr>
+                      <td
+                        colSpan={headerCells.length}
+                        className="px-4 py-12 text-center text-sm font-medium text-gray-500"
+                      >
+                        در حال بارگذاری...
+                      </td>
+                    </tr>
+                  ) : !links || links.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={headerCells.length}
+                        className="px-4 py-12 text-center text-sm font-medium text-gray-500"
+                      >
+                        <Link2 className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                        هیچ لینکی ثبت نشده است.
+                      </td>
+                    </tr>
+                  ) : (
+                    links.map((link) => (
+                      <SortableRow
+                        key={link.id}
+                        link={link}
+                        onEdit={() => setSelectedLinkForUpdate(link)}
+                        onDelete={() => setSelectedLinkForDelete(link)}
+                      />
+                    ))
+                  )}
+                </tbody>
+              </SortableContext>
+            </DndContext>
+          </table>
+        </div>
       </div>
     </>
+  );
+}
+
+// ---------- Sortable row ----------
+function SortableRow({
+  link,
+  onEdit,
+  onDelete,
+}: {
+  link: LinkDto;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: String(link.id) });
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={cn(
+        "transition-colors hover:bg-gray-50",
+        isDragging && "opacity-50 bg-blue-50 z-50 relative",
+      )}
+    >
+      <td className="px-4 py-3 text-sm text-gray-700">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label="جابجایی ردیف"
+          className="cursor-grab touch-none text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-700">
+        <div className="min-w-0">
+          <div className="font-medium truncate max-w-60">
+            {link.title || "—"}
+          </div>
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            dir="ltr"
+            className="text-sm text-muted-foreground hover:text-primary truncate block max-w-60 text-start"
+          >
+            {link.url}
+          </a>
+        </div>
+      </td>
+
+      <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-700">
+        <span className="text-sm text-muted-foreground line-clamp-2 max-w-80">
+          {link.description || "—"}
+        </span>
+      </td>
+
+      <td className="px-4 py-3 text-sm text-gray-700 text-end">
+        <DropdownMenu modal={true}>
+          <DropdownMenuTrigger>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">باز کردن منو</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              className="cursor-pointer text-xs"
+              onClick={onEdit}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              ویرایش
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 text-xs"
+              onClick={onDelete}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              حذف
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </td>
+    </tr>
   );
 }

@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { Check, X, Pencil } from "lucide-react";
+import { Check, X, Pencil, MonitorPlay, Volume2 } from "lucide-react";
 import { cn } from "#lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "#components/ui/tooltip";
 
+import { MediaType } from "../../../../features/course/enums/media-type";
 import { useContentUpdateMutation } from "../../../../features/course/course-api";
 
 // 1. Define the Props Interface
@@ -10,6 +17,7 @@ interface ContentItemProps {
     id: number;
     title: string;
     order: number;
+    mediaType: MediaType;
   };
   onDelete: () => void;
   onAcceptOrder: (contentId: number, newOrder: number) => void;
@@ -82,6 +90,31 @@ const AdminCourseContentItem = ({
   return (
     <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-muted rounded-full text-sm font-medium">
       <div className={cn("flex items-center gap-[16px] grow shrink")}>
+        {/* Content type icon (Video / Audio) */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <span
+                className={cn(
+                  "h-6 w-6 rounded-full flex items-center justify-center shrink-0",
+                  content.mediaType === MediaType.Video
+                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                    : "bg-pink-500/10 text-pink-600 dark:text-pink-400",
+                )}
+              >
+                {content.mediaType === MediaType.Video ? (
+                  <MonitorPlay size={14} />
+                ) : (
+                  <Volume2 size={14} />
+                )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{content.mediaType === MediaType.Video ? "ویدیو" : "صدا"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <span className="truncate flex-1">
           {/* Conditional Title Rendering */}
           {isEditingTitle ? (

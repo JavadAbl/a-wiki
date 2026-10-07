@@ -15,6 +15,7 @@ import { Admin } from 'src/common/decorators/admin.decorator';
 import { LinkService } from '../services/link.service';
 import { LinkCreateDto } from '../dto/request/link-create.dto';
 import { LinkUpdateDto } from '../dto/request/link-update.dto';
+import { LinkSetOrdersDto } from '../dto/request/link-set-orders.dto';
 import { LinkDto } from '../dto/response/link.dto';
 
 @Controller('Links')
@@ -32,6 +33,13 @@ export class LinkController {
   @HttpCode(HttpStatus.CREATED)
   linkCreate(@Body() payload: LinkCreateDto): Promise<number> {
     return this.linkService.linkCreate(payload);
+  }
+
+  // Must stay declared before @Patch(':linkId') so 'SetOrders' is not captured as an id
+  @Admin()
+  @Patch('SetOrders')
+  linkSetOrders(@Body() payload: LinkSetOrdersDto): Promise<void> {
+    return this.linkService.linkSetOrders(payload);
   }
 
   @Admin()

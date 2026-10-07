@@ -36,6 +36,35 @@ export const linkApi = createApi({
       invalidatesTags: ["link"],
     }),
 
+    LinkSetOrders: builder.mutation<
+      void,
+      { orders: { id: number; order: number }[] }
+    >({
+      query: (body) => ({
+        url: "Links/SetOrders",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["link"],
+      // Optimistic update: reorder the cached list immediately, undo on failure
+      async onQueryStarted({ orders }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          linkApi.util.updateQueryData("LinksGetMany", undefined, (draft) => {
+            const orderById = new Map(orders.map((o) => [o.id, o.order]));
+            return draft
+              .map((l) => ({ ...l, order: orderById.get(l.id) ?? l.order }))
+              .sort((a, b) => a.order - b.order || a.id - b.id);
+          }),
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+    }),
+
     LinkDelete: builder.mutation<void, number>({
       query: (linkId) => ({
         url: `Links/${linkId}`,
@@ -50,5 +79,6 @@ export const {
   useLinksGetManyQuery,
   useLinkCreateMutation,
   useLinkUpdateMutation,
+  useLinkSetOrdersMutation,
   useLinkDeleteMutation,
 } = linkApi;

@@ -7,7 +7,8 @@ import { Button } from "#components/ui/button";
 import { sharedActions } from "../../features/shared/shared-slice";
 import { authActions } from "../../features/auth/auth-slice";
 import InputSearch from "#components/inputs/input-search";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
+import { ArrowLeft } from "lucide-react";
 import AuthorizationComponent from "#components/auth/role-authorization-component";
 import { Role } from "../../features/auth/enums/role";
 import { toast } from "sonner";
@@ -24,6 +25,8 @@ const links = [
 
 export default function Navbar() {
   const nav = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
   const { isAuth, user } = useAppSelector((s) => s.auth);
   const dis = useAppDispatch();
   const [isOpenResetPassword, setIsOpenResetPassword] = useState(false);
@@ -103,7 +106,23 @@ export default function Navbar() {
             )}
           </div>
 
-          <InputSearch />
+          <div className={cn("flex items-center gap-4")}>
+            <InputSearch />
+
+            {!isHome && (
+              <Button
+                size={"icon"}
+                variant={"ghost"}
+                aria-label="بازگشت به صفحه قبل"
+                onClick={() => nav(-1)}
+                className={cn(
+                  "rounded-full text-primary hover:bg-primary/10 hover:text-primary",
+                )}
+              >
+                <ArrowLeft className="size-6" />
+              </Button>
+            )}
+          </div>
         </div>
 
         <Separator />

@@ -36,7 +36,9 @@ export function Modal({
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className={cn("p-0 rounded-[10px]", className)}>
+      <DialogContent
+        className={cn("p-0 rounded-[10px] [&>*]:min-w-0", className)}
+      >
         <DialogHeader className="bg-surface-300 py-[10px] px-[16px] rounded-t-[10px] border-b border-neutral-200">
           <DialogTitle className={cn("flex justify-between items-center p-0")}>
             <span className={cn("text-primary-300 font-bold ")}>{title}</span>

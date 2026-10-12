@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Button } from "#components/ui/button";
 import { CardContent } from "#components/ui/card";
 import { cn } from "#lib/utils";
 import { useNavigate } from "react-router";
+import NavbarRelatedLinks from "#components/navbar/navbar-related-links";
 import {
   useDashboardHeroDataQuery,
   useHeroImageURLQuery,
@@ -10,6 +12,7 @@ import { toAbsoluteAssetUrl } from "../../../features/base-api";
 
 export default function HomeHero() {
   const nav = useNavigate();
+  const [isOpenLinks, setIsOpenLinks] = useState(false);
 
   const { data } = useDashboardHeroDataQuery();
   const { data: heroImageData } = useHeroImageURLQuery();
@@ -31,6 +34,11 @@ export default function HomeHero() {
       variant: "primary",
       onClick: () => nav("/Courses"),
     },
+    {
+      label: "لینک‌های مرتبط",
+      variant: "glass",
+      onClick: () => setIsOpenLinks(true),
+    },
     /*  {
       label: "مشاهده دوره‌ها",
       variant: "glass",
@@ -39,7 +47,10 @@ export default function HomeHero() {
   ] as const;
 
   return (
-    <section
+    <>
+      <NavbarRelatedLinks isOpen={isOpenLinks} setIsOpen={setIsOpenLinks} />
+
+      <section
       className="relative min-h-180 w-full overflow-hidden bg-center bg-cover"
       style={{
         backgroundImage: isDefaultHero
@@ -115,6 +126,7 @@ export default function HomeHero() {
           </CardContent>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }

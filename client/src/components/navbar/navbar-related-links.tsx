@@ -14,7 +14,12 @@ export default function NavbarRelatedLinks({ isOpen, setIsOpen }: Props) {
   });
 
   return (
-    <Modal open={isOpen} onOpenChange={setIsOpen} title="لینک‌های مرتبط">
+    <Modal
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      title="لینک‌های مرتبط"
+      className="max-w-[min(500px,95vw)]!"
+    >
       <div className={cn("flex flex-col gap-2 py-4 px-[40px] min-h-40")}>
         {isLoading ? (
           <p className="text-sm text-content-tertiary py-8 text-center">
@@ -37,8 +42,8 @@ export default function NavbarRelatedLinks({ isOpen, setIsOpen }: Props) {
               </div>
 
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="flex items-center gap-1.5 truncate text-sm font-medium text-content-primary group-hover:text-primary">
-                  {link.title || link.url}
+                <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-content-primary group-hover:text-primary">
+                  <span className="truncate">{link.title || link.url}</span>
                   <ExternalLink className="size-3.5 shrink-0 text-content-tertiary" />
                 </span>
 

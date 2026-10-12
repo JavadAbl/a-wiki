@@ -193,9 +193,11 @@ export default function AdminCourse() {
 
     const reordered = arrayMove(documents, oldIndex, newIndex);
 
-    // Optimistic cache update + persistence happen inside the mutation hook
+    // Optimistic cache update + persistence happen inside the mutation hook.
+    // Pass the same string key the query is cached under (the route param), otherwise
+    // the optimistic patch targets a different cache entry and the row snaps back.
     const res = await mutateDocumentSetOrders({
-      courseId: course.id,
+      courseId: String(course.id),
       orders: reordered.map((d, index) => ({ id: d.id, order: index + 1 })),
     });
 

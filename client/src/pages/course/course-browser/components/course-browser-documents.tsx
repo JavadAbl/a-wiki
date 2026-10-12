@@ -4,10 +4,20 @@ import { Paperclip, Download } from "lucide-react";
 
 interface Props {
   course: CourseDetailsDto;
+  /**
+   * "vertical" (default): the narrow sidebar column used next to the player.
+   * "horizontal": a full-width layout that spreads the documents across the
+   * page in a responsive grid — used for courses that ship only files.
+   */
+  layout?: "vertical" | "horizontal";
 }
 
-export default function CourseBrowserDocuments({ course }: Props) {
+export default function CourseBrowserDocuments({
+  course,
+  layout = "vertical",
+}: Props) {
   const hasDocuments = course?.documents && course.documents.length > 0;
+  const isHorizontal = layout === "horizontal";
 
   return (
     <div className="flex flex-col gap-6 rounded-[24px] bg-surface-100 p-6 text-content-primary shadow-lg">
@@ -17,7 +27,11 @@ export default function CourseBrowserDocuments({ course }: Props) {
           <Paperclip className="w-5 h-5" />
         </div>
         <div className="flex flex-col">
-          <h3 className="text-lg font-bold font-h5">فایل‌های ضمیمه دوره</h3>
+          <h3 className="text-lg font-bold font-h5">
+            {isHorizontal
+              ? `فایل‌های ضمیمه دوره ${course?.title ?? ""}`.trim()
+              : "فایل‌های ضمیمه دوره"}
+          </h3>
           <p className="text-xs text-content-tertiary mt-0.5">
             {hasDocuments
               ? `${course.documents.length} فایل موجود است`
@@ -28,7 +42,14 @@ export default function CourseBrowserDocuments({ course }: Props) {
 
       {/* Documents List Section */}
       {hasDocuments ? (
-        <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1">
+        <div
+          className={cn(
+            "gap-3",
+            isHorizontal
+              ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+              : "flex flex-col max-h-[400px] overflow-y-auto pr-1",
+          )}
+        >
           {course.documents.map((doc) => (
             // Removed the Fragment <> and moved the key directly to the <a> tag
             <a

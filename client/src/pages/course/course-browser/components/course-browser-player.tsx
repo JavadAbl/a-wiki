@@ -15,10 +15,21 @@ import {
   VolumeX,
   SkipBack,
   SkipForward,
+  RotateCcw,
+  RotateCw,
 } from "lucide-react";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuLabel,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
+  ContextMenuTrigger,
+} from "#components/ui/context-menu";
 import { formatSeconds } from "../../../../utils/app-utils";
 
 const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 2];
+const SKIP_SECONDS_OPTIONS = [10, 20, 30];
 
 export default function CourseBrowserPlayer() {
   const dis = useAppDispatch();
@@ -75,6 +86,9 @@ export default function CourseBrowserPlayer() {
   const [duration, setDuration] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+
+  // Seconds skipped by the rewind/forward buttons (chosen from the context menu)
+  const [skipSeconds, setSkipSeconds] = useState(10);
 
   // ADDED: Autoplay state (default is true)
   const [isAutoplay, setIsAutoplay] = useState(true);
@@ -221,6 +235,18 @@ export default function CourseBrowserPlayer() {
       mediaRef.current.currentTime = time;
       setCurrentTime(time);
     }
+  };
+
+  // Skip forward/backward by the selected number of seconds (clamped to the media bounds)
+  const skipBy = (seconds: number) => {
+    if (!mediaRef.current) return;
+    const mediaDuration = mediaRef.current.duration || 0;
+    const target = Math.min(
+      Math.max(mediaRef.current.currentTime + seconds, 0),
+      mediaDuration || Infinity,
+    );
+    mediaRef.current.currentTime = target;
+    setCurrentTime(target);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -464,6 +490,50 @@ export default function CourseBrowserPlayer() {
               </div>
 
               <div className="flex items-center gap-3">
+                {/* Rewind / Fast-forward with a right-click context menu to pick the interval.
+                    The app is RTL, so the first flex child renders on the right: list
+                    forward first so it lands on the right and rewind on the left. */}
+                <ContextMenu>
+                  <ContextMenuTrigger className="flex items-center gap-3">
+                    <button
+                      onClick={() => skipBy(skipSeconds)}
+                      className="relative flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/40 transition-all"
+                      aria-label={`Forward ${skipSeconds} seconds`}
+                      title={`${skipSeconds} ثانیه جلو`}
+                    >
+                      <RotateCw size={20} className="text-white" />
+                      <span className="absolute text-[9px] font-bold text-white leading-none">
+                        {skipSeconds}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => skipBy(-skipSeconds)}
+                      className="relative flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/40 transition-all"
+                      aria-label={`Rewind ${skipSeconds} seconds`}
+                      title={`${skipSeconds} ثانیه عقب`}
+                    >
+                      <RotateCcw size={20} className="text-white" />
+                      <span className="absolute text-[9px] font-bold text-white leading-none">
+                        {skipSeconds}
+                      </span>
+                    </button>
+                  </ContextMenuTrigger>
+
+                  <ContextMenuContent className="w-40">
+                    <ContextMenuRadioGroup
+                      value={skipSeconds}
+                      onValueChange={(value) => setSkipSeconds(Number(value))}
+                    >
+                      <ContextMenuLabel>مقدار پرش (ثانیه)</ContextMenuLabel>
+                      {SKIP_SECONDS_OPTIONS.map((seconds) => (
+                        <ContextMenuRadioItem key={seconds} value={seconds}>
+                          {seconds} ثانیه
+                        </ContextMenuRadioItem>
+                      ))}
+                    </ContextMenuRadioGroup>
+                  </ContextMenuContent>
+                </ContextMenu>
                 {/* Previous / Next Lesson */}
                 <button
                   onClick={() =>

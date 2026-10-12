@@ -68,6 +68,31 @@ export default function CourseBrowser() {
 
   if (!course) return null;
 
+  // A course that has no video/audio content (e.g. a course that only ships
+  // attached documents) has nothing to play. In that case the player, the
+  // parts/syllabus view and the related-courses column are hidden, and the
+  // documents are shown full-width across the page instead.
+  const hasContent = course.totalContents > 0;
+  const hasDocuments = !!course.documents?.length;
+
+  if (!hasContent) {
+    return (
+      <div
+        className={cn(
+          "bg-surface-300 p-4 md:p-[16px] md:pb-[256px] mask-reveal-l",
+        )}
+      >
+        <div
+          className={cn("container mx-auto flex flex-col gap-4 md:gap-[16px]")}
+        >
+          <Show when={hasDocuments}>
+            <CourseBrowserDocuments course={course} layout="horizontal" />
+          </Show>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("bg-surface-300 p-4 md:p-[16px] mask-reveal-l")}>
       <div
@@ -133,7 +158,7 @@ export default function CourseBrowser() {
           </div>
 
           <div className={cn("w-full lg:w-[300px] lg:flex-shrink-0")}>
-            <Show when={!!course?.documents?.length}>
+            <Show when={hasDocuments}>
               <CourseBrowserDocuments course={course} />
             </Show>
           </div>

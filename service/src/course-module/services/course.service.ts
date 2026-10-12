@@ -53,7 +53,7 @@ export class CourseService {
               },
             },
           },
-          documents: true,
+          documents: { orderBy: { order: 'asc' } },
         },
       },
       'id',

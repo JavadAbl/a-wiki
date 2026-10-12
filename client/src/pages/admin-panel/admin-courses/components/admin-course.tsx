@@ -5,6 +5,7 @@ import {
   useCourseGetByIdQuery,
   useCourseUpdateMutation,
   useDocumentDeleteMutation,
+  useDocumentSetOrdersMutation,
   usePartDeleteMutation,
   usePartUpdateMutation,
   useSectionDeleteMutation,
@@ -12,6 +13,26 @@ import {
   useThumbnailDeleteMutation,
 } from "../../../../features/course/course-api";
 import { skipToken } from "@reduxjs/toolkit/query";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { toast } from "sonner";
+import { GripVertical } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Badge } from "#components/ui/badge";
 import { Separator } from "#components/ui/separator";
@@ -125,6 +146,7 @@ export default function AdminCourse() {
     useContentDeleteMutation();
   const [mutateDocumentDelete, { isLoading: isLoadingDocumentDelete }] =
     useDocumentDeleteMutation();
+  const [mutateDocumentSetOrders] = useDocumentSetOrdersMutation();
   const [mutateDeleteThumbnail, { isLoading: isLoadingThumbnailDelete }] =
     useThumbnailDeleteMutation();
 
@@ -145,6 +167,42 @@ export default function AdminCourse() {
   const contents: ContentDto[] = [...(selectedPart?.contents ?? [])].sort(
     (a, b) => a.order - b.order,
   );
+
+  const documents: DocumentDto[] = [...(course?.documents ?? [])].sort(
+    (a, b) => a.order - b.order || a.id - b.id,
+  );
+
+  // ---------- Document drag-and-drop reorder ----------
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDocumentDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !course) return;
+
+    const oldIndex = documents.findIndex(
+      (d) => String(d.id) === String(active.id),
+    );
+    const newIndex = documents.findIndex(
+      (d) => String(d.id) === String(over.id),
+    );
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(documents, oldIndex, newIndex);
+
+    // Optimistic cache update + persistence happen inside the mutation hook
+    const res = await mutateDocumentSetOrders({
+      courseId: course.id,
+      orders: reordered.map((d, index) => ({ id: d.id, order: index + 1 })),
+    });
+
+    if (res.error) {
+      toast.error("ذخیره ترتیب ناموفق بود");
+    }
+  };
 
   // --- Inline editing state (title / lecturer / lecturerProfession) ---
   type EditableCourseField = "title" | "lecturer" | "lecturerProfession";
@@ -714,71 +772,57 @@ export default function AdminCourse() {
             </div>
           </CardHeader>
           <CardContent>
-            {course.documents && course.documents.length > 0 ? (
-              <div className="rounded-lg border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      {/* Added text-right to fix RTL alignment */}
-                      <TableHead className="text-right">عنوان</TableHead>
+            {documents.length > 0 ? (
+              <>
+                <p className="text-xs text-muted-foreground mb-3">
+                  برای تغییر ترتیب نمایش، ردیف‌ها را با کشیدن دستگیره جابجا کنید.
+                </p>
+                <div className="rounded-lg border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <TableHead className="w-[40px] text-right" />
 
-                      {/* Added text-right to fix RTL alignment */}
-                      <TableHead className="hidden md:table-cell max-w-[300px] text-right">
-                        توضیحات
-                      </TableHead>
+                        {/* Added text-right to fix RTL alignment */}
+                        <TableHead className="text-right">عنوان</TableHead>
 
-                      <TableHead className="w-[80px] text-left md:text-right">
-                        عملیات
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
+                        {/* Added text-right to fix RTL alignment */}
+                        <TableHead className="hidden md:table-cell max-w-[300px] text-right">
+                          توضیحات
+                        </TableHead>
 
-                  <TableBody>
-                    {course.documents.map((doc, index) => (
-                      <TableRow key={`Docs_${index}`} className="group">
-                        <TableCell className="align-middle">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                              <File className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <span className="font-medium text-sm">
-                              {doc.title}
-                            </span>
-                          </div>
-                        </TableCell>
-
-                        {/* ✅ Added max-w-[300px] to match the header's width constraint */}
-                        <TableCell className="hidden md:table-cell align-middle max-w-[300px]">
-                          <span className="text-sm text-muted-foreground line-clamp-1">
-                            {doc.description || "—"}
-                          </span>
-                        </TableCell>
-
-                        {/* ✅ Added w-[80px] to match the header's width constraint */}
-                        <TableCell className="text-left md:text-right align-middle w-[80px]">
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <button
-                                onClick={() => {
-                                  setSelectedDocument(doc);
-                                  setIsOpenDocumentDeleteConfirm(true);
-                                }}
-                                className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer hover:bg-destructive/25 rounded-full p-1 shrink-0 ml-1"
-                                aria-label="Remove"
-                              >
-                                <X size={14} className="text-destructive" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>حذف کردن سند</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableCell>
+                        <TableHead className="w-[80px] text-left md:text-right">
+                          عملیات
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDocumentDragEnd}
+                    >
+                      <SortableContext
+                        items={documents.map((d) => String(d.id))}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <TableBody>
+                          {documents.map((doc) => (
+                            <SortableDocumentRow
+                              key={`Docs_${doc.id}`}
+                              doc={doc}
+                              onDelete={() => {
+                                setSelectedDocument(doc);
+                                setIsOpenDocumentDeleteConfirm(true);
+                              }}
+                            />
+                          ))}
+                        </TableBody>
+                      </SortableContext>
+                    </DndContext>
+                  </Table>
+                </div>
+              </>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -926,5 +970,78 @@ export default function AdminCourse() {
         </Card>
       </div>
     </TooltipProvider>
+  );
+}
+
+// ---------- Sortable document row ----------
+function SortableDocumentRow({
+  doc,
+  onDelete,
+}: {
+  doc: DocumentDto;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: String(doc.id) });
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={cn("group", isDragging && "opacity-50 bg-primary/5")}
+    >
+      <TableCell className="align-middle w-[40px]">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label="جابجایی سند"
+          className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </TableCell>
+
+      <TableCell className="align-middle">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <File className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <span className="font-medium text-sm">{doc.title}</span>
+        </div>
+      </TableCell>
+
+      <TableCell className="hidden md:table-cell align-middle max-w-[300px]">
+        <span className="text-sm text-muted-foreground line-clamp-1">
+          {doc.description || "—"}
+        </span>
+      </TableCell>
+
+      <TableCell className="text-left md:text-right align-middle w-[80px]">
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              onClick={onDelete}
+              className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer hover:bg-destructive/25 rounded-full p-1 shrink-0 ml-1"
+              aria-label="Remove"
+            >
+              <X size={14} className="text-destructive" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>حذف کردن سند</p>
+          </TooltipContent>
+        </Tooltip>
+      </TableCell>
+    </TableRow>
   );
 }

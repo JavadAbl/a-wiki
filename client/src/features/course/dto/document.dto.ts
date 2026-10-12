@@ -3,5 +3,6 @@ export interface DocumentDto {
   fileUrl: string;
   fileSize: number;
   title: string;
+  order: number;
   description?: string | null;
 }

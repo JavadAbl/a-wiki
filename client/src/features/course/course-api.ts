@@ -551,6 +551,36 @@ export const courseApi = createApi({
       invalidatesTags: ["course"],
     }),
 
+    DocumentSetOrders: builder.mutation<
+      void,
+      { orders: { id: number; order: number }[]; courseId: number | string }
+    >({
+      query: ({ orders }) => ({
+        url: "Courses/Documents/SetOrders",
+        method: "PATCH",
+        body: { orders },
+      }),
+      invalidatesTags: ["course"],
+      // Optimistic update: reorder the cached course documents immediately, undo on failure
+      async onQueryStarted({ orders, courseId }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          courseApi.util.updateQueryData("CourseGetById", courseId, (draft) => {
+            if (!draft.documents) return;
+            const orderById = new Map(orders.map((o) => [o.id, o.order]));
+            draft.documents = draft.documents
+              .map((d) => ({ ...d, order: orderById.get(d.id) ?? d.order }))
+              .sort((a, b) => a.order - b.order || a.id - b.id);
+          }),
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+    }),
+
     // Thumbnail-------------------------------------------------------
     ThumbnailCreate: builder.mutation<
       number,
@@ -599,6 +629,7 @@ export const {
   usePartDeleteMutation,
   useSectionDeleteMutation,
   useDocumentDeleteMutation,
+  useDocumentSetOrdersMutation,
   useThumbnailCreateMutation,
   useThumbnailDeleteMutation,
   useCourseDeleteMutation,

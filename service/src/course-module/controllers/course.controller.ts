@@ -39,6 +39,7 @@ import { User } from 'src/common/decorators/user.decorator';
 import { type TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 import { Public } from 'src/common/decorators/public.decorator';
 import { DocumentCreateDto } from '../dto/request/document-create.dto';
+import { DocumentSetOrdersDto } from '../dto/request/document-set-orders.dto';
 import { DocumentService } from '../services/document.service';
 import { ContentUpdateDto } from '../dto/request/content-update.dto';
 import { PartUpdateDto } from '../dto/request/part-update.dto';
@@ -317,6 +318,12 @@ export class CourseController {
   @HttpCode(HttpStatus.NO_CONTENT)
   documentDelete(@Param('documentId', ParseIntPipe) id: number): Promise<void> {
     return this.documentService.documentDelete(id);
+  }
+
+  @Admin()
+  @Patch('Documents/SetOrders')
+  documentSetOrders(@Body() payload: DocumentSetOrdersDto): Promise<void> {
+    return this.documentService.documentSetOrders(payload);
   }
 
   //Thumbnail--------------------------------------------------------

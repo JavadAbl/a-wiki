@@ -12,5 +12,11 @@ export class DocumentDto {
   fileSize: number;
 
   @Expose()
+  title: string;
+
+  @Expose()
+  order: number;
+
+  @Expose()
   description?: string | null;
 }

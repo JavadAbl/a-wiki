@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DocumentRepository } from '../repositories/document.repository';
 import { DocumentCreateDto } from '../dto/request/document-create.dto';
+import { DocumentSetOrdersDto } from '../dto/request/document-set-orders.dto';
 import { CourseRepository } from '../repositories/course.repository';
 import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 import { extname } from 'path';
@@ -23,7 +24,10 @@ export class DocumentService {
     if (!file) throw new BadRequestException('Wrong file');
 
     const course = await this.courseRep.findAndCheckExistsBy(
-      { where: { id: courseId } },
+      {
+        where: { id: courseId },
+        include: { documents: { select: { order: true }, orderBy: { order: 'desc' }, take: 1 } },
+      },
       'courseId',
       courseId,
     );
@@ -42,6 +46,11 @@ export class DocumentService {
     // 5. Free memory
     file.buffer = null as any;
 
+    // Append to the end of the document list
+    let order = 0;
+    const lastDocument = course.documents?.[0]?.order;
+    if (lastDocument != undefined) order = lastDocument + 1;
+
     // 6. Persist inside a transaction so order assignment is race-safe
     const document = await this.documentRep.create({
       data: {
@@ -50,10 +59,26 @@ export class DocumentService {
         description: payload.description,
         courseId: course.id,
         fileSize: fileSizeInKb,
+        order,
       },
     });
 
     return document.id;
+  }
+
+  async documentSetOrders(payload: DocumentSetOrdersDto): Promise<void> {
+    const { orders } = payload;
+
+    const ids = orders.map((o) => o.id);
+    const found = await this.documentRep.count({ where: { id: { in: ids } } });
+    if (found !== ids.length) {
+      throw new BadRequestException('One or more documents not found');
+    }
+
+    const prisma = this.documentRep.prismaClient;
+    await prisma.$transaction(
+      orders.map((o) => prisma.document.update({ where: { id: o.id }, data: { order: o.order } })),
+    );
   }
 
   async documentDelete(documentId: number): Promise<void> {

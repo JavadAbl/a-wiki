@@ -39,7 +39,7 @@ export default function CoursesHeader({
                   : "secondary"
               }
               className={cn(
-                "whitespace-nowrap max-w-[160px] h-auto font-normal font-b2",
+                "whitespace-nowrap px-3 h-auto font-normal font-b2",
               )}
               onClick={() => {
                 // If the category is already selected, deselect it (pass null)

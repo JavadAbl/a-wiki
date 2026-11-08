@@ -78,7 +78,7 @@ export class UserService {
   async userCreate(payload: UserCreateDto): Promise<number> {
     const { nationalCode } = payload;
 
-    await this.userRep.checkDuplicateBy({ where: { nationalCode } }, 'mobile', nationalCode);
+    await this.userRep.checkDuplicateBy({ where: { nationalCode } }, 'nationalCode', nationalCode);
 
     const defaultPassword = nationalCode;
     const hashedPassword = await this.passwordService.hashPassword(defaultPassword);

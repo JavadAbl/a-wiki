@@ -10,6 +10,7 @@ import {
 } from "#components/ui/dropdown-menu";
 import {
   CheckCircleIcon,
+  FileSpreadsheet,
   MoreVertical,
   Pencil,
   PlusIcon,
@@ -19,6 +20,7 @@ import {
 import { useUserGetManyQuery } from "../../../features/user/user-api";
 import type { UserDto } from "../../../features/user/dto/user.dto";
 import UserCreate from "./components/user-create";
+import UserBatchCreate from "./components/user-batch-create";
 import UserUpdate from "./components/user-update";
 import { Badge } from "#components/ui/badge";
 import UserSetActive from "./components/user-set-active";
@@ -29,6 +31,7 @@ import { useDebounce } from "#hooks/use-debounce";
 
 export default function AdminPanelUsers() {
   const [isOpenUserCreate, setIsOpenUserCreate] = useState(false);
+  const [isOpenUserBatchCreate, setIsOpenUserBatchCreate] = useState(false);
   const [selectedUserForUpdate, setSelectedUserForUpdate] =
     useState<UserDto | null>(null);
   const [selectedUserForSetActive, setSelectedUserForSetActive] =
@@ -147,6 +150,14 @@ export default function AdminPanelUsers() {
           increaseModalsKey();
         }}
       />
+      <UserBatchCreate
+        key={`Batch_${modalKeys}`}
+        isOpen={isOpenUserBatchCreate}
+        setIsOpen={(open: boolean) => {
+          setIsOpenUserBatchCreate(open);
+          increaseModalsKey();
+        }}
+      />
       <UserUpdate
         key={`Update_${modalKeys}`}
         user={selectedUserForUpdate}
@@ -194,10 +205,20 @@ export default function AdminPanelUsers() {
             </div>
           </div>
 
-          <Button onClick={() => setIsOpenUserCreate(true)}>
-            <PlusIcon />
-            افزودن کاربر
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpenUserBatchCreate(true)}
+            >
+              <FileSpreadsheet />
+              افزودن گروهی (اکسل)
+            </Button>
+
+            <Button onClick={() => setIsOpenUserCreate(true)}>
+              <PlusIcon />
+              افزودن کاربر
+            </Button>
+          </div>
         </div>
 
         {/* DataGrid in Server Mode */}

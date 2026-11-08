@@ -4,6 +4,7 @@ import { baseApi } from "../base-api";
 import type { GetManyQuery, GetManyReply } from "../../utils/types";
 import type { UserCreateDto } from "./schemas/user-create.schema";
 import type { UserUpdateDto } from "./schemas/user-update.schema";
+import type { UserBatchResult } from "./dto/user-batch-result.dto";
 
 export const userApi = createApi({
   reducerPath: "userApi",
@@ -44,6 +45,22 @@ export const userApi = createApi({
       }),
       invalidatesTags: ["user"],
     }),
+    UserBatchTemplate: builder.query<Blob, void>({
+      query: () => ({
+        url: "Users/Batch/Template",
+        responseHandler: (response) => response.blob(),
+        cache: "no-cache",
+      }),
+    }),
+
+    UserBatchCreate: builder.mutation<UserBatchResult, { body: FormData }>({
+      query: ({ body }) => ({
+        url: "Users/Batch",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["user"],
+    }),
   }),
 });
 
@@ -53,4 +70,6 @@ export const {
   useUserCreateMutation,
   useUserUpdateMutation,
   useLazyUserGetByContextQuery,
+  useLazyUserBatchTemplateQuery,
+  useUserBatchCreateMutation,
 } = userApi;

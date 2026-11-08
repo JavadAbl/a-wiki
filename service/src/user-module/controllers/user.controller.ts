@@ -9,7 +9,14 @@ import {
   HttpStatus,
   ParseIntPipe,
   Patch,
+  Res,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { type Response } from 'express';
 import { GetManyQuery, GetManyQueryType } from 'src/common/dto/request/get-many-query';
 import { UserCreateDto } from '../dto/request/user-create.dto';
 import { GetManyReply } from 'src/common/dto/response/get-many-reply';
@@ -22,16 +29,44 @@ import { type TokenPayload } from 'src/auth-module/contracts/token-service.contr
 import { Public } from 'src/common/decorators/public.decorator';
 import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-otp.dto';
 import { UserUpdateDto } from '../dto/request/user-update.dto';
+import { Admin } from 'src/common/decorators/admin.decorator';
+import { UserBatchService } from '../services/user-batch.service';
+import { UserBatchResultDto } from '../dto/response/user-batch-result.dto';
 
 @Controller('Users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly userBatchService: UserBatchService,
+  ) {}
 
   /*   @Public()
   @Get('test')
   test() {
     return this.userService.insertData();
   } */
+
+  @Admin()
+  @Get('Batch/Template')
+  async userBatchTemplate(@Res() res: Response): Promise<void> {
+    const buffer = await this.userBatchService.buildTemplate();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="users-template.xlsx"');
+    res.send(buffer);
+  }
+
+  @Admin()
+  @Post('Batch')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(
+    FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } }),
+  )
+  userBatchCreate(@UploadedFile() file?: Express.Multer.File): Promise<UserBatchResultDto> {
+    if (!file?.buffer || file.size === 0) throw new BadRequestException('فایلی انتخاب نشده است.');
+    if (!/\.xlsx$/i.test(file.originalname))
+      throw new BadRequestException('فقط فایل اکسل با پسوند xlsx پذیرفته می‌شود.');
+    return this.userBatchService.createFromWorkbook(file.buffer);
+  }
 
   @Get()
   userGetMany(@Query() query: GetManyQuery, @User() context: TokenPayload): Promise<GetManyReply<UserDto>> {

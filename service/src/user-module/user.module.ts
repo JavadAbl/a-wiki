@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserController } from './controllers/user.controller';
 import { UserService } from './services/user.service';
 import { UserRepository } from './repository/user.repository';
+import { UserBatchService } from './services/user-batch.service';
 import { PasswordService } from 'src/auth-module/services/password.service';
 import { UserProvider } from './providers/user.service.provider';
 import { UserServiceContract } from './contracts/user-service.contract';
@@ -11,6 +12,7 @@ import { UserServiceContract } from './contracts/user-service.contract';
   controllers: [UserController],
   providers: [
     UserService,
+    UserBatchService,
     UserRepository,
     PasswordService,
     { provide: UserServiceContract, useClass: UserProvider },

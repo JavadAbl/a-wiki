@@ -5,7 +5,7 @@ services:
     # container_name: node_app
     # Load variables from .env file into the container
     env_file:
-      - .env
+      - .env.prod
     # Expose 3000 internally to the docker network (not to the host)
     volumes:
       - ./logs:/app/logs

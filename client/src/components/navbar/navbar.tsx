@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import NavbarResetPassword from "./navbar-reset-password";
 import NavbarRelatedLinks from "./navbar-related-links";
 import { useState } from "react";
+import { storage } from "../../utils/storage";
+import { Building2 } from "lucide-react";
 
 const links = [
   { text: "صفحه اصلی", to: "/" },
@@ -52,6 +54,8 @@ export default function Navbar() {
         >
           <div className={cn("flex flex-wrap text-sm items-end gap-4")}>
             <AtieLogo />
+
+            <NavbarTenantChip />
 
             {isAuth ? (
               <div className={cn("flex gap-1 items-center")}>
@@ -153,5 +157,27 @@ export default function Navbar() {
         </div>
       </div>
     </>
+  );
+}
+
+/// shows the currently selected tenant instance; click to switch
+function NavbarTenantChip() {
+  const nav = useNavigate();
+  const tenant = storage.getTenant();
+  if (!tenant) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => nav("/Tenants")}
+      title="تغییر سامانه"
+      className={cn(
+        "flex items-center gap-1.5 rounded-2xl border border-primary/30 bg-primary/5",
+        "px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors cursor-pointer",
+      )}
+    >
+      <Building2 className="h-3.5 w-3.5" />
+      <span className="max-w-40 truncate">{tenant.name}</span>
+    </button>
   );
 }

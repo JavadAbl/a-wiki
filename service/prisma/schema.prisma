@@ -12,21 +12,51 @@ datasource db {
 }
 
 // =============================================================================
+// TENANCY
+// =============================================================================
+
+/// A tenant is one independent "instance" of the wiki (its own users, courses,
+/// categories, links and progress). End users pick a tenant on the landing
+/// screen; afterwards every request is scoped to that tenant.
+model Tenant {
+  id          Int     @id() @default(autoincrement())
+  name        String
+  slug        String  @unique()
+  description String?
+  logoUrl     String?
+  isActive    Boolean @default(true)
+  order       Int     @default(0)
+
+  users       User[]
+  categories  Category[]
+  courses     Course[]
+  links       Link[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================================
 // AUTH & USER MANAGEMENT 
 // =============================================================================
 
+/// tenantId == null means the user is global (only the seeded SuperAdmin).
 model User {
-  id           Int     @id() @default(autoincrement())
+  id           Int      @id() @default(autoincrement())
+  tenantId     Int?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   mobile       String?
-  nationalCode String  @unique()
+  nationalCode String
   firstName    String
   lastName     String
   password     String
-  isActive     Boolean @default(true)
-  role         String  @default("User")
+  isActive     Boolean  @default(true)
+  role         String   @default("User")
 
   userPermissions UserPermission[]
   userPartViews   PartView[]
+
+  @@unique([tenantId, nationalCode])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,11 +118,15 @@ model RolePermission {
 
 model Category {
   id          Int      @id() @default(autoincrement())
-  name        String   @unique()
+  tenantId    Int
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  name        String
   description String?
   icon        String?  @db.NVarChar(MAX)
   order       Int      @default(0)
   courses     Course[]
+
+  @@unique([tenantId, name])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -100,11 +134,13 @@ model Category {
 
 /// Related links ("لینک‌های مرتبط") managed by admins, shown in the navbar modal
 model Link {
-  id          Int      @id() @default(autoincrement())
+  id          Int     @id() @default(autoincrement())
+  tenantId    Int
+  tenant      Tenant  @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   title       String?
   url         String
   description String?
-  order       Int      @default(0)
+  order       Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -112,9 +148,11 @@ model Link {
 
 model Course {
   id                 Int       @id() @default(autoincrement())
+  tenantId           Int
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   categoryId         Int?
   category           Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  title              String    @unique()
+  title              String
   description        String?
   thumbnailUrl       String?
   isPublished        Boolean   @default(false)
@@ -129,12 +167,15 @@ model Course {
   sections  Section[]
   documents Document[]
 
+  @@unique([tenantId, title])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 /// Join table: related courses ("دوره‌های مرتبط") set by admins, shown on the course page
 model CourseRelatedCourse {
+  tenantId        Int
   courseId        Int
   relatedCourseId Int
   course          Course @relation("courseRelatedCourses", fields: [courseId], references: [id], onUpdate: NoAction, onDelete: NoAction)
@@ -149,6 +190,7 @@ model CourseRelatedCourse {
 /// Courses marked as popular ("دوره‌های پرطرفدار") by admins, shown on the home page
 model FavoriteCourse {
   id       Int    @id() @default(autoincrement())
+  tenantId Int
   courseId Int    @unique()
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   order    Int    @default(0)
@@ -159,6 +201,7 @@ model FavoriteCourse {
 
 model Document {
   id          Int     @id() @default(autoincrement())
+  tenantId    Int
   courseId    Int
   course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   fileUrl     String
@@ -173,6 +216,7 @@ model Document {
 
 model Section {
   id          Int     @id() @default(autoincrement())
+  tenantId    Int
   courseId    Int
   course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title       String
@@ -187,6 +231,7 @@ model Section {
 
 model Part {
   id          Int     @id() @default(autoincrement())
+  tenantId    Int
   sectionId   Int
   section     Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   title       String
@@ -202,6 +247,7 @@ model Part {
 
 model Content {
   id              Int     @id() @default(autoincrement())
+  tenantId        Int
   partId          Int
   part            Part    @relation(fields: [partId], references: [id], onDelete: Cascade)
   mediaType       String
@@ -217,13 +263,14 @@ model Content {
 
 /// Granular progress tied to a specific course part
 model PartView {
-  id     Int  @id() @default(autoincrement())
-  partId Int
-  userId Int
-  part   Part @relation(fields: [partId], references: [id], onDelete: Cascade)
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  id       Int  @id() @default(autoincrement())
+  tenantId Int
+  partId   Int
+  userId   Int
+  part     Part @relation(fields: [partId], references: [id], onDelete: Cascade)
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, partId])
+
+  createdAt DateTime @default(now())
 }

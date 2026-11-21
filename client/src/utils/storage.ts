@@ -3,6 +3,7 @@ class Storage {
   private accessTokenKey = "accessToken";
   private refreshTokenKey = "refreshToken";
   private sidebarStateKey = "sidebarCollapsed";
+  private tenantKey = "tenant";
 
   // --- persistent preferences: localStorage ---
   getTheme() {
@@ -17,6 +18,24 @@ class Storage {
   }
   setSidebarCollapsed(isCollapsed: boolean) {
     localStorage.setItem(this.sidebarStateKey, JSON.stringify(isCollapsed));
+  }
+
+  // --- selected tenant instance: localStorage (remembered across sessions) ---
+  getTenant(): { id: number; name: string; slug: string; logoUrl?: string | null } | null {
+    const raw = localStorage.getItem(this.tenantKey);
+    if (!raw) return null;
+    try {
+      const tenant = JSON.parse(raw);
+      return typeof tenant?.id === "number" ? tenant : null;
+    } catch {
+      return null;
+    }
+  }
+  setTenant(tenant: { id: number; name: string; slug: string; logoUrl?: string | null }) {
+    localStorage.setItem(this.tenantKey, JSON.stringify(tenant));
+  }
+  clearTenant() {
+    localStorage.removeItem(this.tenantKey);
   }
 
   // --- session-scoped tokens: sessionStorage ---

@@ -7,7 +7,8 @@ import { User } from 'src/generated/prisma/client';
 export class UserProvider implements UserServiceContract {
   constructor(private readonly userRep: UserRepository) {}
   userGetByNationalCode(nationalCode: string): Promise<UserWithPermissions | null> {
-    return this.userRep.findUnique({
+    // nationalCode is unique per tenant now, so this is a scoped lookup
+    return this.userRep.findFirst({
       where: { nationalCode },
       include: { userPermissions: { select: { permission: { select: { name: true } } } } },
     });

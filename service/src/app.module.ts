@@ -15,6 +15,9 @@ import { join } from 'path';
 import { AdminGuard } from './common/guards/admin.guard';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TenantCoreModule } from './common/tenant/tenant.module';
+import { TenantModule } from './tenant-module/tenant.module';
+import { SuperAdminGuard } from './common/guards/super-admin.guard';
 
 @Module({
   imports: [
@@ -39,18 +42,23 @@ import { AppService } from './app.service';
 
     CacheModule.register({ isGlobal: true }),
 
+    // global: provides TenantContext + TenantMiddleware (per-request tenant store)
+    TenantCoreModule,
+
     PrismaModule,
     S3Module,
     AuthModule,
     UserModule,
     CourseModule,
     LinkModule,
+    TenantModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: AuthenticationGuard },
     { provide: APP_GUARD, useClass: AdminGuard },
+    { provide: APP_GUARD, useClass: SuperAdminGuard },
     /*   { provide: APP_GUARD, useClass: AuthorizationGuard }, */
   ],
 })

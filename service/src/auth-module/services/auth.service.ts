@@ -34,6 +34,7 @@ import { RefreshTokenDto } from '../dto/request/refresh-token.dto';
 import { TokensDto } from '../dto/response/tokens.dto';
 import { PermissionType } from '../enums/permission-type.enum';
 import { Role } from '../enums/role.enum';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class AuthService {
@@ -50,14 +51,19 @@ export class AuthService {
     @Inject(UserServiceContract) private readonly userService: UserServiceContract,
     @Inject(CACHE_MANAGER) private cacheManager: NestCache,
     private readonly config: ConfigService<AppConfig>,
+    private readonly tenantContext: TenantContext,
   ) {}
 
   async login(payload: LoginDto): Promise<AuthDto> {
     const { password, nationalCode } = payload;
 
+    // tenant-scoped automatically via the Prisma extension when the
+    // X-Tenant-Id header is present; without a header only global users
+    // (the seeded SuperAdmin) may log in.
     const user = await this.userService.userGetByNationalCode(nationalCode);
 
-    if (!user) throw new UnauthorizedException('نام کاربری یا رمز عبور اشتباه است');
+    if (!user || !this.tenantContext.matchesTenant(user.tenantId))
+      throw new UnauthorizedException('نام کاربری یا رمز عبور اشتباه است');
 
     if (!user.isActive) throw new UnauthorizedException('کاربر غیر فعال است');
 
@@ -68,6 +74,7 @@ export class AuthService {
       userId: user.id,
       role: user.role,
       permissions: user.userPermissions.map((up) => up.permission.name),
+      tenantId: user.tenantId,
     });
 
     const userDto = plainToInstance(UserDto, user);
@@ -77,19 +84,21 @@ export class AuthService {
   async loginWithOto(payload: LoginOtpDto): Promise<AuthDto> {
     const { otp, mobile } = payload;
 
-    const cachedOtp = await this.cacheManager.get(`otp-${mobile}`);
+    const cachedOtp = await this.cacheManager.get(this.tenantContext.scopedKey(`otp-${mobile}`));
     if (cachedOtp != otp) throw new UnauthorizedException('کد اشتباه است');
 
     const user = await this.userService.userGetByMobile(mobile);
-    if (!user) throw new UnauthorizedException('کاربر اشتباه است');
+    if (!user || !this.tenantContext.matchesTenant(user.tenantId))
+      throw new UnauthorizedException('کاربر اشتباه است');
 
     const { accessToken, refreshToken } = await this.tokenService.generateTokens({
       userId: user.id,
       role: user.role,
       permissions: user.userPermissions.map((up) => up.permission.name),
+      tenantId: user.tenantId,
     });
 
-    await this.cacheManager.del(`otp-${mobile}`);
+    await this.cacheManager.del(this.tenantContext.scopedKey(`otp-${mobile}`));
     const userDto = plainToInstance(UserDto, user);
     return { user: userDto, refreshToken, accessToken };
   }
@@ -97,10 +106,10 @@ export class AuthService {
   async sendOtp(payload: SendOtpDto) {
     const { mobile } = payload;
     const user = await this.userService.userGetByMobile(mobile);
-    if (!user) return;
+    if (!user || !this.tenantContext.matchesTenant(user.tenantId)) return;
     const random5Digit = Math.floor(Math.random() * 90000) + 10000;
     await this.sendSms(mobile, random5Digit.toFixed());
-    await this.cacheManager.set(`otp-${mobile}`, random5Digit, 120000);
+    await this.cacheManager.set(this.tenantContext.scopedKey(`otp-${mobile}`), random5Digit, 120000);
   }
 
   async refreshToken(payload: RefreshTokenDto): Promise<TokensDto> {
@@ -112,6 +121,7 @@ export class AuthService {
       permissions: tokenPayload.permissions,
       role: tokenPayload.role,
       userId: tokenPayload.userId,
+      tenantId: tokenPayload.tenantId ?? null,
     });
 
     return tokens;

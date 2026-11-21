@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router";
 import { Button } from "#components/ui/button";
 import {
   BookOpen,
+  Building2,
   ChartBarIncreasingIcon,
   Link2,
   LogOut, // Changed from ChevronRightIcon for better UX
@@ -11,9 +12,13 @@ import {
 } from "lucide-react";
 import { cn } from "#lib/utils";
 import { Separator } from "#components/ui/separator";
+import { useAppSelector } from "#hooks/redux-hooks";
+import { Role } from "../../../features/auth/enums/role";
 
 export function AdminSidebar() {
   const nav = useNavigate();
+  const user = useAppSelector((s) => s.auth.user);
+  const isSuperAdmin = user?.role === Role.SuperAdmin;
 
   // Helper function to generate classes for the NavLink
   const getNavLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -107,6 +112,23 @@ export function AdminSidebar() {
             </Button>
           )}
         </NavLink>
+
+        {isSuperAdmin && (
+          <NavLink to="/Admin/Tenants" className={getNavLinkClass}>
+            {({ isActive }) => (
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-2",
+                  isActive && "bg-transparent hover:bg-transparent",
+                )}
+              >
+                <Building2 size={18} />
+                <span>سامانه‌ها</span>{" "}
+              </Button>
+            )}
+          </NavLink>
+        )}
       </div>
 
       {/* Footer */}

@@ -3,6 +3,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { ITokenService } from 'src/auth-module/contracts/token-service.contract';
 import { Request } from 'express';
+import { TenantContext } from '../tenant/tenant-context';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class AuthenticationGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private readonly tokenService: ITokenService,
+    private readonly tenantContext: TenantContext,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,6 +30,12 @@ export class AuthenticationGuard implements CanActivate {
     const accessToken = authorizeHeader.split(' ')?.[1];
 
     const tokenPayload = await this.tokenService.verifyAccessToken(accessToken);
+
+    // The JWT tenant is authoritative over the X-Tenant-Id header:
+    // a user of tenant A can never see tenant B by faking the header,
+    // and a global SuperAdmin (tenantId == null) sees across tenants.
+    this.tenantContext.overrideFromToken(tokenPayload);
+
     request.user = tokenPayload;
     return true;
   }

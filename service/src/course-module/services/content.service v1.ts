@@ -9,11 +9,13 @@ import * as mm from 'music-metadata';
 import { S3Client } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'src/common/config/config.type';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class ContentService {
   s3Client: S3Client;
   constructor(
+    private readonly tenantContext: TenantContext,
     private readonly contentRep: ContentRepository,
     private readonly partRep: PartRepository,
     private readonly configService: ConfigService<AppConfig>,
@@ -92,6 +94,7 @@ export class ContentService {
     // 7. Save all records to the database in a single query
     const content = await this.contentRep.create({
       data: {
+        tenantId: this.tenantContext.tenantId!,
         durationSeconds,
         mediaUrl: relativeUrl,
         mediaType: mediaType as any,

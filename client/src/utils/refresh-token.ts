@@ -5,6 +5,7 @@ import type { BaseQueryApi } from "@reduxjs/toolkit/query/react";
 import type { AppState } from "../features/store";
 import { authActions } from "../features/auth/auth-slice";
 import { BASE_ADDRESS } from "../features/base-api";
+import { storage } from "./storage";
 
 const mutex = new Mutex();
 
@@ -33,10 +34,13 @@ export async function refreshAccessToken(api: BaseQueryApi): Promise<boolean> {
       return false;
     }
 
+    const tenant = storage.getTenant();
+
     const refreshResult = await fetch(`${BASE_ADDRESS}Auth/RefreshToken`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(tenant ? { "X-Tenant-Id": String(tenant.id) } : {}),
       },
       body: JSON.stringify({ refreshToken }),
     });

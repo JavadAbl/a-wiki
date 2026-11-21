@@ -6,10 +6,14 @@ import { LinkUpdateDto } from '../dto/request/link-update.dto';
 import { LinkSetOrdersDto } from '../dto/request/link-set-orders.dto';
 import { LinkDto } from '../dto/response/link.dto';
 import { plainToInstance } from 'class-transformer';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class LinkService {
-  constructor(private readonly linkRep: LinkRepository) {}
+  constructor(
+    private readonly tenantContext: TenantContext,
+    private readonly linkRep: LinkRepository,
+  ) {}
 
   async linkGetMany(): Promise<LinkDto[]> {
     const links = await this.linkRep.findMany({
@@ -37,7 +41,7 @@ export class LinkService {
   }
 
   async linkCreate(payload: LinkCreateDto): Promise<number> {
-    const link = await this.linkRep.create({ data: payload });
+    const link = await this.linkRep.create({ data: { ...payload, tenantId: this.tenantContext.tenantId! } });
     return link.id;
   }
 

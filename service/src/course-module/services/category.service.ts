@@ -10,10 +10,14 @@ import { CategoryRepository } from '../repositories/category.repository';
 import { CategoryUpdateDto } from '../dto/request/category-update.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import type { CategoryOrderByWithRelationInput } from 'src/generated/prisma/models/Category';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly categoryRep: CategoryRepository) {}
+  constructor(
+    private readonly tenantContext: TenantContext,
+    private readonly categoryRep: CategoryRepository,
+  ) {}
 
   async categoryGetMany(query: GetManyQueryType<'Category'>): Promise<GetManyReply<CategoryDto>> {
     const predicate = buildFindManyArgs(query, { searchableFields: ['name'] });
@@ -55,7 +59,7 @@ export class CategoryService {
 
     await this.categoryRep.checkDuplicateBy({ where: { name } }, 'name', name);
 
-    const category = await this.categoryRep.create({ data: payload });
+    const category = await this.categoryRep.create({ data: { ...payload, tenantId: this.tenantContext.tenantId! } });
     return category.id;
   }
 

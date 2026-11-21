@@ -5,6 +5,9 @@ import { PrismaClient } from '../src/generated/prisma/client';
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+/// seed data belongs to the default tenant created by the multi-tenancy migration
+const DEFAULT_TENANT_ID = 1;
+
 async function createCategories() {
   const farsiCategories = [
     'برنامه‌نویسی وب',
@@ -33,9 +36,9 @@ async function createCategories() {
 
   for (const name of farsiCategories) {
     await prisma.category.upsert({
-      where: { name },
+      where: { tenantId_name: { tenantId: DEFAULT_TENANT_ID, name } },
       update: {}, // No updates needed if category already exists
-      create: { name },
+      create: { name, tenantId: DEFAULT_TENANT_ID },
     });
     createdCount++;
   }
@@ -182,9 +185,9 @@ async function createCourses() {
     const category = categories[i % categories.length];
 
     await prisma.course.upsert({
-      where: { title: data.title },
+      where: { tenantId_title: { tenantId: DEFAULT_TENANT_ID, title: data.title } },
       update: {}, // Preserve existing data on re-seed
-      create: { ...data, categoryId: category.id },
+      create: { ...data, categoryId: category.id, tenantId: DEFAULT_TENANT_ID },
     });
     ensuredCount++;
   }
@@ -210,7 +213,7 @@ async function createSections() {
     await prisma.section.upsert({
       where: { id: data.id },
       update: {},
-      create: { ...data, courseId: data.courseId },
+      create: { ...data, courseId: data.courseId, tenantId: DEFAULT_TENANT_ID },
     });
     ensuredCount++;
   }
@@ -241,7 +244,7 @@ async function createParts() {
     await prisma.part.upsert({
       where: { id: data.id },
       update: {},
-      create: { ...data, sectionId: data.sectionId },
+      create: { ...data, sectionId: data.sectionId, tenantId: DEFAULT_TENANT_ID },
     });
     ensuredCount++;
   }

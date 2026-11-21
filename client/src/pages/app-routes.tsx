@@ -1,6 +1,4 @@
 import { Routes, Route } from "react-router";
-import { useAuth } from "../hooks/use-auth";
-import { Spinner } from "#components/ui/spinner";
 import Home from "./home/home";
 import Layout from "./layout/layout";
 import CourseRoutes from "./course/course-routes";
@@ -9,26 +7,19 @@ import RoleAuthorizationRoute from "#components/auth/role-authorization-route";
 import { Role } from "../features/auth/enums/role";
 import About from "./about/about";
 import NotFound from "#components/utils/not-found";
+import TenantSelect from "./tenants/tenant-select";
 
+// Auth resolution (useAuth) happens in TenantGate before this tree mounts,
+// so isAuth is already settled here.
 export default function AppRoutes() {
-  // const theme = useAppSelector((s) => s.app.theme);
-  const { isAuthDone } = useAuth();
-
-  /* useLayoutEffect(() => {
-    const currentTheme = storage.getTheme();
-    if (currentTheme) dis(appActions.setTheme({ theme: currentTheme }));
-    else dis(appActions.setTheme({ theme: "light" }));
-  }, [dis]);
-
-  if (!theme) return null; */
-  if (!isAuthDone) return <Spinner />;
   return (
-    <div /* data-theme={theme} */>
+    <div>
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/About" element={<About />} />
           <Route path="/Courses/*" element={<CourseRoutes />} />
+          <Route path="/Tenants" element={<TenantSelect />} />
         </Route>
 
         <Route

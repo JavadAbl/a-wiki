@@ -9,10 +9,12 @@ import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 import { random5Digit } from 'src/common/utils/app.utils';
 import { ContentUpdateDto } from '../dto/request/content-update.dto';
 import { ContentCreateManyDto } from '../dto/request/content-create-many.dto';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class ContentService {
   constructor(
+    private readonly tenantContext: TenantContext,
     private readonly contentRep: ContentRepository,
     private readonly partRep: PartRepository,
     private readonly s3Provider: S3Provider,
@@ -81,6 +83,7 @@ export class ContentService {
 
       return tx.content.create({
         data: {
+          tenantId: this.tenantContext.tenantId!,
           durationSeconds,
           mediaUrl: s3Key,
           mediaType: mediaType as any,
@@ -195,6 +198,7 @@ export class ContentService {
         for (const item of prepared) {
           const content = await tx.content.create({
             data: {
+              tenantId: this.tenantContext.tenantId!,
               durationSeconds: item.durationSeconds,
               mediaUrl: item.s3Key,
               mediaType: item.mediaType,

@@ -25,10 +25,12 @@ import { createHash } from 'crypto';
 import { random5Digit } from 'src/common/utils/app.utils';
 import { DocumentDto } from '../dto/response/document.dto';
 import { Jimp, JimpMime } from 'jimp';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class CourseService {
   constructor(
+    private readonly tenantContext: TenantContext,
     private readonly courseRep: CourseRepository,
     private readonly categoryRep: CategoryRepository,
     private readonly favoriteCourseRep: FavoriteCourseRepository,
@@ -388,7 +390,7 @@ export class CourseService {
     await prisma.$transaction([
       prisma.courseRelatedCourse.deleteMany({ where: { courseId } }),
       ...uniqueIds.map((relatedCourseId) =>
-        prisma.courseRelatedCourse.create({ data: { courseId, relatedCourseId } }),
+        prisma.courseRelatedCourse.create({ data: { courseId, relatedCourseId, tenantId: this.tenantContext.tenantId! } }),
       ),
     ]);
   }
@@ -409,7 +411,7 @@ export class CourseService {
     if (isFavorite) {
       const last = await this.favoriteCourseRep.findFirst({ orderBy: { order: 'desc' } });
       await this.favoriteCourseRep.create({
-        data: { courseId, order: (last?.order ?? -1) + 1 },
+        data: { courseId, order: (last?.order ?? -1) + 1, tenantId: this.tenantContext.tenantId! },
       });
     } else {
       await this.favoriteCourseRep.remove({ where: { courseId } });
@@ -424,7 +426,7 @@ export class CourseService {
     if (categoryId)
       await this.categoryRep.findAndCheckExistsBy({ where: { id: categoryId } }, 'id', categoryId);
 
-    const course = await this.courseRep.create({ data: payload });
+    const course = await this.courseRep.create({ data: { ...payload, tenantId: this.tenantContext.tenantId! } });
     return course.id;
   }
 

@@ -2,6 +2,8 @@ export interface TokenPayload {
   userId: number;
   role: string;
   permissions: string[];
+  /// tenant the user belongs to; null/undefined for the global SuperAdmin
+  tenantId?: number | null;
 }
 
 export interface DecodedToken extends TokenPayload {

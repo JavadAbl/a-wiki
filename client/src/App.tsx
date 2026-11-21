@@ -1,16 +1,15 @@
 import { Provider as ReduxProvider } from "react-redux";
-import { BrowserRouter } from "react-router";
 import { Toaster } from "#components/ui/sonner";
-import AppRoutes from "./pages/app-routes";
 import { store } from "./features/store";
+import TenantGate from "./pages/tenants/tenant-gate";
 
 export default function App() {
   return (
     <ReduxProvider store={store}>
-      <BrowserRouter>
-        <AppRoutes />
-        <Toaster />
-      </BrowserRouter>
+      {/* TenantGate renders the instance-selection screen until a tenant is
+          chosen, then mounts the router with the normal routes. */}
+      <TenantGate />
+      <Toaster />
     </ReduxProvider>
   );
 }

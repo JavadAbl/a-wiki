@@ -6,10 +6,12 @@ import { PartSetDescriptionDto } from '../dto/request/part-set-description.dto';
 import { PartViewRepository } from '../repositories/part-view.repository';
 import { PartUpdateDto } from '../dto/request/part-update.dto';
 import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class PartService {
   constructor(
+    private readonly tenantContext: TenantContext,
     private readonly partRep: PartRepository,
     private readonly partViewRep: PartViewRepository,
     private readonly sectionRep: SectionRepository,
@@ -37,7 +39,7 @@ export class PartService {
     const lastPart = course.parts?.[0]?.order;
     if (lastPart != undefined) order = lastPart + 1;
 
-    const part = await this.partRep.create({ data: { ...payload, order, sectionId }, select: { id: true } });
+    const part = await this.partRep.create({ data: { ...payload, order, sectionId, tenantId: this.tenantContext.tenantId! }, select: { id: true } });
     return part.id;
   }
 
@@ -76,6 +78,6 @@ export class PartService {
     const existingView = await this.partViewRep.findUnique({ where: { userId_partId: { partId, userId } } });
     if (existingView) return;
     await this.partRep.findAndCheckExistsBy({ where: { id: partId } }, 'partId', partId);
-    await this.partViewRep.create({ data: { userId, partId } });
+    await this.partViewRep.create({ data: { userId, partId, tenantId: this.tenantContext.tenantId! } });
   }
 }

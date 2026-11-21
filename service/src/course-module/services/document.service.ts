@@ -7,10 +7,12 @@ import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 import { extname } from 'path';
 import { createHash } from 'crypto';
 import { random5Digit } from 'src/common/utils/app.utils';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class DocumentService {
   constructor(
+    private readonly tenantContext: TenantContext,
     private readonly documentRep: DocumentRepository,
     private readonly courseRep: CourseRepository,
     private readonly s3Provider: S3Provider,
@@ -54,6 +56,7 @@ export class DocumentService {
     // 6. Persist inside a transaction so order assignment is race-safe
     const document = await this.documentRep.create({
       data: {
+        tenantId: this.tenantContext.tenantId!,
         fileUrl: s3Key,
         title: payload.title,
         description: payload.description,

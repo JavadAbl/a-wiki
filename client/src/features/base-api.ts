@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import type { AppState } from "./store";
 import status from "http-status";
 import { refreshAccessToken } from "../utils/refresh-token";
+import { storage } from "../utils/storage";
 
 // export const BASE_ADDRESS = "http://192.168.100.16/api/";
 export const BASE_ADDRESS = "/api/";
@@ -35,6 +36,13 @@ const rawBaseQuery = fetchBaseQuery({
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
+
+    // every request is scoped to the selected tenant instance
+    const tenant = storage.getTenant();
+    if (tenant) {
+      headers.set("X-Tenant-Id", String(tenant.id));
+    }
+
     return headers;
   },
 });
@@ -122,9 +130,11 @@ export const getAuthorizedImage = async (
 ) => {
   if (!url) return null;
   try {
+    const tenant = storage.getTenant();
     const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        ...(tenant ? { "X-Tenant-Id": String(tenant.id) } : {}),
       },
     });
 

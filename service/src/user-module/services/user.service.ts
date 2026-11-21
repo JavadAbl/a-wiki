@@ -22,6 +22,7 @@ import { UserChangePasswordOtpDto } from '../dto/request/user-change-password-ot
 import { UserUpdateDto } from '../dto/request/user-update.dto';
 import { TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 import { Role } from 'src/auth-module/enums/role.enum';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class UserService {
@@ -30,6 +31,7 @@ export class UserService {
     private readonly passwordService: PasswordService,
     private readonly configService: ConfigService<AppConfig>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly tenantContext: TenantContext,
   ) {}
 
   /* async insertData() {
@@ -140,6 +142,8 @@ export class UserService {
         role: Role.SuperAdmin,
         password: hashedPassword,
         nationalCode: 'admin',
+        // the SuperAdmin is global: no tenant
+        tenantId: null,
       },
     });
   }
@@ -167,12 +171,15 @@ export class UserService {
   async userChangePasswordOtp(payload: UserChangePasswordOtpDto): Promise<void> {
     const { newPassword, otp, mobile } = payload;
 
-    const cachedOtp = await this.cacheManager.get(`otp-${mobile}`);
+    const cachedOtp = await this.cacheManager.get(this.tenantContext.scopedKey(`otp-${mobile}`));
     console.log(cachedOtp, otp);
 
     if (cachedOtp != otp) throw new BadRequestException('Incorrect otp code');
 
     const user = await this.userRep.findAndCheckExistsBy({ where: { mobile } }, 'mobile', mobile);
+
+    if (!this.tenantContext.matchesTenant(user.tenantId))
+      throw new BadRequestException('Incorrect otp code');
 
     const hashedNewPassword = await this.passwordService.hashPassword(newPassword);
 

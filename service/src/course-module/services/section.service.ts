@@ -5,10 +5,12 @@ import { SectionSetDescriptionDto } from '../dto/request/section-set-description
 import { SectionCreateDto } from '../dto/request/section-create.dto';
 import { SectionUpdateDto } from '../dto/request/section-update.dto';
 import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
+import { TenantContext } from 'src/common/tenant/tenant-context';
 
 @Injectable()
 export class SectionService {
   constructor(
+    private readonly tenantContext: TenantContext,
     private readonly sectionRep: SectionRepository,
     private readonly courseRep: CourseRepository,
     private readonly s3Provider: S3Provider,
@@ -36,7 +38,7 @@ export class SectionService {
     if (lastSection != undefined) order = lastSection + 1;
 
     const section = await this.sectionRep.create({
-      data: { ...payload, order, courseId },
+      data: { ...payload, order, courseId, tenantId: this.tenantContext.tenantId! },
       select: { id: true },
     });
     return section.id;

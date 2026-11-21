@@ -6,6 +6,8 @@ import AdminPanelCategories from "./admin-categories/admin-panel-categories";
 import AdminPanelUsers from "./admin-users/admin-panel-users";
 import AdminPanelSettings from "./admin-settings/admin-panel-settings";
 import AdminPanelLinks from "./admin-links/admin-panel-links";
+import AdminPanelTenants from "./admin-tenants/admin-panel-tenants";
+import SARoute from "#components/auth/sa-route";
 
 export default function AdminPanelRoutes() {
   return (
@@ -18,6 +20,14 @@ export default function AdminPanelRoutes() {
         <Route path="Links" element={<AdminPanelLinks />} />
         <Route path="Courses/:id" element={<AdminCourse />} />
         <Route path="Settings" element={<AdminPanelSettings />} />
+        <Route
+          path="Tenants"
+          element={
+            <SARoute>
+              <AdminPanelTenants />
+            </SARoute>
+          }
+        />
       </Route>
     </Routes>
   );

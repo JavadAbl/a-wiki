@@ -12,6 +12,7 @@ import {
   type UserCreateDto,
 } from "../../../../features/user/schemas/user-create.schema";
 import { toEnglishDigits } from "../../../../utils/app-utils";
+import GroupSelect from "../../../../features/group/components/group-select";
 
 interface Props {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
       lastName: "",
       nationalCode: "",
       mobile: "",
+      groupId: "",
     },
     mode: "onSubmit",
   });
@@ -36,6 +38,7 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
     const res = await mutateCreateUser({
       ...data,
       mobile: data.mobile === "" ? undefined : data.mobile,
+      groupId: data.groupId ? Number(data.groupId) : null,
     });
     if (!res.error) {
       setIsOpen(false);
@@ -123,6 +126,22 @@ export default function UserCreate({ isOpen, setIsOpen }: Props) {
                 inputMode="numeric"
                 aria-invalid={fieldState.invalid}
                 autoComplete="off"
+              />
+              <InputMessage>{fieldState.error?.message}</InputMessage>
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="groupId"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="groupId">گروه</FieldLabel>
+              <GroupSelect
+                id="groupId"
+                value={field.value ?? null}
+                onValueChange={field.onChange}
               />
               <InputMessage>{fieldState.error?.message}</InputMessage>
             </Field>

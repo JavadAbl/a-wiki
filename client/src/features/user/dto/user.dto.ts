@@ -6,4 +6,5 @@ export interface UserDto {
   nationalCode: string;
   isActive: boolean;
   role: string;
+  groupId: number | null;
 }

@@ -25,11 +25,55 @@ model User {
   isActive     Boolean @default(true)
   role         String  @default("User")
 
+  groupId Int?
+  group   Group? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
   userPermissions UserPermission[]
   userPartViews   PartView[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Access group: members may only see courses/categories on this allowlist.
+/// Users without a group have no restriction.
+model Group {
+  id          Int             @id() @default(autoincrement())
+  name        String          @unique()
+  description String?
+
+  users      User[]
+  courses    GroupCourse[]
+  categories GroupCategory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GroupCourse {
+  id        Int    @id() @default(autoincrement())
+  groupId   Int
+  courseId  Int
+  group     Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, courseId])
+}
+
+model GroupCategory {
+  id         Int      @id() @default(autoincrement())
+  groupId    Int
+  categoryId Int
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, categoryId])
 }
 
 model Permission {
@@ -93,6 +137,7 @@ model Category {
   icon        String?  @db.NVarChar(MAX)
   order       Int      @default(0)
   courses     Course[]
+  groups      GroupCategory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,6 +170,7 @@ model Course {
 
   relatedCourses    CourseRelatedCourse[] @relation("courseRelatedCourses")
   relatedToCourses  CourseRelatedCourse[] @relation("relatedToCourses")
+  groups            GroupCourse[]
 
   sections  Section[]
   documents Document[]

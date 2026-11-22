@@ -76,9 +76,10 @@ export class UserService {
   }
 
   async userCreate(payload: UserCreateDto): Promise<number> {
-    const { nationalCode } = payload;
+    const { nationalCode, groupId } = payload;
 
     await this.userRep.checkDuplicateBy({ where: { nationalCode } }, 'nationalCode', nationalCode);
+    await this.validateGroupId(groupId);
 
     const defaultPassword = nationalCode;
     const hashedPassword = await this.passwordService.hashPassword(defaultPassword);
@@ -89,9 +90,27 @@ export class UserService {
   }
 
   async userUpdate(userId: number, payload: UserUpdateDto): Promise<void> {
-    const { mobile } = payload;
-    await this.userRep.findAndCheckExistsBy({ where: { mobile } }, 'mobile', mobile);
+    await this.validateGroupId(payload.groupId);
+    await this.userRep.findAndCheckExistsBy({ where: { id: userId } }, 'userId', userId);
     await this.userRep.update({ data: payload, where: { id: userId } });
+  }
+
+  async userSetGroup(userId: number, groupId: number | null): Promise<void> {
+    await this.validateGroupId(groupId);
+    await this.userRep.findAndCheckExistsBy({ where: { id: userId } }, 'userId', userId);
+    await this.userRep.update({ where: { id: userId }, data: { groupId } });
+  }
+
+  async userSetGroupBulk(userIds: number[], groupId: number | null): Promise<void> {
+    await this.validateGroupId(groupId);
+    if (userIds.length === 0) return;
+    await this.userRep.updateMany({ where: { id: { in: userIds } }, data: { groupId } });
+  }
+
+  private async validateGroupId(groupId?: number | null): Promise<void> {
+    if (groupId == null) return;
+    const group = await this.userRep.prismaClient.group.findUnique({ where: { id: groupId } });
+    if (!group) throw new BadRequestException(`group with id ${groupId} not found`);
   }
 
   async adminCreate(

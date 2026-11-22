@@ -18,9 +18,10 @@ import { CategoryController } from './controllers/category.controller';
 import { DocumentService } from './services/document.service';
 import { CourseProvider } from './providers/course.provider';
 import { CourseServiceContract } from './contracts/course-service.contract';
+import { GroupModule } from 'src/group-module/group.module';
 
 @Module({
-  imports: [],
+  imports: [GroupModule],
   controllers: [CourseController, CategoryController],
   providers: [
     CourseRepository,

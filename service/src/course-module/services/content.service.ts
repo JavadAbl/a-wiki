@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { ContentRepository } from '../repositories/content.repository';
 import { ContentCreateDto } from '../dto/request/content-create.dto';
 import { PartRepository } from '../repositories/part.repository';
@@ -9,6 +9,8 @@ import { S3Provider } from 'src/infrastructure-modules/s3-module/s3.provider';
 import { random5Digit } from 'src/common/utils/app.utils';
 import { ContentUpdateDto } from '../dto/request/content-update.dto';
 import { ContentCreateManyDto } from '../dto/request/content-create-many.dto';
+import { AccessService } from 'src/group-module/services/access.service';
+import { TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 
 @Injectable()
 export class ContentService {
@@ -16,6 +18,7 @@ export class ContentService {
     private readonly contentRep: ContentRepository,
     private readonly partRep: PartRepository,
     private readonly s3Provider: S3Provider,
+    private readonly accessService: AccessService,
   ) {}
 
   async contentCreate(partId: number, payload: ContentCreateDto, file: Express.Multer.File): Promise<number> {
@@ -234,12 +237,27 @@ export class ContentService {
     await this.contentRep.remove({ where: { id: contentId } });
   }
 
-  async generatePresignedUrl(contentId: number): Promise<{ url: string }> {
+  async generatePresignedUrl(contentId: number, context?: TokenPayload): Promise<{ url: string }> {
+    const restriction = await this.accessService.resolveRestriction(context);
     const content = await this.contentRep.findAndCheckExistsBy(
-      { where: { id: contentId } },
+      {
+        where: { id: contentId },
+        include: { part: { include: { section: true } } },
+      },
       'contentId',
       contentId,
     );
+
+    if (restriction) {
+      const courseId = content.part.section.courseId;
+      const course = await this.contentRep.prismaClient.course.findUnique({
+        where: { id: courseId },
+        select: { id: true, categoryId: true },
+      });
+      if (!course || !this.accessService.isCourseAllowed(restriction, course))
+        throw new ForbiddenException('You do not have access to this content');
+    }
+
     const url = await this.s3Provider.getSignedUrlByKey(content.mediaUrl);
     return { url };
   }

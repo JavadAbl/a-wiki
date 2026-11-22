@@ -1,4 +1,4 @@
-import { IsString, MaxLength, Length, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, MaxLength, Length, IsOptional, IsBoolean, IsInt } from 'class-validator';
 
 export class UserUpdateDto {
   @IsString()
@@ -24,4 +24,8 @@ export class UserUpdateDto {
   @IsBoolean()
   @IsOptional()
   isActive: boolean;
+
+  @IsInt()
+  @IsOptional()
+  groupId?: number | null;
 }

@@ -35,7 +35,7 @@ export default function UserSetActive({ close, user }: Props) {
     if (isActive === null) return;
 
     const res = await mutate({
-      body: { isActive },
+      body: { isActive, groupId: user.groupId },
       userId: user.id,
     });
     if (!res.error) {

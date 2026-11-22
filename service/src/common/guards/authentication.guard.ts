@@ -17,11 +17,23 @@ export class AuthenticationGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest<Request>();
-
     const authorizeHeader: string | undefined = request.headers?.['authorization'];
+
+    if (isPublic) {
+      // On public routes a valid token is optional: populate request.user when present
+      // so group rules can apply to logged-in users, but never block anonymous callers.
+      if (authorizeHeader) {
+        try {
+          const accessToken = authorizeHeader.split(' ')?.[1];
+          request.user = await this.tokenService.verifyAccessToken(accessToken);
+        } catch {
+          // Ignore invalid/expired tokens on public routes.
+        }
+      }
+      return true;
+    }
 
     if (!authorizeHeader) throw new UnauthorizedException();
 

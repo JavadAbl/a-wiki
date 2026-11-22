@@ -15,14 +15,15 @@ export const UserCreateSchema = z.object({
     .string()
     .length(10, { message: " کدملی باید دقیقاً ۱۰ کاراکتر باشد" }),
 
-  mobile: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z
-      .string()
-      .length(11, { message: "شماره موبایل باید دقیقاً ۱۱ کاراکتر باشد" })
-      .regex(/^0[0-9]{10}$/, "شماره موبایل صحیح نیست")
-      .optional(),
-  ),
+  mobile: z
+    .string()
+    .refine(
+      (val) => val === "" || /^0[0-9]{10}$/.test(val),
+      "شماره موبایل صحیح نیست",
+    )
+    .optional(),
+
+  groupId: z.string().nullable().optional(),
 });
 
 export type UserCreateDto = z.infer<typeof UserCreateSchema>;

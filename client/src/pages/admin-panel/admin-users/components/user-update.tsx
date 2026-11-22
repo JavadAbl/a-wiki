@@ -13,6 +13,7 @@ import {
   UserUpdateSchema,
   type UserUpdateDto,
 } from "../../../../features/user/schemas/user-update.schema";
+import GroupSelect from "../../../../features/group/components/group-select";
 
 interface Props {
   close: () => any;
@@ -27,6 +28,7 @@ export default function UserUpdate({ close, user }: Props) {
       lastName: "",
       nationalCode: "",
       mobile: "",
+      groupId: "",
     },
     mode: "onSubmit",
   });
@@ -41,6 +43,7 @@ export default function UserUpdate({ close, user }: Props) {
           lastName: user?.lastName,
           nationalCode: user?.nationalCode,
           mobile: user?.mobile ?? "",
+          groupId: user?.groupId == null ? "" : String(user.groupId),
         });
     };
 
@@ -54,6 +57,7 @@ export default function UserUpdate({ close, user }: Props) {
       body: {
         ...data,
         mobile: data.mobile === "" ? undefined : data.mobile,
+        groupId: data.groupId ? Number(data.groupId) : null,
       },
       userId: user.id,
     });
@@ -131,6 +135,22 @@ export default function UserUpdate({ close, user }: Props) {
                 id="mobile"
                 aria-invalid={fieldState.invalid}
                 autoComplete="off"
+              />
+              <InputMessage>{fieldState.error?.message}</InputMessage>
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="groupId"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="groupId">گروه</FieldLabel>
+              <GroupSelect
+                id="groupId"
+                value={field.value ?? null}
+                onValueChange={field.onChange}
               />
               <InputMessage>{fieldState.error?.message}</InputMessage>
             </Field>

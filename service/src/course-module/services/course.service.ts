@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { CourseRepository } from '../repositories/course.repository';
 import { CourseCreateDto } from '../dto/request/course-create.dto';
 import { CategoryRepository } from '../repositories/category.repository';
@@ -25,6 +25,8 @@ import { createHash } from 'crypto';
 import { random5Digit } from 'src/common/utils/app.utils';
 import { DocumentDto } from '../dto/response/document.dto';
 import { Jimp, JimpMime } from 'jimp';
+import { AccessService, AccessRestriction } from 'src/group-module/services/access.service';
+import { TokenPayload } from 'src/auth-module/contracts/token-service.contract';
 
 @Injectable()
 export class CourseService {
@@ -34,9 +36,11 @@ export class CourseService {
     private readonly favoriteCourseRep: FavoriteCourseRepository,
     private readonly courseRelatedCourseRep: CourseRelatedCourseRepository,
     private readonly s3Provider: S3Provider,
+    private readonly accessService: AccessService,
   ) {}
 
-  async courseGetById(id: number): Promise<CourseDetailsDto> {
+  async courseGetById(id: number, context?: TokenPayload): Promise<CourseDetailsDto> {
+    const restriction = await this.accessService.resolveRestriction(context);
     const prisma = this.courseRep.prismaClient;
 
     // 1. Fetch the course with nested structure (ordered)
@@ -59,6 +63,9 @@ export class CourseService {
       'id',
       id,
     );
+
+    if (!this.accessService.isCourseAllowed(restriction, course))
+      throw new ForbiddenException('You do not have access to this course');
 
     // The generic Repository typing can't represent the include payload; fetch relations via the delegate directly
     const relatedCourseRows = await prisma.courseRelatedCourse.findMany({
@@ -113,7 +120,9 @@ export class CourseService {
     }
 
     // 4.1 Related courses: sign thumbnails + compute content totals
-    const relatedCourses = relatedCourseRows.map((r) => r.relatedCourse);
+    const relatedCourses = relatedCourseRows
+      .map((r) => r.relatedCourse)
+      .filter((c) => this.accessService.isCourseAllowed(restriction, c));
 
     let relatedAggregates: Array<{ courseId: number; totalContents: bigint; totalContentsLength: bigint }> = [];
     if (relatedCourses.length > 0) {
@@ -211,7 +220,9 @@ export class CourseService {
     query: GetManyQueryType<'Course'>,
     adminCourses: boolean,
     categoryId?: number,
+    context?: TokenPayload,
   ): Promise<GetManyReply<CourseDto>> {
+    const restriction = adminCourses ? null : await this.accessService.resolveRestriction(context);
     const predicate = buildFindManyArgs(query, { searchableFields: ['title'] });
 
     // Default sort by order (then id) unless the query asked for a specific sort
@@ -225,9 +236,11 @@ export class CourseService {
     if (adminCourses) isPublished = undefined;
     else isPublished = true;
 
+    const accessWhere = this.accessService.courseWhere(restriction) ?? {};
+
     const { items, totalCount } = await this.courseRep.findMany({
       ...predicate,
-      where: { ...predicate.where, categoryId, isPublished },
+      where: { ...predicate.where, categoryId, isPublished, ...accessWhere },
       orderBy,
       include: { favorite: true },
     });
@@ -322,9 +335,12 @@ export class CourseService {
     );
   }
 
-  async courseGetManyFavorites(limit = 12): Promise<CourseDto[]> {
+  async courseGetManyFavorites(context?: TokenPayload, limit = 12): Promise<CourseDto[]> {
+    const restriction = await this.accessService.resolveRestriction(context);
+    const accessWhere = this.accessService.courseWhere(restriction) ?? {};
+
     const { items: favorites } = await this.favoriteCourseRep.findMany({
-      where: { course: { isPublished: true } },
+      where: { course: { isPublished: true, ...accessWhere } },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       take: limit,
       include: { course: true },

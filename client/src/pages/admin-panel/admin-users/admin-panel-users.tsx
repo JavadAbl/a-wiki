@@ -15,6 +15,7 @@ import {
   Pencil,
   PlusIcon,
   SearchIcon,
+  UsersRound,
   XIcon,
 } from "lucide-react";
 import { useUserGetManyQuery } from "../../../features/user/user-api";
@@ -28,6 +29,9 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { DataGrid } from "#components/grids/data-grid";
 import { cn } from "#lib/utils";
 import { useDebounce } from "#hooks/use-debounce";
+import { useGroupGetManyQuery } from "../../../features/group/group-api";
+import UserSetGroupBulk from "./components/user-set-group-bulk";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 export default function AdminPanelUsers() {
   const [isOpenUserCreate, setIsOpenUserCreate] = useState(false);
@@ -36,6 +40,8 @@ export default function AdminPanelUsers() {
     useState<UserDto | null>(null);
   const [selectedUserForSetActive, setSelectedUserForSetActive] =
     useState<UserDto | null>(null);
+  const [bulkUserIds, setBulkUserIds] = useState<number[]>([]);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [modalKeys, setModalsKey] = useState(0);
 
   // Server pagination state
@@ -56,8 +62,11 @@ export default function AdminPanelUsers() {
     page: pageIndex,
     search: debouncedSearch ? debouncedSearch : undefined,
   });
+  const { data: groupsRes } = useGroupGetManyQuery({ pageSize: 1000 });
 
   const users = usersRes?.items || [];
+  const groupName = (id: number | null) =>
+    id == null ? "بدون گروه" : (groupsRes?.items.find((g) => g.id === id)?.name ?? "بدون گروه");
   const totalCount = usersRes?.totalCount || 0;
 
   useEffect(() => {
@@ -68,6 +77,27 @@ export default function AdminPanelUsers() {
   // Column definitions
   const columns = useMemo<ColumnDef<UserDto>[]>(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <input
+            type="checkbox"
+            checked={table.getIsAllPageRowsSelected()}
+            onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
+            aria-label="انتخاب همه"
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={row.getIsSelected()}
+            onChange={(e) => row.toggleSelected(e.target.checked)}
+            aria-label="انتخاب کاربر"
+          />
+        ),
+        size: 40,
+        enableSorting: false,
+      },
       {
         id: "firstName",
         header: "نام",
@@ -87,6 +117,11 @@ export default function AdminPanelUsers() {
         id: "mobile",
         header: "موبایل",
         cell: ({ row }) => row.original.mobile,
+      },
+      {
+        id: "group",
+        header: "گروه",
+        cell: ({ row }) => groupName(row.original.groupId),
       },
       {
         id: "status",
@@ -136,8 +171,12 @@ export default function AdminPanelUsers() {
         },
       },
     ],
-    [],
+    [groupsRes],
   );
+
+  const selectedUserIds = Object.keys(rowSelection)
+    .map((key) => users[Number(key)]?.id)
+    .filter((id): id is number => id != null);
 
   return (
     <>
@@ -174,6 +213,17 @@ export default function AdminPanelUsers() {
           increaseModalsKey();
         }}
       />
+      {bulkUserIds.length > 0 && (
+        <UserSetGroupBulk
+          key={`SetGroupBulk_${modalKeys}`}
+          userIds={bulkUserIds}
+          onClose={() => {
+            setBulkUserIds([]);
+            setRowSelection({});
+            increaseModalsKey();
+          }}
+        />
+      )}
 
       <div className="h-full box-border flex flex-col gap-4 overflow-hidden p-4">
         {/* Header */}
@@ -206,6 +256,18 @@ export default function AdminPanelUsers() {
           </div>
 
           <div className="flex items-center gap-2">
+            {selectedUserIds.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setBulkUserIds(selectedUserIds);
+                  increaseModalsKey();
+                }}
+              >
+                <UsersRound />
+                تغییر گروه ({selectedUserIds.length})
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => setIsOpenUserBatchCreate(true)}
@@ -228,6 +290,8 @@ export default function AdminPanelUsers() {
           columns={columns}
           isLoading={isFetching}
           totalCount={totalCount}
+          enableRowSelection
+          onRowSelectionChange={setRowSelection}
           // Convert 1-based API page to 0-based TanStack Table page
           page={pageIndex - 1}
           pageSize={pageSize}

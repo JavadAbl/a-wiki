@@ -15,6 +15,7 @@ import { join } from 'path';
 import { AdminGuard } from './common/guards/admin.guard';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { GroupModule } from './group-module/group.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AppService } from './app.service';
     AuthModule,
     UserModule,
     CourseModule,
+    GroupModule,
     LinkModule,
   ],
   controllers: [AppController],

@@ -12,6 +12,7 @@ import { courseApi } from "./course/course-api";
 import { courseReducer } from "./course/course-slice";
 import { sharedApi } from "./shared/shared-api";
 import { linkApi } from "./link/link-api";
+import { groupApi } from "./group/group-api";
 
 // Configure the Redux store
 export const store = configureStore({
@@ -22,6 +23,7 @@ export const store = configureStore({
     [courseApi.reducerPath]: courseApi.reducer,
     [sharedApi.reducerPath]: sharedApi.reducer,
     [linkApi.reducerPath]: linkApi.reducer,
+    [groupApi.reducerPath]: groupApi.reducer,
 
     shared: sharedReducer,
     auth: authReducer,
@@ -37,6 +39,7 @@ export const store = configureStore({
       .concat(userApi.middleware)
       .concat(courseApi.middleware)
       .concat(linkApi.middleware)
+      .concat(groupApi.middleware)
       .prepend(authListenerMiddleware.middleware),
 });
 

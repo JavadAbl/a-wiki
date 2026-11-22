@@ -25,6 +25,8 @@ export const UserUpdateSchema = z.object({
     .optional(),
 
   isActive: z.boolean().optional(),
+
+  groupId: z.string().nullable().optional(),
 });
 
 export type UserUpdateDto = z.infer<typeof UserUpdateSchema>;

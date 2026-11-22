@@ -6,6 +6,10 @@ import type { UserCreateDto } from "./schemas/user-create.schema";
 import type { UserUpdateDto } from "./schemas/user-update.schema";
 import type { UserBatchResult } from "./dto/user-batch-result.dto";
 
+/// API bodies use a numeric groupId; the form schemas keep it as a string for the picker.
+export type UserCreateBody = Omit<UserCreateDto, "groupId"> & { groupId?: number | null };
+export type UserUpdateBody = Omit<UserUpdateDto, "groupId"> & { groupId?: number | null };
+
 export const userApi = createApi({
   reducerPath: "userApi",
   baseQuery: baseApi,
@@ -25,7 +29,7 @@ export const userApi = createApi({
       providesTags: ["user"],
     }),
 
-    UserCreate: builder.mutation<number, UserCreateDto>({
+    UserCreate: builder.mutation<number, UserCreateBody>({
       query: (body) => ({
         url: "Users",
         method: "POST",
@@ -36,12 +40,36 @@ export const userApi = createApi({
 
     UserUpdate: builder.mutation<
       number,
-      { body: UserUpdateDto; userId: number }
+      { body: UserUpdateBody; userId: number }
     >({
       query: ({ body, userId }) => ({
         url: `Users/${userId}`,
         method: "PATCH",
         body,
+      }),
+      invalidatesTags: ["user"],
+    }),
+
+    UserSetGroup: builder.mutation<
+      void,
+      { userId: number; groupId: number | null }
+    >({
+      query: ({ userId, groupId }) => ({
+        url: `Users/${userId}/SetGroup`,
+        method: "PATCH",
+        body: { groupId },
+      }),
+      invalidatesTags: ["user"],
+    }),
+
+    UserSetGroupBulk: builder.mutation<
+      void,
+      { userIds: number[]; groupId: number | null }
+    >({
+      query: ({ userIds, groupId }) => ({
+        url: "Users/SetGroupBulk",
+        method: "PATCH",
+        body: { userIds, groupId },
       }),
       invalidatesTags: ["user"],
     }),
@@ -69,6 +97,8 @@ export const {
   useUserGetManyQuery,
   useUserCreateMutation,
   useUserUpdateMutation,
+  useUserSetGroupMutation,
+  useUserSetGroupBulkMutation,
   useLazyUserGetByContextQuery,
   useLazyUserBatchTemplateQuery,
   useUserBatchCreateMutation,

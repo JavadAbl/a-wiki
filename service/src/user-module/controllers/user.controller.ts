@@ -32,6 +32,8 @@ import { UserUpdateDto } from '../dto/request/user-update.dto';
 import { Admin } from 'src/common/decorators/admin.decorator';
 import { UserBatchService } from '../services/user-batch.service';
 import { UserBatchResultDto } from '../dto/response/user-batch-result.dto';
+import { UserSetGroupDto } from '../dto/request/user-set-group.dto';
+import { UserSetGroupBulkDto } from '../dto/request/user-set-group-bulk.dto';
 
 @Controller('Users')
 export class UserController {
@@ -66,6 +68,13 @@ export class UserController {
     if (!/\.xlsx$/i.test(file.originalname))
       throw new BadRequestException('فقط فایل اکسل با پسوند xlsx پذیرفته می‌شود.');
     return this.userBatchService.createFromWorkbook(file.buffer);
+  }
+
+  // Must stay declared before @Get(':userId') so 'Context'/'Batch' are not captured as an id
+  @Admin()
+  @Patch('SetGroupBulk')
+  userSetGroupBulk(@Body() payload: UserSetGroupBulkDto): Promise<void> {
+    return this.userService.userSetGroupBulk(payload.userIds, payload.groupId);
   }
 
   @Get()
@@ -123,6 +132,12 @@ export class UserController {
   @Patch(':id/SetIsActive')
   userSetIsActive(@Param('id', ParseIntPipe) id: number, @Body() payload: UserSetActiveDto): Promise<void> {
     return this.userService.userSetIsActive(id, payload);
+  }
+
+  @Admin()
+  @Patch(':id/SetGroup')
+  userSetGroup(@Param('id', ParseIntPipe) id: number, @Body() payload: UserSetGroupDto): Promise<void> {
+    return this.userService.userSetGroup(id, payload.groupId);
   }
 
   @Patch('ChangePassword')

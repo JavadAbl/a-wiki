@@ -22,4 +22,7 @@ export class UserDto {
 
   @Expose()
   role: string;
+
+  @Expose()
+  groupId: number | null;
 }

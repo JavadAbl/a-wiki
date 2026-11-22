@@ -8,6 +8,7 @@ import {
   LogOut, // Changed from ChevronRightIcon for better UX
   Settings,
   Users,
+  UsersRound,
 } from "lucide-react";
 import { cn } from "#lib/utils";
 import { Separator } from "#components/ui/separator";
@@ -89,6 +90,21 @@ export function AdminSidebar() {
             >
               <Users size={18} />
               <span>کاربران</span>{" "}
+            </Button>
+          )}
+        </NavLink>
+
+        <NavLink to="/Admin/Groups" className={getNavLinkClass}>
+          {({ isActive }) => (
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2",
+                isActive && "bg-transparent hover:bg-transparent",
+              )}
+            >
+              <UsersRound size={18} />
+              <span>گروه ها</span>{" "}
             </Button>
           )}
         </NavLink>

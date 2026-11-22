@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength, Length, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, Length, IsOptional, IsInt } from 'class-validator';
 
 export class UserCreateDto {
   @IsString()
@@ -19,4 +19,8 @@ export class UserCreateDto {
   @IsString()
   @Length(10)
   nationalCode: string;
+
+  @IsInt()
+  @IsOptional()
+  groupId?: number | null;
 }

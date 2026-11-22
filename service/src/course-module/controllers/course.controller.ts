@@ -66,8 +66,9 @@ export class CourseController {
   courseGetMany(
     @Query() query: GetManyQuery,
     @Query('categoryId', new ParseIntPipe({ optional: true })) categoryId?: number,
+    @User() context?: TokenPayload,
   ): Promise<GetManyReply<CourseDto>> {
-    return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, false, categoryId);
+    return this.courseService.courseGetMany(query as GetManyQueryType<'Course'>, false, categoryId, context);
   }
 
   @Admin()
@@ -82,8 +83,8 @@ export class CourseController {
   // Must stay declared before @Get(':courseId') so 'Favorites' is not captured as an id
   @Public()
   @Get('/Favorites')
-  courseGetManyFavorites(): Promise<CourseDto[]> {
-    return this.courseService.courseGetManyFavorites();
+  courseGetManyFavorites(@User() context?: TokenPayload): Promise<CourseDto[]> {
+    return this.courseService.courseGetManyFavorites(context);
   }
 
   // Must stay declared before @Get(':courseId')/@Patch(':courseId') so 'SetOrders' is not captured as an id
@@ -112,8 +113,11 @@ export class CourseController {
   }
 
   @Get(':courseId')
-  courseGetById(@Param('courseId', ParseIntPipe) id: number): Promise<CourseDetailsDto> {
-    return this.courseService.courseGetById(id);
+  courseGetById(
+    @Param('courseId', ParseIntPipe) id: number,
+    @User() context?: TokenPayload,
+  ): Promise<CourseDetailsDto> {
+    return this.courseService.courseGetById(id, context);
   }
 
   @Admin()
@@ -273,8 +277,11 @@ export class CourseController {
  */
 
   @Get('Contents/:contentId/URL')
-  async contentGetURL(@Param('contentId', ParseIntPipe) contentId: number): Promise<{ url: string }> {
-    return this.contentService.generatePresignedUrl(contentId);
+  async contentGetURL(
+    @Param('contentId', ParseIntPipe) contentId: number,
+    @User() context?: TokenPayload,
+  ): Promise<{ url: string }> {
+    return this.contentService.generatePresignedUrl(contentId, context);
   }
 
   @Admin()
